@@ -91,7 +91,7 @@ test("recognises older model versions within a tier", () => {
   assert.equal(tierOf("claude-haiku-4-5-20251001"), "haiku");
   assert.equal(tierOf("claude-opus-4-1"), "opus");
   assert.equal(tierOf("claude-fable-5-1[1m]"), "fable");
-  assert.equal(tierOf("gpt-9"), null);
+  assert.equal(tierOf("mystery-9"), null);
   assert.equal(tierOf(undefined), null);
 });
 
@@ -239,6 +239,8 @@ test("a routed request without metadata is recorded under the conversation key",
   assert.ok(status, "the decision is filed under the conversation key instead of being dropped");
   assert.equal(status.tier, "sonnet");
   assert.equal(status.confidence, 0.77);
+  assert.equal(status.effort, "high", "records the effort that went out, here Sonnet's own since the request named none");
+  assert.equal(agentView(status).main.effort, "high", "and carries it to the per-agent entry the status line reads");
 });
 
 const withTools = (messages) => ({ tools: [{ name: "Bash" }], messages });

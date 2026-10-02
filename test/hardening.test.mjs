@@ -5,7 +5,6 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startProxy } from "../src/proxy.mjs";
-import { startCodexProxy } from "../src/codex-proxy.mjs";
 import { idOf } from "../src/config.mjs";
 import { writeDecision, readStatus, dumpBody, STATUS_DIR } from "../src/status.mjs";
 import { loadEnv, childEnv } from "../src/env.mjs";
@@ -164,30 +163,6 @@ test("an upstream that drops mid-stream fails the client instead of hanging it",
   assert.equal(await ended, false, "the client sees an incomplete response, not a clean end");
 });
 
-test("picking a model by hand in Codex keeps the routing history", async (t) => {
-  const { url } = await recordingUpstream(t);
-  const statusId = `codex-manual-${process.pid}`;
-  writeDecision(statusId, { tier: "opus", model: "gpt-5.6-sol", reason: "jev", at: Date.now() });
-  const proxy = await startCodexProxy({ apiBaseURL: url, chatgptBaseURL: url, route: sure("gpt-5.6-sol"), statusId });
-  t.after(proxy.close);
-
-  await fetch(`http://127.0.0.1:${proxy.port}/responses`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      model: "gpt-5.6-terra",
-      input: [
-        { type: "additional_tools", role: "developer", tools: [{}] },
-        { role: "user", content: [{ type: "input_text", text: "write the docs" }] },
-      ],
-    }),
-  }).then((r) => r.text());
-
-  const status = readStatus(statusId);
-  assert.equal(status.manual, true);
-  assert.equal(status.history.length, 1, "the earlier decision survives the manual pick");
-});
-
 test("a project's .env may only set jev's own keys", () => {
   const cwd = mkdtempSync(join(tmpdir(), "jev-env-cwd-"));
   const home = mkdtempSync(join(tmpdir(), "jev-env-home-"));
@@ -195,7 +170,7 @@ test("a project's .env may only set jev's own keys", () => {
     join(cwd, ".env"),
     [
       "JEV_API_KEY=from-project",
-      "JEV_CODEX_FAST_MODEL=gpt-mini",
+      "JEV_OPUS_EFFORT=low",
       "ANTHROPIC_BASE_URL=https://attacker.example",
       "TYPESAFE_BASE_URL=https://attacker.example",
       "NODE_OPTIONS=--require /tmp/evil.js",
@@ -208,7 +183,7 @@ test("a project's .env may only set jev's own keys", () => {
   const env = loadEnv({ cwd, home, env: { JEV_ALLOW_FABLE: "1" } });
 
   assert.equal(env.JEV_API_KEY, "from-project");
-  assert.equal(env.JEV_CODEX_FAST_MODEL, "gpt-mini");
+  assert.equal(env.JEV_OPUS_EFFORT, "low");
   assert.equal(env.JEV_DEBUG, "project", "the project file still outranks the home file");
   assert.equal(env.TYPESAFE_BASE_URL, "https://jev.example", "only the user's own file may move Jev");
   assert.equal(env.ANTHROPIC_BASE_URL, undefined);
@@ -271,13 +246,13 @@ const run = (spec, args) =>
     child.on("close", () => resolve(JSON.parse(out)));
   });
 
-// Values whose quoting the old shell path broke: TOML quotes, a space, and cmd metacharacters.
-const AWKWARD = ['model_providers.jev.name="Jev Router"', "fix a&b|c", "50% done", 'say "hi"', "plain"];
+// Values whose quoting the old shell path broke: embedded quotes, a space, and cmd metacharacters.
+const AWKWARD = ['name="Jev Router"', "fix a&b|c", "50% done", 'say "hi"', "plain"];
 
-test("prefers Codex's .cmd shim over its .ps1 and runs the script behind it directly", async () => {
-  const { dir, script } = shimDir("codex");
-  const file = resolveCommand("codex", { exts: [".exe", ".cmd", ".bat", ".ps1"], path: dir, win: true });
-  assert.equal(file, join(dir, "codex.cmd"));
+test("prefers Claude's .cmd shim over its .ps1 and runs the script behind it directly", async () => {
+  const { dir, script } = shimDir("claude");
+  const file = resolveCommand("claude", { exts: [".exe", ".cmd", ".bat", ".ps1"], path: dir, win: true });
+  assert.equal(file, join(dir, "claude.cmd"));
   assert.equal(shimScript(file), script);
   const spec = launchSpec(file);
   assert.deepEqual(spec, { command: process.execPath, prefix: [script] });
@@ -285,7 +260,7 @@ test("prefers Codex's .cmd shim over its .ps1 and runs the script behind it dire
 });
 
 test("a PowerShell shim is run past the default execution policy", () => {
-  assert.deepEqual(launchSpec("C:\\bin\\codex.ps1").prefix.slice(0, 4), ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
+  assert.deepEqual(launchSpec("C:\\bin\\claude.ps1").prefix.slice(0, 4), ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
 });
 
 test("a shim with no script to run directly is quoted for cmd.exe", { skip: process.platform !== "win32" }, async () => {

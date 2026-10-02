@@ -70,8 +70,7 @@ const MAX_AGENTS = 12;
  * `agent` identifies which conversation inside the session was routed: the main thread or
  * one sub-agent. Claude Code runs every agent through one endpoint and one session id, so
  * without this the last agent to be routed would be the only one visible, and a sub-agent
- * dropping to Haiku would read as the whole session dropping to Haiku. Omitted by Codex,
- * which has no sub-agents.
+ * dropping to Haiku would read as the whole session dropping to Haiku.
  *
  * @param {string} sessionId
  * @param {object} decision
@@ -90,11 +89,12 @@ export function writeDecision(sessionId, decision, agent = null) {
         tier: decision.tier,
         model: decision.model,
         confidence: decision.confidence,
+        effort: decision.effort,
         reason: decision.reason,
         at: decision.at ?? Date.now(),
       })
     : previous?.agents;
-  // Flat fields stay the latest decision: Codex and `jev-explain` already read them, and the
+  // Flat fields stay the latest decision: `jev-explain` already reads them, and the
   // status line prefers the main agent out of `agents` when it is present.
   writeStatus(sessionId, { ...decision, ...(agents ? { agents } : {}), history });
 }
@@ -126,7 +126,7 @@ export function markManual(sessionId, model, agent = null) {
 
 /**
  * The main thread's most recent full decision, or the latest one when the session has no
- * per-agent record (Codex, or a session that predates agent tracking).
+ * per-agent record (a session that predates agent tracking).
  */
 export function mainDecision(status) {
   if (!status) return null;

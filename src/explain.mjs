@@ -1,7 +1,6 @@
 import { agentView } from "./status.mjs";
 import { isNoChange, longReason } from "./reasons.mjs";
 import { tierOf } from "./config.mjs";
-import { codexTierOf } from "./codex-proxy.mjs";
 
 /**
  * What Jev itself recommended, as a tier where the model is recognisable.
@@ -15,7 +14,7 @@ const recommendationOf = (status) => {
   const answers = status.jev?.response?.answers;
   const choice = answers?.model?.choice ?? answers?.model_tier?.choice;
   if (!choice) return status.tier ?? "unknown";
-  return tierOf(choice) ?? codexTierOf(choice) ?? choice;
+  return tierOf(choice) ?? choice;
 };
 
 const WIDTH = 33;
@@ -49,7 +48,7 @@ const age = (at, now) => {
  *
  * Claude Code shows one model for the whole session, and a sub-agent's routing is invisible
  * there even though it is a separate decision. Returns "" when the session has no per-agent
- * record, which is the case for Codex and for sessions started before agents were tracked.
+ * record, which is the case for sessions started before agents were tracked.
  */
 export function formatAgents(status, now = Date.now()) {
   // Diagnosis wants the whole session, not just what is still running.

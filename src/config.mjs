@@ -126,15 +126,15 @@ export const COMPLEXITY_MAX_SCORE = COMPLEXITY_SCALE.length - 1;
  *
  * An override beats Jev outright, so a false match silently pins an ordinary prompt: "replace
  * the loop with long polling" used to land on Fable, "help with fast fourier transforms" on
- * Haiku. So it takes an instruction verb plus a model name (the Codex names too), and the
- * generic words only when they say "model" or "tier". A hyphen after the name, as in
- * "haiku-style", is a description rather than a model.
+ * Haiku. So it takes an instruction verb plus a model name, and the generic words only when
+ * they say "model" or "tier". A hyphen after the name, as in "haiku-style", is a description
+ * rather than a model.
  */
 const OVERRIDE_NAMES = {
-  haiku: { names: "haiku|luna", generic: "fast" },
-  sonnet: { names: "sonnet|terra", generic: "balanced" },
-  opus: { names: "opus|sol", generic: "strong" },
-  fable: { names: "fable|astra", generic: "long" },
+  haiku: { names: "haiku", generic: "fast" },
+  sonnet: { names: "sonnet", generic: "balanced" },
+  opus: { names: "opus", generic: "strong" },
+  fable: { names: "fable", generic: "long" },
 };
 
 export const OVERRIDE_PATTERNS = TIERS.map((t) => {

@@ -28,15 +28,20 @@ const dir = (input.workspace?.current_dir ?? input.cwd ?? "").split(/[\\/]/).pop
 const pct = Math.round(input.context_window?.used_percentage ?? 0);
 const { main, subagents } = agentView(status);
 
-/** The main thread's model, with confidence and the reason when it is not the obvious one. */
+/**
+ * The main thread's model, with confidence, the effort it runs at, and the reason when it is
+ * not the obvious one. Haiku takes no effort and sessions recorded before effort was tracked
+ * have none, so the effort is simply left out for those.
+ */
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
   const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
+  const level = entry.effort ? ` ${DIM}· effort${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${color}${entry.model ?? entry.tier}${RESET}${p}${why}`;
+  return `${color}${entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
 let routed = `${DIM}jev: waiting for first prompt${RESET}`;
@@ -46,7 +51,7 @@ if (main?.manual || (!main && status?.manual)) {
 } else if (main) {
   routed = mainLine(main);
 } else if (status) {
-  // A session routed before per-agent tracking existed, or by Codex, which has no agents.
+  // A session routed before per-agent tracking existed.
   routed = mainLine(status);
 }
 

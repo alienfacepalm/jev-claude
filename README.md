@@ -9,9 +9,6 @@ Per-turn model routing for Claude Code. For each new prompt, Jev picks the Claud
 the best result for the least money: quality first, then cost, speed last. Claude Code itself is
 unchanged: its interface, tools, sessions, permissions, and sign-in all work as before.
 
-The original jev-router also routed OpenAI Codex; that code is still here but is not maintained
-or tested in this fork (see [OpenAI Codex](#openai-codex)).
-
 ## Install
 
 You need [Node.js](https://nodejs.org) 22 or later (24 LTS recommended; see
@@ -190,12 +187,13 @@ that name none.
 
 ## Status line
 
-`jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, and the
-reason when it was not simply Jev's pick. Sub-agents follow `⤷`, with their model and version:
+`jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
+reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
+effort, so none is shown for it. Sub-agents follow `⤷`, with their model and version:
 
 ```text
-claude-sonnet-5-5 (94%) · my-project · 8% context
-claude-opus-5-5 (91%) (keeping the cache) · ⤷ Haiku 4.5,Sonnet 5.5 · my-project · 34% context
+claude-sonnet-5-5 (94%) · effort high · my-project · 8% context
+claude-opus-5-5 (91%) · effort medium (keeping the cache) · ⤷ Haiku 4.5,Sonnet 5.5 · my-project · 34% context
 ⏸ manual Opus 4.6 · my-project · 21% context
 ```
 
@@ -311,12 +309,6 @@ Only requests for **Jev Router** are routed; a model you pick yourself passes st
 Request fields the chosen model cannot accept, such as adaptive thinking on Haiku, are removed
 before forwarding, and old MCP tool schemas that the API would reject are normalised.
 
-## OpenAI Codex
-
-The original project's `jev-codex` command and its Codex proxy are still in this repository, but
-this fork is for Claude Code: Codex support is not maintained or tested here and may come back in
-a later version. Its `JEV_CODEX_*_MODEL` settings are still read.
-
 ## Development
 
 ```bash
@@ -370,7 +362,7 @@ Pull after pushing to pick up that commit. The size of the bump comes from the
 jev-claude started as an import of [jev-router](https://github.com/gargpratyush/jev-router) by
 [@gargpratyush](https://github.com/gargpratyush). What this fork changes:
 
-- **Claude Code only.** The Codex code is kept but no longer maintained or tested.
+- **Claude Code only.** The original's support for other coding CLIs is removed.
 - **Routing re-tuned for value.** Jev is told each model's cost per completed task, from published
   benchmarks, instead of its per-token price, and to prefer the stronger model when unsure a
   cheaper one would succeed. Unsure answers run one tier below Jev's pick, new conversations

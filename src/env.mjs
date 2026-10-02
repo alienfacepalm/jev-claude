@@ -17,9 +17,9 @@ const PROJECT_KEYS = new Set([
   "JEV_NO_STATUSLINE",
 ]);
 const isProjectKey = (key) =>
-  PROJECT_KEYS.has(key) || /^JEV_CODEX_[A-Z]+_MODEL$/.test(key) || /^JEV_[A-Z]+_EFFORT$/.test(key);
+  PROJECT_KEYS.has(key) || /^JEV_[A-Z]+_EFFORT$/.test(key);
 
-/** Keys only jev itself reads, removed from the environment handed to Claude Code or Codex. */
+/** Keys only jev itself reads, removed from the environment handed to Claude Code. */
 export const PRIVATE_KEYS = ["JEV_API_KEY", "TYPESAFE_API_KEY"];
 
 function read(file) {

@@ -45,18 +45,9 @@ test("shows Jev's own pick when policy overruled it", () => {
   assert.match(output, /Selected model: CLAUDE-OPUS-5-5/);
 });
 
-test("reads the recommendation from Codex and from sessions recorded before the rename", () => {
-  const codex = { tier: "opus", jev: { response: { answers: { model: { choice: "gpt-5.6-luna" } } } } };
-  assert.match(formatExplanation(codex), /Recommended tier: HAIKU/);
+test("reads the recommendation from sessions recorded before the rename", () => {
   const old = { tier: "opus", jev: { response: { answers: { model_tier: { choice: "sonnet" } } } } };
   assert.match(formatExplanation(old), /Recommended tier: SONNET/);
-});
-
-test("shows the concrete provider model when available", () => {
-  assert.match(
-    formatExplanation({ tier: "haiku", model: "gpt-5.6-luna", confidence: 0.99 }),
-    /Selected model: GPT-5\.6-LUNA/,
-  );
 });
 
 test("Claude skill pre-approves its read-only explanation command", () => {
@@ -69,10 +60,17 @@ test("says a held decision in words a person reads, not the reason code", () => 
   // shown one. Both surfaces translate through src/reasons.mjs.
   assert.equal(shortReason("downgrade-not-worth-cache-rebuild/no-change"), "keeping the cache");
   assert.match(longReason("downgrade-not-worth-cache-rebuild"), /re-read the whole conversation/);
-  assert.equal(shortReason("low-confidence-default"), "router unsure");
   assert.equal(shortReason("jev-unavailable"), "router offline");
-  assert.equal(shortReason("override"), "you asked for it");
   assert.equal(shortReason("jev+unavailable"), "nearest available");
+});
+
+test("the status line stays quiet where the reason is obvious or not actionable", () => {
+  // Unsure shows as the confidence percentage already; an override is what the person typed.
+  assert.equal(shortReason("low-confidence-default"), null);
+  assert.equal(shortReason("override"), null);
+  // The panel still explains both.
+  assert.match(longReason("low-confidence-default"), /unsure/);
+  assert.match(longReason("override"), /named this model/);
 });
 
 test("an ordinary recommendation adds nothing to the status line", () => {

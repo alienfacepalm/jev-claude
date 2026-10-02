@@ -28,7 +28,7 @@ const HOP_BY_HOP = ["content-length", "transfer-encoding", "connection", "keep-a
  * Headers for the upstream request. The body may have been rewritten, so its length is set from
  * what is actually sent rather than dropped, which would make every request chunked.
  */
-export function upstreamHeaders(incoming, host, body) {
+function upstreamHeaders(incoming, host, body) {
   const headers = { ...incoming, host };
   for (const name of HOP_BY_HOP) delete headers[name];
   if (body.length) headers["content-length"] = String(body.length);
@@ -40,7 +40,7 @@ export function upstreamHeaders(incoming, host, body) {
  * cold first call, which otherwise lands inside the user's first turn. The SDK uses the global
  * fetch, whose connection pool this warms; a failure here costs nothing.
  */
-export function prewarmJev(base = process.env.TYPESAFE_BASE_URL ?? TYPESAFE_BASE_URL) {
+function prewarmJev(base = process.env.TYPESAFE_BASE_URL ?? TYPESAFE_BASE_URL) {
   try {
     fetch(new URL(base).origin, { method: "HEAD" }).catch(() => {});
   } catch {
@@ -438,7 +438,10 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
             // key is stable for the same conversation and is already what `debug` prints, so
             // it is the identifier a user can pass to `jev-explain` for a print-mode run.
             if (fresh && !explaining) {
-              writeDecision(sessionOf(body) || key, { tier, ...fresh, at: Date.now() }, agent);
+              // The effort that actually went out: Claude Code's own when it sent one, else the
+              // tier's. Haiku takes none, so this is null there.
+              const effort = body.output_config?.effort ?? null;
+              writeDecision(sessionOf(body) || key, { tier, ...fresh, effort, at: Date.now() }, agent);
             }
           }
           out = Buffer.from(JSON.stringify(body));

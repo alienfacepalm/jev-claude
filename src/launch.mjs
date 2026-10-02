@@ -31,7 +31,7 @@ export function resolveCommand(name, { exts, path = process.env.PATH ?? "", win 
  *
  * npm writes a shim of the form `"%_prog%" "%dp0%\node_modules\pkg\cli.js" %*`. Running that
  * script with this Node directly sidesteps cmd.exe, whose quoting rules strip the quotes from
- * Codex's TOML config values and split any argument containing a space.
+ * quoted config values and split any argument containing a space.
  */
 export function shimScript(file) {
   try {

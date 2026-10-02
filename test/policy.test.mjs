@@ -31,7 +31,7 @@ test("an explicit user override beats Jev", () => {
 
 test("detectOverride only fires on a real instruction", () => {
   assert.equal(detectOverride("switch to opus"), "opus");
-  assert.equal(detectOverride("use luna"), "haiku");
+  assert.equal(detectOverride("use haiku"), "haiku");
   assert.equal(detectOverride("use the strong model"), "opus");
   assert.equal(detectOverride("Use Claude Haiku for this one"), "haiku");
   assert.equal(detectOverride("the opus of his career"), null);
@@ -44,7 +44,6 @@ test("detectOverride ignores ordinary prose that mentions a tier word", () => {
     "the test only fails on fast CI runners",
     "write tests with long input strings",
     "turn on fast refresh in vite",
-    "merge with sol branch",
     "refactor this to rely on strong typing",
     "use haiku-style commit messages",
     "use long variable names",
@@ -61,7 +60,7 @@ test("keeps the current model when Jev is unreachable", () => {
 });
 
 test("ignores a tier name Jev invented", () => {
-  assert.equal(decide({ ...base, jev: sure("gpt-9") }).tier, "sonnet");
+  assert.equal(decide({ ...base, jev: sure("mystery-9") }).tier, "sonnet");
 });
 
 test("an unsure pick of Opus runs one tier lower, on the default", () => {

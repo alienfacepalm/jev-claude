@@ -16,7 +16,7 @@ test("a date suffix or a context tag is not part of the version", () => {
 });
 
 test("anything that is not a Claude model id has no short name", () => {
-  assert.equal(shortName("gpt-5.6-sol"), null);
+  assert.equal(shortName("mystery-9"), null);
   assert.equal(shortName("jev-router"), null);
   assert.equal(shortName(undefined), null);
 });

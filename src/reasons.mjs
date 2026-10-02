@@ -8,13 +8,16 @@
  * their own wording.
  *
  * `short` is for the status line, which has one line to share with the model, the agents, the
- * directory and the context gauge: a few words, lower case, no punctuation. `long` is for the
- * panel, which can afford a sentence and should answer "why am I on this model" outright.
+ * directory and the context gauge: a few words, lower case, no punctuation. It is only set where
+ * the person would otherwise be surprised or needs to act (the router is down, the tier is not on
+ * their account, a downgrade was held back); otherwise it is null and the line stays quiet.
+ * `long` is for the panel, which can afford a sentence and should answer "why am I on this
+ * model" outright, so every reason has one.
  */
 const REASONS = [
   {
     match: "override",
-    short: "you asked for it",
+    short: null, // the person just typed the model name; echoing it back tells them nothing
     long: "you named this model in the prompt",
   },
   {
@@ -24,7 +27,8 @@ const REASONS = [
   },
   {
     match: "low-confidence-default",
-    short: "router unsure",
+    // The confidence percentage is already on the line, and there is nothing to do about it.
+    short: null,
     long: "the router was unsure, so this ran one tier below its pick, and no lower than the default model",
   },
   {
