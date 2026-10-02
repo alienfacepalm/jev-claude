@@ -19,7 +19,7 @@
     "prepublishOnly": "pnpm test"
   },
   "files": [
-    ".claude/skills",
+    ".claude/skills/jev-explain",
     "bin",
     "skills",
     "src",

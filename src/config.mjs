@@ -172,15 +172,27 @@ const GUIDANCE = {
     signals: ["Rename, reformat, comment, or run one obvious command"],
     not_for: "Design judgement or multi-file reasoning.",
   },
+  // Sonnet and Opus are described from measurements at their configured efforts (Sonnet high, Opus
+  // medium), published September 2026 by Anthropic and Artificial Analysis. Opus scored higher on
+  // every benchmark: by 5-15 points on agentic coding, by 1-2 on knowledge work. Sonnet cost less
+  // per task, but 10-50% less rather than half, because it spends more tokens at high effort.
   sonnet: {
-    what: "Everyday coding and agent work, including most of it: a capable model, not a fallback.",
-    signals: ["Implement a specified function, test existing behaviour, or fix an understood local bug"],
-    not_for: "Open-ended architecture, subtle concurrency, or unknown-cause debugging.",
+    what:
+      "Well-scoped everyday work, and documents and knowledge work, where it lands within a point or two of Opus for less.",
+    signals: [
+      "Implement a specified function or change, add tests, or fix a bug whose cause is already known",
+      "Write or edit documents, specs, summaries, or analysis",
+    ],
+    not_for:
+      "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-15 points higher on agentic coding.",
   },
   opus: {
-    what: "Hard reasoning, ambiguity, or high blast radius - and twice the price of sonnet.",
-    signals: ["Unknown-cause debugging, cross-module design, security, auth, concurrency, or migrations"],
-    not_for: "Routine work with a clear implementation, which sonnet does as well for half the cost.",
+    what:
+      "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet - at only somewhat more per task, since it uses fewer tokens.",
+    signals: [
+      "Unknown-cause or intermittent bugs, multi-step changes across a codebase, cross-module design, API or behaviour-preserving changes, security, auth, concurrency, or migrations",
+    ],
+    not_for: "Well-scoped changes and document or knowledge work, where Sonnet does nearly as well for less.",
   },
   // From Anthropic's model guidance: Fable is the step up for the hardest long-running agentic and
   // research work, and for work where Opus at higher effort still falls short; Opus stays the
@@ -202,11 +214,21 @@ const GUIDANCE = {
   },
 };
 
+// Per-task figures are from the September 2026 measurements above; Haiku and Fable have no
+// published per-task comparison, so only their per-token price is stated.
+const COST = {
+  haiku: "$1 / $5 per million input / output tokens; the cheapest, but it does no reasoning",
+  sonnet: "$2 / $10 per million tokens; at its effort, about 10-50% less per completed task than Opus",
+  opus: "$4 / $20 per million tokens, but it uses fewer tokens: about 1.1-1.9x Sonnet's cost per completed task, not 2x",
+  fable: "$10 / $50 per million tokens; the most expensive by far",
+};
+
 /** Build a Jev choice from the exact models available to this account and CLI. */
 export const questionForModels = (models) =>
   choice(
     [
       "Pick the cheapest exact model that can fully complete this coding request in one pass, without retrying on a stronger model.",
+      "When you are unsure whether a cheaper model would get it right, pick the stronger one: a failed attempt wastes the whole turn and is rerun anyway, so it costs more than the difference. Speed does not matter.",
       "Each tier is offered as its newest version only. Judge required reasoning, not requested reply length.",
       "Reasoning effort is set per tier and is not something to choose between; judge only which model the work needs.",
       "Changing tier mid-conversation discards the prompt cache and re-reads the whole history, so prefer the current model where the work has not changed shape.",
@@ -216,9 +238,10 @@ export const questionForModels = (models) =>
         id,
         {
           model: description ?? id,
-          // What the choice costs, so "cheapest sufficient" is a judgement with a number in it
-          // rather than an ordering Jev has to assume.
-          cost: priceOf(tier) ? `$${priceOf(tier)} per million input tokens` : undefined,
+          // What the choice costs per completed task, so "cheapest sufficient" is a judgement with a
+          // number in it. Per-token prices alone mislead: Opus is twice Sonnet's per token but uses
+          // fewer tokens, so the per-task gap is much smaller.
+          cost: COST[tier],
           ...GUIDANCE[tier],
         },
       ]),

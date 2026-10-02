@@ -258,6 +258,18 @@ The test suite covers shared policy, both request formats, model rewriting, capa
 handling, settings restoration, Codex authentication forwarding, native model-picker
 injection, and decision display.
 
+### Calibrating for new models
+
+`node scripts/calibrate.mjs --runs 2` asks the real Jev about the labelled prompts in
+`scripts/calibration-cases.mjs` and reports how many land on the intended tier, with Jev's
+confidence. Run it before and after any change to the tier guidance, costs, effort, or thresholds
+in `src/config.mjs`, and keep a change only when the score holds.
+
+When a new Claude model ships, run `/jev-calibrate` in a `jev-claude` session. It checks
+Anthropic's model notes and published per-task measurements, updates `src/config.mjs`, and
+measures each change with the script above. It runs only when invoked and is not part of the
+published package.
+
 ## Limitations
 
 - The user's prompt text is sent to TypeSafe for the routing decision. Nothing else is.
