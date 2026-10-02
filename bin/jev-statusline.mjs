@@ -41,7 +41,7 @@ function mainLine(entry) {
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${color}${entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
 let routed = `${DIM}jev: waiting for first prompt${RESET}`;
