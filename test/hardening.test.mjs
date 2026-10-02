@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync, copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startProxy } from "../src/proxy.mjs";
@@ -220,6 +220,17 @@ test("a project's .env may only set jev's own keys", () => {
   assert.equal(child.JEV_API_KEY, undefined);
   assert.equal(child.TYPESAFE_API_KEY, undefined);
   assert.equal(child.PATH, "/bin");
+});
+
+test("a blank key in a copied .env.example does not hide the real one", () => {
+  const cwd = mkdtempSync(join(tmpdir(), "jev-env-cwd-"));
+  const home = mkdtempSync(join(tmpdir(), "jev-env-home-"));
+  copyFileSync(new URL("../.env.example", import.meta.url), join(cwd, ".env"));
+  writeFileSync(join(home, ".jev-router.env"), "JEV_API_KEY=from-home\n");
+
+  const env = loadEnv({ cwd, home, env: {} });
+  assert.equal(env.JEV_API_KEY, "from-home");
+  assert.equal(env.JEV_ALLOW_FABLE, undefined, "commented-out settings stay unset");
 });
 
 /** A directory holding an npm-style `name.cmd` shim, its script, and a `.ps1` beside it. */

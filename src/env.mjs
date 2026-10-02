@@ -43,7 +43,9 @@ export function loadEnv({ cwd = process.cwd(), home = homedir(), env = process.e
     ...Object.entries(read(join(home, ".jev-router.env"))),
     ...Object.entries(read(join(home, ".jev-claude.env"))),
   ]) {
-    env[key] ??= value;
+    // An empty value is a setting left blank, as in a copied .env.example, and must not hide a
+    // real one further down the list.
+    if (value !== "") env[key] ??= value;
   }
   return env;
 }

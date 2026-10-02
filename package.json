@@ -5,10 +5,10 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gargpratyush/jev-router.git"
+    "url": "git+https://github.com/alienfacepalm/jev-claude.git"
   },
-  "homepage": "https://github.com/gargpratyush/jev-router#readme",
-  "bugs": "https://github.com/gargpratyush/jev-router/issues",
+  "homepage": "https://github.com/alienfacepalm/jev-claude#readme",
+  "bugs": "https://github.com/alienfacepalm/jev-claude/issues",
   "bin": {
     "jev-claude": "bin/jev-claude.mjs",
     "jev-codex": "bin/jev-codex.mjs",
@@ -23,7 +23,8 @@
     "bin",
     "skills",
     "src",
-    "README.md"
+    "README.md",
+    ".env.example"
   ],
   "keywords": [
     "claude",
@@ -43,5 +44,6 @@
   "license": "MIT",
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
-  }
+  },
+  "packageManager": "pnpm@12.4.2"
 }
