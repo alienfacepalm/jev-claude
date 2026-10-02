@@ -1,0 +1,38 @@
+#!/bin/sh
+# Claude Code as Lattis launches it, routed through jev-router.
+#
+# Lattis finds agent CLIs by name on PATH and its AgentKind is a fixed five-variant enum
+# (Claude, Codex, Pi, OpenCode, Sawyer), so there is no sixth row to add: making its Claude
+# row route means standing in front of `claude` itself. Everywhere else - a terminal, a
+# script, Claude Code's own self-update - this hands straight to the real binary, so only
+# Lattis's sessions change.
+REAL="${JEV_REAL_CLAUDE:-$HOME/.local/bin/claude}"
+
+# jev-claude resolves `claude` from PATH and would find this shim again. The marker it is
+# given on the way in sends that second call to the real binary instead of looping.
+if [ -n "$JEV_SHIM" ]; then
+  exec "$REAL" "$@"
+fi
+
+# Lattis keeps a Claude sign-in of its own and points CLAUDE_CONFIG_DIR at it; its agent
+# token is the second signal, for a launch that does not carry the config dir.
+case "${CLAUDE_CONFIG_DIR:-}" in
+  *lattis*) ;;
+  *)
+    if [ -z "${LATTIS_AGENT_TOKEN:-}" ]; then
+      exec "$REAL" "$@"
+    fi
+    ;;
+esac
+
+# Run the entry point through node rather than exec'ing the `jev-claude` link: the repository
+# is checked out with CRLF line endings, which makes the kernel read the shebang as `node\r`
+# and refuse to start it. A missing entry point must not take Lattis's Claude row down with it.
+JEV_ENTRY="${JEV_ENTRY:-$HOME/.claude/jev-router/bin/jev-claude.mjs}"
+if [ ! -f "$JEV_ENTRY" ] || ! command -v node >/dev/null 2>&1; then
+  exec "$REAL" "$@"
+fi
+
+JEV_SHIM=1
+export JEV_SHIM
+exec node "$JEV_ENTRY" "$@"
