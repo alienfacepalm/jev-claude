@@ -138,10 +138,16 @@ export function applyTier(body, tierName, model = idOf(tierName)) {
  * `[major, minor]` read from a model id: `claude-opus-6` is [6, 0], `claude-opus-5-5` is [5, 5],
  * `claude-haiku-4-5-20251001` is [4, 5] (the date is not a minor version). Unreadable ids are
  * [0, 0], which sorts them last.
+ *
+ * Only an id that starts with `claude-<family>-` is read, optionally after a provider prefix
+ * such as `anthropic.`. The older naming put the version first (`claude-3-7-sonnet-20250219`),
+ * and reading the number after the family there took the release date for the version, which
+ * ranked a retired model as the newest of its tier.
  */
 export function versionOf({ id = "", tier } = {}) {
-  const family = tierSpec(tier)?.family ?? "";
-  const m = new RegExp(`${family}-(\\d+)(?:-(\\d{1,2})(?!\\d))?`).exec(id);
+  const family = tierSpec(tier)?.family;
+  if (!family) return [0, 0];
+  const m = new RegExp(`^(?:[\\w-]+\\.)?claude-${family}-(\\d+)(?:-(\\d{1,2})(?!\\d))?`).exec(id);
   return m ? [Number(m[1]), Number(m[2] ?? 0)] : [0, 0];
 }
 

@@ -512,6 +512,27 @@ test("a sub-agent pinned to its own model does not pause the session", () => {
   assert.equal(readStatus(sid).manual, true, "the main thread picking a model does pause it");
 });
 
+test("an id in the old version-first naming never outranks a current model", () => {
+  const catalog = [
+    { id: "claude-3-7-sonnet-20250219" },
+    { id: "claude-sonnet-5-5" },
+    { id: "claude-3-5-haiku-20241022" },
+    { id: "claude-haiku-4-5-20251001" },
+  ];
+  assert.deepEqual(
+    newestPerTier(claudeModels(catalog)).map((m) => m.id),
+    ["claude-sonnet-5-5", "claude-haiku-4-5-20251001"],
+  );
+  assert.deepEqual(newerThanCalibrated(catalog), [], "a retired model is not news");
+});
+
+test("a provider prefix does not hide the version", () => {
+  assert.deepEqual(
+    newestPerTier(claudeModels([{ id: "anthropic.claude-opus-5-5" }, { id: "anthropic.claude-opus-6" }])).map((m) => m.id),
+    ["anthropic.claude-opus-6"],
+  );
+});
+
 test("flags a model newer than the router was calibrated for, and nothing else", () => {
   assert.deepEqual(newerThanCalibrated([]), [], "no catalog yet: nothing to report");
   assert.deepEqual(

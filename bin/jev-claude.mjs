@@ -10,7 +10,7 @@ import { LOG_FILE } from "../src/log.mjs";
 import { loadEnv, childEnv } from "../src/env.mjs";
 import { resolveCommand, launchSpec, spawnSpec } from "../src/launch.mjs";
 import { SETTINGS_FILE, writePrivate } from "../src/status.mjs";
-import { shouldOffer, wasOffered, markOffered, askYesNo } from "../src/first-run.mjs";
+import { shouldOffer, shadowsSkill, wasOffered, markOffered, askYesNo } from "../src/first-run.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -97,16 +97,22 @@ if (
     args: process.argv.slice(2),
     interactive: Boolean(process.stdin.isTTY && process.stdout.isTTY),
     offered: wasOffered(),
+    // A repository with its own skill of that name would be what runs on the user's "yes", so
+    // the offer waits for a launch from somewhere else.
+    shadowed: shadowsSkill(process.cwd(), ROOT),
   })
 ) {
-  const accepted = await askYesNo(
+  const answer = await askYesNo(
     "[jev] First run: check your Jev Router setup now with /jev-calibrate?\n" +
       "[jev] It only reads your setup and changes nothing, using a little of your Claude usage. [Y/n] ",
   );
-  markOffered(accepted);
+  // Ctrl+C at the prompt stops the launch, as it would anywhere else in a terminal. No answer at
+  // all (the input closed) is not a decision, so nothing is recorded and the offer comes back.
+  if (answer === "interrupt") process.exit(130);
+  if (answer !== null) markOffered(answer);
   // `check` keeps it to the report even in the router's own repository, where /jev-calibrate
   // would otherwise go on to re-tune: the offer promised to change nothing.
-  if (accepted) args.unshift("/jev-calibrate check");
+  if (answer === true) args.unshift("/jev-calibrate check");
 }
 
 if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
