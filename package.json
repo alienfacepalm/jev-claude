@@ -1,6 +1,6 @@
 {
   "name": "jev-router",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Runs coding CLIs and routes each turn to the cheapest sufficient model using TypeSafe Jev",
   "type": "module",
   "repository": {
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\"",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "pnpm test"
   },
   "files": [
     ".claude/skills",

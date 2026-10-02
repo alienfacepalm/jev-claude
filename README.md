@@ -17,10 +17,10 @@ Requires Node.js 20.12+ and at least one supported CLI:
 [Claude Code](https://code.claude.com/docs/en/setup) or
 [OpenAI Codex](https://developers.openai.com/codex/cli).
 
-### 1. npm package
+### 1. Package
 
 ```bash
-npm install -g jev-router
+pnpm add -g jev-router
 echo "JEV_API_KEY=..." > ~/.jev-router.env
 ```
 
@@ -29,8 +29,8 @@ echo "JEV_API_KEY=..." > ~/.jev-router.env
 ```bash
 git clone https://github.com/gargpratyush/jev-router.git
 cd jev-router
-npm install
-npm link
+pnpm install
+pnpm link --global
 echo "JEV_API_KEY=..." > ~/.jev-router.env
 ```
 
@@ -58,20 +58,20 @@ jev-codex resume --last
 jev-codex exec "fix the failing test"
 ```
 
-For a local checkout, `npm link` installs both commands. Without it, run
+For a local checkout, `pnpm link --global` installs both commands. Without it, run
 `node bin/jev-claude.mjs` or `node bin/jev-codex.mjs`.
 
 ## Claude Code interface
 
-![Jev Router in the Claude Code model picker](docs/model-picker.png)
-
 `jev-claude` launches Claude Code with **Jev Router** selected in `/model`. Selecting another
 model pauses routing; selecting **Jev Router** resumes it.
 
-The injected status line shows the model used for the last turn:
+The injected status line shows the model used for the last turn, Jev's confidence, and why
+when the decision was not simply Jev's pick. Sub-agents running on their own models follow `⤷`:
 
 ```text
-⚡ haiku p=0.98 · my-project · 8% context
+claude-haiku-4-5-20251001 (98%) · my-project · 8% context
+claude-opus-5-5 (91%) (keeping the cache) · ⤷ haiku,sonnet · my-project · 34% context
 ⏸ manual Opus 4.6 · my-project · 21% context
 ```
 
@@ -134,11 +134,10 @@ file with 600). Files not updated for 7 days are deleted automatically, and the 
 may also remove them during normal temporary-file cleanup.
 
 > Choosing a model with `Enter` can save it as Claude Code's default. `jev-claude` restores
-> the previous default on exit so `jev-router` cannot break plain `claude`.
+> the previous default on exit, including when the terminal is closed, so `jev-router` cannot
+> break plain `claude`. If a session is killed outright, the next `jev-claude` run restores it.
 
 ## OpenAI Codex interface
-
-![Jev Router in the OpenAI Codex model picker](docs/codex-model-picker.png)
 
 `jev-codex` launches Codex with a temporary **Jev Router** provider and selects `jev-router`.
 The native `/model` picker still contains the models available to the account. Selecting a
@@ -190,7 +189,8 @@ One Jev call per fresh user turn selects a shared abstract tier:
 
 `src/policy.mjs` then applies these rules:
 
-- explicit requests such as `use opus`, `use luna`, or `use strong` win;
+- explicit requests such as `use opus`, `switch to luna`, or `use the strong model` win;
+  a tier word in ordinary prose (`replace this with long polling`) is not a request;
 - failure, timeout, or an unrecognised Jev answer keeps the current model;
 - low confidence never downgrades and caps upgrades at the balanced tier;
 - large conversations refuse downgrades that would waste more prompt-cache work than they save;
@@ -207,7 +207,7 @@ sub-agents are pinned separately. Routing is fail-open: Jev failure never blocks
 | `JEV_API_KEY` | Both | Enables routing. `TYPESAFE_API_KEY` also works. |
 | `JEV_ALLOW_FABLE` | Both | Enables the opt-in long tier. |
 | `JEV_DEBUG` | Both | Logs decisions and rewrites to `~/.jev-claude.log` in interactive sessions. |
-| `JEV_DUMP` | Both | Dumps request bodies for debugging wire-format changes. |
+| `JEV_DUMP` | Both | Dumps request bodies (whole conversations) for debugging wire-format changes. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
 | `JEV_NO_STATUSLINE` | Claude | Disables the injected Claude status line. |
 | `JEV_CODEX_FAST_MODEL` | Codex | Fast model; defaults to `gpt-5.6-luna`. |
 | `JEV_CODEX_BALANCED_MODEL` | Codex | Balanced model; defaults to `gpt-5.6-terra`. |
@@ -216,6 +216,13 @@ sub-agents are pinned separately. Routing is fail-open: Jev failure never blocks
 
 Existing environment variables have highest precedence, followed by `.env` in the launch
 directory, `~/.jev-router.env`, and the legacy `~/.jev-claude.env`.
+
+The launch directory is often someone else's repository, so its `.env` may set only
+`JEV_API_KEY`, `TYPESAFE_API_KEY`, `JEV_DEBUG`, `JEV_ALLOW_FABLE`, `JEV_NO_STATUSLINE`, and
+the `JEV_CODEX_*_MODEL` variables. Anything that could redirect traffic or run code, such as
+`ANTHROPIC_BASE_URL`, `TYPESAFE_BASE_URL`, or `NODE_OPTIONS`, is ignored there; set it in your
+shell or in `~/.jev-router.env`. The Jev key itself is removed from the environment Claude Code
+and Codex run with.
 
 Tier definitions, Jev's question, confidence thresholds, and timeouts live in `src/config.mjs`.
 Both launchers send Jev the exact models in the signed-in account's native catalog, so model
@@ -237,11 +244,11 @@ ids are used only until the CLI fetches its catalog.
 ## Development
 
 ```bash
-npm install
+pnpm install
 echo "JEV_API_KEY=..." > .env
 
-npm test
-node test/live-routing.mjs
+pnpm test
+node scripts/live-routing.mjs
 node bin/jev-claude.mjs -p "what is 2+2?"
 node bin/jev-codex.mjs exec "what is 2+2?"
 ```
@@ -269,7 +276,7 @@ For a pull request:
 1. Open an issue first - all PRs by contributors should be linked with an approved issue. Explain the problem and validation in the issue description.
 2. Fork the repository and create a focused branch from `master`.
 3. Make the smallest change that solves the problem.
-4. Run `npm test` and include tests for non-trivial behavior changes.
+4. Run `pnpm test` and include tests for non-trivial behavior changes.
 5. Claude/Copilot/Codex shall not be the contributors. 
 
 Please do not commit API keys or other secrets. All contributions require review, and only the
