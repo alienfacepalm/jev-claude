@@ -3,6 +3,10 @@
 // this prints. See https://code.claude.com/docs/en/statusline
 import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
+import { shortName } from "../src/model-names.mjs";
+
+// Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
+const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
@@ -47,14 +51,15 @@ if (main?.manual || (!main && status?.manual)) {
 }
 
 // Sub-agents run in parallel and each gets its own model, which is the whole point of showing
-// them: a sub-agent on Haiku should not look like the main thread dropping to Haiku. Tier
-// names rather than model ids, because three full ids do not fit on one line.
+// them: a sub-agent on Haiku should not look like the main thread dropping to Haiku. Short names
+// with the version ("Opus 5.5") rather than full ids, because three full ids do not fit on one
+// line; the tier name is the fallback for a model id that does not parse.
 let agents = "";
 if (subagents.length) {
   const shown = subagents.slice(0, 3);
   const names = shown.map((a) => {
-    const color = COLOR[a.tier] ?? "";
-    return `${color}${a.manual ? "⏸" : ""}${a.tier ?? a.model ?? "?"}${RESET}`;
+    const color = COLOR[a.tier ?? tierOf(a.model)] ?? "";
+    return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
   agents = ` ${DIM}·${RESET} ${DIM}⤷${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
