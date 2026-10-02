@@ -1,4 +1,13 @@
-import { chmodSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -16,17 +25,32 @@ const FILE_MODE = 0o600;
 export const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 let pruned = false;
 
+// The --settings file jev-claude hands Claude Code. Lives here so it gets the same private
+// directory, and is never pruned: a session can outlive the stale cutoff.
+export const SETTINGS_FILE = join(DIR, "settings.json");
+
 const fileFor = (sessionId) => join(DIR, `${sessionId.replace(/[^\w-]/g, "")}.json`);
+
+/**
+ * Writes `text` to `file` inside the status directory, owner-only.
+ *
+ * Written to a temporary name and renamed into place, so the status line, which reads these
+ * files on every redraw, never sees one half-written and drops back to "waiting".
+ */
+export function writePrivate(file, text) {
+  ensureDir();
+  const temp = `${file}.${process.pid}.tmp`;
+  writeFileSync(temp, text, { mode: FILE_MODE });
+  renameSync(temp, file);
+  // `mode` only applies on creation; tighten files written by earlier versions too.
+  chmodSync(file, FILE_MODE);
+}
 
 /** Publish the latest routing decision so the status line can display it. */
 export function writeStatus(sessionId, status) {
   if (!sessionId) return;
   try {
-    ensureDir();
-    const file = fileFor(sessionId);
-    writeFileSync(file, JSON.stringify(status), { mode: FILE_MODE });
-    // `mode` only applies on creation; tighten files written by earlier versions too.
-    chmodSync(file, FILE_MODE);
+    writePrivate(fileFor(sessionId), JSON.stringify(status));
     if (!pruned) {
       pruned = true;
       pruneStale();
@@ -151,11 +175,36 @@ export function readStatus(sessionId) {
   }
 }
 
-function ensureDir() {
+/**
+ * Creates the status directory, owner-only. Directories created by earlier versions were
+ * world-readable. chmod throws if another user owns the directory, as they would if they had
+ * created it first in a shared /tmp, so every caller's write fails and is skipped rather than
+ * landing somewhere that user controls.
+ */
+export function ensureDir() {
   mkdirSync(DIR, { recursive: true, mode: DIR_MODE });
-  // Directories created by earlier versions were world-readable. chmod fails if another user
-  // owns the directory, in which case the write below fails too and status is skipped.
   chmodSync(DIR, DIR_MODE);
+}
+
+let dumped = 0;
+
+/**
+ * Saves a request body for diagnosing wire-format changes (`JEV_DUMP`). `1` or `true` files it
+ * in the private status directory; any other value is used as a path prefix, as before. Bodies
+ * hold the whole conversation, so they are owner-only either way, and numbered so parallel
+ * sub-agents in the same millisecond do not overwrite each other.
+ */
+export function dumpBody(body, setting = process.env.JEV_DUMP) {
+  if (!setting) return null;
+  const prefix = /^(1|true|yes)$/i.test(setting) ? join(DIR, "dump") : setting;
+  const file = `${prefix}.${Date.now()}-${dumped++}.json`;
+  try {
+    if (prefix.startsWith(DIR)) ensureDir();
+    writeFileSync(file, JSON.stringify(body, null, 2), { mode: FILE_MODE });
+    return file;
+  } catch {
+    return null;
+  }
 }
 
 /** Delete status files untouched for `maxAgeMs`. Runs once per process on the first write. */
@@ -163,7 +212,7 @@ export function pruneStale(maxAgeMs = STALE_AFTER_MS, now = Date.now()) {
   let removed = 0;
   try {
     for (const name of readdirSync(DIR)) {
-      if (!name.endsWith(".json")) continue;
+      if (!name.endsWith(".json") || name === "settings.json") continue;
       const file = join(DIR, name);
       try {
         if (now - statSync(file).mtimeMs > maxAgeMs) {

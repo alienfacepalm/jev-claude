@@ -229,6 +229,14 @@ test("reads a text block prompt as a new turn", () => {
   assert.equal(newTurnPrompt(body), "fix the bug");
 });
 
+test("hook context after the prompt does not hide the turn", () => {
+  const body = withTools([
+    { role: "user", content: "refactor the parser" },
+    { role: "system", content: [{ type: "text", text: "SessionStart hook additional context: ..." }] },
+  ]);
+  assert.equal(newTurnPrompt(body), "refactor the parser");
+});
+
 test("ignores a tool_result continuation mid-turn", () => {
   const body = withTools([
     { role: "user", content: "fix the bug" },

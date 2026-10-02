@@ -2,20 +2,44 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { AUTO_MODEL } from "./config.mjs";
+import { STATUS_DIR, ensureDir } from "./status.mjs";
 
 export const USER_SETTINGS = join(homedir(), ".claude", "settings.json");
 
 /**
- * The model saved as the user's default, ignoring a sentinel left behind by a session that
- * did not exit cleanly, which is not a preference worth restoring.
+ * Where the model from before the last session is kept, so a session that was killed before it
+ * could clean up does not cost the user their saved default on the next run.
  */
-export function readSavedModel(file = USER_SETTINGS) {
+export const SAVED_MODEL_MEMO = join(STATUS_DIR, "saved-model.json");
+
+const memoOf = (memo) => {
   try {
-    const model = JSON.parse(readFileSync(file, "utf8")).model;
-    return model === AUTO_MODEL ? undefined : model;
+    return JSON.parse(readFileSync(memo, "utf8")).model;
   } catch {
     return undefined;
   }
+};
+
+/**
+ * The model saved as the user's default. A sentinel left behind by a session that did not exit
+ * cleanly is not a preference, so it resolves to the model remembered from before that session.
+ * A real model is remembered for the same reason.
+ */
+export function readSavedModel(file = USER_SETTINGS, memo = SAVED_MODEL_MEMO) {
+  let model;
+  try {
+    model = JSON.parse(readFileSync(file, "utf8")).model;
+  } catch {
+    return undefined;
+  }
+  if (model === AUTO_MODEL) return memoOf(memo);
+  try {
+    if (memo === SAVED_MODEL_MEMO) ensureDir();
+    writeFileSync(memo, JSON.stringify({ model: model ?? null }), { mode: 0o600 });
+  } catch {
+    // Remembering is best effort; restoring still works for a clean exit.
+  }
+  return model;
 }
 
 /**
@@ -28,7 +52,7 @@ export function restoreSavedModel(previous, file = USER_SETTINGS) {
   try {
     const settings = JSON.parse(readFileSync(file, "utf8"));
     if (settings.model !== AUTO_MODEL) return false;
-    if (previous === undefined) delete settings.model;
+    if (previous == null) delete settings.model;
     else settings.model = previous;
     writeFileSync(file, `${JSON.stringify(settings, null, 2)}\n`);
     return true;

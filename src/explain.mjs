@@ -1,5 +1,22 @@
 import { agentView } from "./status.mjs";
 import { isNoChange, longReason } from "./reasons.mjs";
+import { tierOf } from "./config.mjs";
+import { codexTierOf } from "./codex-proxy.mjs";
+
+/**
+ * What Jev itself recommended, as a tier where the model is recognisable.
+ *
+ * Jev answers a question named `model` with an exact model id. Shown alongside the selected
+ * model, so a turn where policy overruled Jev (an unsure answer, a refused downgrade) shows two
+ * different answers rather than the selection twice. `model_tier` is what sessions recorded
+ * before the question was renamed.
+ */
+const recommendationOf = (status) => {
+  const answers = status.jev?.response?.answers;
+  const choice = answers?.model?.choice ?? answers?.model_tier?.choice;
+  if (!choice) return status.tier ?? "unknown";
+  return tierOf(choice) ?? codexTierOf(choice) ?? choice;
+};
 
 const WIDTH = 33;
 const row = (text = "") => `│ ${text.slice(0, WIDTH - 2).padEnd(WIDTH - 2)} │`;
@@ -58,14 +75,15 @@ export function formatExplanation(status) {
 
   const m = status.metrics ?? {};
   const request = status.jev?.request?.state;
-  const recommendation = status.jev?.response?.answers?.model_tier?.choice ?? status.tier ?? "unknown";
+  const recommendation = recommendationOf(status);
   return [
     `┌${"─".repeat(WIDTH)}┐`,
     row("Jev Router"),
     row(),
     row("Jev request"),
     ...wrapped("Prompt: ", status.prompt ?? "not recorded"),
-    row(`Current tier: ${(request?.session?.current_model ?? "unknown").toUpperCase()}`),
+    // Jev is told the exact model in use, not a tier name.
+    row(`Current model: ${(request?.session?.current_model ?? "unknown").toUpperCase()}`),
     row(`Context tokens: ${request?.session?.context_tokens ?? "unknown"}`),
     row(),
     row("Jev response"),

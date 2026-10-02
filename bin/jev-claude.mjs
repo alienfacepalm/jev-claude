@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync, accessSync, constants } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startProxy } from "../src/proxy.mjs";
 import { AUTO_MODEL } from "../src/config.mjs";
 import { readSavedModel, restoreSavedModel } from "../src/settings.mjs";
 import { LOG_FILE } from "../src/log.mjs";
+import { loadEnv, childEnv } from "../src/env.mjs";
+import { resolveCommand, launchSpec, spawnSpec } from "../src/launch.mjs";
+import { SETTINGS_FILE, writePrivate } from "../src/status.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -57,62 +59,26 @@ function statusLineArgs() {
       // No settings file, or unreadable; nothing to preserve.
     }
   }
-  // Passed as a file rather than inline JSON: on Windows the args go through a shell, and a
-  // JSON string containing its own quotes does not survive that.
+  // Passed as a file rather than inline JSON, which does not survive a Windows shell. The file
+  // tells Claude Code what command to run, so it lives in the owner-only status directory:
+  // in a shared /tmp, anyone able to rewrite it could run commands as this user.
   const command = `"${process.execPath}" "${join(HERE, "jev-statusline.mjs")}"`;
-  const file = join(tmpdir(), "jev-claude", "settings.json");
   try {
-    mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, JSON.stringify({ statusLine: { type: "command", command } }));
+    writePrivate(SETTINGS_FILE, JSON.stringify({ statusLine: { type: "command", command } }));
   } catch {
     return [];
   }
-  return ["--settings", file];
+  return ["--settings", SETTINGS_FILE];
 }
 
-// Existing environment variables win, followed by project-local, shared user-level, then
-// the legacy Claude-specific file.
-for (const file of [
-  join(process.cwd(), ".env"),
-  join(homedir(), ".jev-router.env"),
-  join(homedir(), ".jev-claude.env"),
-]) {
-  try {
-    process.loadEnvFile(file);
-  } catch {
-    // Missing or unreadable; the key may still come from the real environment.
-  }
-}
-
-/**
- * Finds the Claude Code executable on PATH. Resolving it here rather than leaning on the
- * shell means arguments are passed as an array (no quoting hazard, no DEP0190 warning) and
- * a missing install produces a useful message instead of a shell error. Older npm-based
- * installs are a `.cmd` shim, which Node still refuses to run without a shell.
- */
-function resolveClaude() {
-  const win = process.platform === "win32";
-  const exts = win ? (process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD").split(";") : [""];
-  for (const dir of (process.env.PATH ?? "").split(win ? ";" : ":")) {
-    if (!dir) continue;
-    for (const ext of exts) {
-      const file = join(dir.replace(/^"|"$/g, ""), `claude${ext}`);
-      try {
-        accessSync(file, constants.X_OK);
-        return { file, shell: /\.(cmd|bat)$/i.test(file) };
-      } catch {
-        // Not here; keep looking.
-      }
-    }
-  }
-  return null;
-}
+loadEnv();
 
 const args = process.argv.slice(2);
 args.push("--add-dir", ROOT);
-const env = { ...process.env };
+// The Jev key is jev's alone; Claude Code and every command it runs go without it.
+const env = childEnv();
 
-const claude = resolveClaude();
+const claude = resolveCommand("claude");
 if (!claude) {
   process.stderr.write(
     "[jev] Claude Code is not installed, or `claude` is not on your PATH.\n" +
@@ -145,19 +111,31 @@ if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
 } else {
   process.stderr.write(
     `[jev] no JEV_API_KEY found - starting Claude Code without routing\n` +
-      `[jev] set it in ${join(homedir(), ".jev-claude.env")} to enable routing\n`,
+      `[jev] set it in ${join(homedir(), ".jev-router.env")} to enable routing\n`,
   );
 }
 
-// On Windows a `.cmd` shim still needs a shell; a real executable does not.
-const child = spawn(claude.file, claude.shell ? args.map((a) => (/\s/.test(a) ? `"${a}"` : a)) : args, {
-  stdio: "inherit",
-  shell: claude.shell,
-  env,
-});
+const child = spawnSpec(launchSpec(claude), args, { stdio: "inherit", env });
 
 child.on("error", (err) => {
   process.stderr.write(`[jev] could not start Claude Code: ${err.message}\n`);
   process.exit(1);
 });
 child.on("exit", (code, signal) => process.exit(signal ? 1 : (code ?? 0)));
+
+// Closing the terminal (SIGHUP) or a `kill` (SIGTERM) would otherwise end this process without
+// running the "exit" handler, leaving "jev-router" saved as the default model and the proxy gone
+// from under Claude Code. Pass the signal on and leave through the child's exit instead.
+for (const signal of ["SIGHUP", "SIGTERM"]) {
+  process.on(signal, () => {
+    try {
+      child.kill(signal);
+    } catch {
+      // Already gone; its exit handler is on its way.
+    }
+    setTimeout(() => process.exit(1), 5000).unref();
+  });
+}
+// The terminal delivers Ctrl+C to Claude Code as well, and it decides whether that ends the
+// session. Dying here on it would pull the proxy out from under a session that carries on.
+process.on("SIGINT", () => {});

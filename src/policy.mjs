@@ -48,7 +48,8 @@ export function decide({ prompt, jev, current, available, contextTokens = 0 }) {
 
   let target = jev.choice;
 
-  if (jev.confidence < THRESHOLDS.minConfidence) {
+  // Written so a missing or non-numeric confidence counts as unsure rather than as certain.
+  if (!(jev.confidence >= THRESHOLDS.minConfidence)) {
     // The answer is not acted on at all: an unsure turn lands on the default, or stays where it
     // is when that is already stronger. Fable is out of reach this way for the same reason it is
     // never stepped up into - it bills extra, so only an explicit ask or a confident answer

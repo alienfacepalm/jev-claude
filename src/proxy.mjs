@@ -1,7 +1,7 @@
 import http from "node:http";
 import https from "node:https";
 import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { pipeline } from "node:stream";
 import {
   TIERS,
   tierOf,
@@ -13,11 +13,38 @@ import {
 } from "./config.mjs";
 import { askJev } from "./router.mjs";
 import { decide } from "./policy.mjs";
-import { log } from "./log.mjs";
-import { writeDecision, markManual } from "./status.mjs";
+import { debug } from "./log.mjs";
+import { writeDecision, markManual, dumpBody } from "./status.mjs";
 
 const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
-const debug = (line) => process.env.JEV_DEBUG && log(line);
+const TYPESAFE_BASE_URL = "https://api.typesafe.ai";
+
+// Hop-by-hop headers describe the client's connection to the proxy, not the proxy's to the API.
+const HOP_BY_HOP = ["content-length", "transfer-encoding", "connection", "keep-alive"];
+
+/**
+ * Headers for the upstream request. The body may have been rewritten, so its length is set from
+ * what is actually sent rather than dropped, which would make every request chunked.
+ */
+export function upstreamHeaders(incoming, host, body) {
+  const headers = { ...incoming, host };
+  for (const name of HOP_BY_HOP) delete headers[name];
+  if (body.length) headers["content-length"] = String(body.length);
+  return headers;
+}
+
+/**
+ * Starts the TLS handshake with Jev before the first prompt needs it. Measured at ~0.9s on a
+ * cold first call, which otherwise lands inside the user's first turn. The SDK uses the global
+ * fetch, whose connection pool this warms; a failure here costs nothing.
+ */
+export function prewarmJev(base = process.env.TYPESAFE_BASE_URL ?? TYPESAFE_BASE_URL) {
+  try {
+    fetch(new URL(base).origin, { method: "HEAD" }).catch(() => {});
+  } catch {
+    // A malformed base URL fails properly on the first real call instead.
+  }
+}
 
 /**
  * Claude Code converts draft-04 relics in MCP tool schemas before sending them first-party,
@@ -54,7 +81,10 @@ export function sanitizeSchema(node) {
  */
 export function newTurnPrompt(body) {
   if (!Array.isArray(body?.tools) || body.tools.length === 0) return null; // auxiliary call
-  const last = body?.messages?.[body.messages.length - 1];
+  // Hook output, such as a SessionStart hook's context, arrives as a `system` message after the
+  // user's prompt. It is not a turn of its own, and treating it as the last message meant the
+  // first prompt of every session with a hook installed was never routed.
+  const last = [...(body?.messages ?? [])].reverse().find((m) => m?.role !== "system");
   if (!last || last.role !== "user") return null;
   let text;
   if (typeof last.content === "string") {
@@ -183,12 +213,6 @@ export function conversationKey(body) {
 }
 
 /**
- * Records the tier Claude Code is asking for and reports whether the user has taken manual
- * control. The first tier seen in a conversation is the baseline; any later change means the
- * user picked a model with /model, and an explicit choice must beat the router. Compared by
- * tier rather than exact model id, because Claude Code varies the id within a tier.
- */
-/**
  * A short human-readable name for a conversation, taken from its first message.
  *
  * `conversationKey` is a hash, which is useless in a status line. For a sub-agent the first
@@ -233,12 +257,8 @@ export function agentOf(body, mains) {
   return { key, label: agentLabel(body) || (main ? "main" : key), main };
 }
 
-export function observeModel(state, current) {
-  state.baseline ??= current;
-  if (current !== state.baseline) state.manual = true;
-  return state.manual;
-}
-
+// Conversations whose routing state is kept per proxy.
+const MAX_CONVERSATIONS = 50;
 
 export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = askJev } = {}) {
   // Tier routed for each conversation's turn in flight, reused by its follow-up requests and
@@ -247,12 +267,29 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
   const catalog = new Map();
   // First conversation key seen per session: the main thread, as opposed to its sub-agents.
   const mains = new Map();
-  const stateFor = (key) => {
+  /**
+   * The routing state for a conversation, kept least-recently-used first, and never evicting a
+   * main thread. The main thread is idle while its sub-agents run, so by recency alone it is
+   * exactly the entry a session with 50 sub-agents throws out, and its next tool continuation
+   * then jumped to the default tier mid-turn.
+   *
+   * `fallback` is the key the conversation had without a session id: some `claude -p` versions
+   * omit the metadata on the first request, and a later request that carries it must find the
+   * same state.
+   */
+  const stateFor = (key, fallback = null) => {
     let s = convos.get(key);
-    if (!s) {
-      if (convos.size > 50) convos.delete(convos.keys().next().value);
-      convos.set(key, (s = { tier: null }));
+    if (!s && fallback && convos.has(fallback)) {
+      s = convos.get(fallback);
+      convos.delete(fallback);
     }
+    if (s) convos.delete(key);
+    else if (convos.size >= MAX_CONVERSATIONS) {
+      const mainKeys = new Set(mains.values());
+      const oldest = [...convos.keys()];
+      convos.delete(oldest.find((k) => !mainKeys.has(k)) ?? oldest[0]);
+    }
+    convos.set(key, (s ??= { tier: null }));
     return s;
   };
 
@@ -260,18 +297,25 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
     // Claude Code probes the base URL before its first request.
     if (req.method === "HEAD") return res.writeHead(200).end();
 
+    // Claude Code drops a request when the user presses Esc. Unless that reaches the API, it
+    // keeps generating, and billing, the rest of a response nobody will read.
+    let upstream = null;
+    res.on("close", () => {
+      if (!res.writableFinished) upstream?.destroy();
+    });
+
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
     req.on("end", async () => {
       let out = Buffer.concat(chunks);
 
       if (/^\/v1\/messages/.test(req.url ?? "")) {
+        let body;
+        let state = null;
         try {
-          const body = JSON.parse(out.toString());
+          body = JSON.parse(out.toString());
           // Claude Code's request shape is undocumented and moves; JEV_DUMP captures it.
-          if (process.env.JEV_DUMP) {
-            writeFileSync(`${process.env.JEV_DUMP}.${Date.now()}.json`, JSON.stringify(body, null, 2));
-          }
+          dumpBody(body);
           body.tools?.forEach((t) => sanitizeSchema(t.input_schema));
 
           // Anything that is not the sentinel is a model the user chose, and an explicit
@@ -282,15 +326,17 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
             // Only a real agent turn reflects the user's choice. Claude Code's own auxiliary
             // calls carry no tools and must not flip the status line to manual mid-session,
             // nor appear as an agent of their own.
+            // Recorded once per turn: the choice cannot change between a turn's tool calls, and
+            // each record is a read and rewrite of the session's status file.
             if (body.tools?.length) {
               const agent = agentOf(body, mains);
               debug(`${agent.key} passthrough ${agent.main ? "main" : "sub"} ${body.model}`);
-              markManual(sessionOf(body), body.model, agent);
+              if (newTurnPrompt(body)) markManual(sessionOf(body), body.model, agent);
             }
           } else {
             const agent = agentOf(body, mains);
             const key = agent.key;
-            const state = stateFor(key);
+            state = stateFor(key, sessionOf(body) ? conversationKey({ ...body, metadata: undefined }) : null);
             // What the prompt cache was built on, which is what a downgrade would discard.
             const current = state.tier ?? "opus";
             const prompt = newTurnPrompt(body);
@@ -316,7 +362,10 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
                 jev: tierAnswer,
                 current,
                 available,
-                contextTokens,
+                // A conversation this proxy has not routed yet - a resumed session, a sub-agent
+                // handed a large brief - has nothing cached on any model here, so there is no
+                // cache for a downgrade to throw away.
+                contextTokens: state.tier ? contextTokens : 0,
               });
               const model =
                 shouldUseExactModel(reason, chosen?.tier, tier)
@@ -336,7 +385,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
               };
               debug(
                 `${key} ${agent.main ? "main" : `sub[${agent.label}]`} ` +
-                  `${jev ? `${jev.ms}ms p=${jev.confidence.toFixed(2)}` : "no-jev"} ` +
+                  `${jev ? `${jev.ms}ms p=${Number(jev.confidence).toFixed(2)}` : "no-jev"} ` +
                   `${current} -> ${tier} (${reason}) ctx~${contextTokens} | ${prompt.slice(0, 60)}`,
               );
             }
@@ -358,21 +407,30 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
           }
           out = Buffer.from(JSON.stringify(body));
         } catch (err) {
-          debug(`passthrough, could not process body: ${err.message}`);
+          debug(`could not process body: ${err.message}`);
+          // Whatever failed, the sentinel is not a model the API knows, and forwarding it is a
+          // certain 400 for the user's turn. The conversation's tier, or the safe default, is not.
+          if (isAuto(body?.model)) {
+            const tier = state?.tier ?? "opus";
+            applyTier(body, tier, state?.model ?? idOf(tier));
+            out = Buffer.from(JSON.stringify(body));
+          }
         }
       }
 
+      // The user gave up while Jev was being asked; there is nobody to send this turn for.
+      if (res.destroyed) return;
+
       const target = new URL(upstreamURL);
       const transport = target.protocol === "http:" ? http : https;
-      const headers = { ...req.headers, host: target.host };
-      delete headers["content-length"];
+      const headers = upstreamHeaders(req.headers, target.host, out);
       if (req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "")) {
         delete headers["accept-encoding"];
       }
       // Under JEV_DEBUG, ask for an uncompressed stream so the model the API reports can be
       // read back out of it. Not worth the bandwidth cost in normal operation.
       if (process.env.JEV_DEBUG) delete headers["accept-encoding"];
-      const upstream = transport.request(
+      upstream = transport.request(
         {
           hostname: target.hostname,
           port: target.port || undefined,
@@ -384,6 +442,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
           const isModels = req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "");
           if (isModels) {
             const chunks = [];
+            up.on("error", (e) => res.destroy(e));
             up.on("data", (chunk) => chunks.push(chunk));
             up.on("end", () => {
               const data = Buffer.concat(chunks);
@@ -415,12 +474,21 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
               debug(`${up.statusCode} served by ${m[1]}`);
             });
           }
-          up.pipe(res);
+          // Ties the two streams together both ways: a client that leaves stops the upstream
+          // read, and an upstream that drops mid-stream fails the client fast rather than
+          // leaving Claude Code waiting on a response that will never finish.
+          pipeline(up, res, (err) => {
+            if (err) debug(`stream ended early: ${err.message}`);
+          });
         },
       );
       upstream.on("error", (e) => {
+        // Destroyed on purpose after the client left; there is no one to tell.
+        if (res.destroyed) return;
         debug(`upstream error: ${e.message}`);
-        if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
+        // Mid-stream, an error body would be appended to an event stream as garbage.
+        if (res.headersSent) return void res.destroy(e);
+        res.writeHead(502, { "content-type": "application/json" });
         res.end(JSON.stringify({ type: "error", error: { message: e.message } }));
       });
       if (out.length) upstream.write(out);
@@ -428,6 +496,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
     });
   });
 
+  if (route === askJev) prewarmJev();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   return { port: server.address().port, close: () => server.close() };
 }

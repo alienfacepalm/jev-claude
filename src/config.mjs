@@ -106,19 +106,33 @@ const COMPLEXITY_SCALE = [
 
 export const COMPLEXITY_MAX_SCORE = COMPLEXITY_SCALE.length - 1;
 
-/** Phrases that mean "the human already decided", checked against the raw prompt. */
-export const OVERRIDE_PATTERNS = TIERS.map((t) => ({
-  tier: t.name,
-  re: new RegExp(
-    `\\b(?:use|switch to|with|on)\\s+(?:${{
-      haiku: "haiku|fast|luna",
-      sonnet: "sonnet|balanced|terra",
-      opus: "opus|strong|sol",
-      fable: "fable|long|astra",
-    }[t.name]})\\b`,
-    "i",
-  ),
-}));
+/**
+ * Phrases that mean "the human already decided", checked against the raw prompt.
+ *
+ * An override beats Jev outright, so a false match silently pins an ordinary prompt: "replace
+ * the loop with long polling" used to land on Fable, "help with fast fourier transforms" on
+ * Haiku. So it takes an instruction verb plus a model name (the Codex names too), and the
+ * generic words only when they say "model" or "tier". A hyphen after the name, as in
+ * "haiku-style", is a description rather than a model.
+ */
+const OVERRIDE_NAMES = {
+  haiku: { names: "haiku|luna", generic: "fast" },
+  sonnet: { names: "sonnet|terra", generic: "balanced" },
+  opus: { names: "opus|sol", generic: "strong" },
+  fable: { names: "fable|astra", generic: "long" },
+};
+
+export const OVERRIDE_PATTERNS = TIERS.map((t) => {
+  const { names, generic } = OVERRIDE_NAMES[t.name];
+  return {
+    tier: t.name,
+    re: new RegExp(
+      `\\b(?:use|switch to|switch over to|route to)\\s+(?:the\\s+)?(?:claude[-\\s])?` +
+        `(?:(?:${names})|${generic}\\s+(?:model|tier))(?![-\\w])`,
+      "i",
+    ),
+  };
+});
 
 export const QUESTIONS = {
   task_complexity: score(

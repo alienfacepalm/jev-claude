@@ -12,7 +12,7 @@ test("formats the last routing decision", () => {
     reason: "jev",
     jev: {
       request: { state: { session: { current_model: "haiku", context_tokens: 6200 } } },
-      response: { answers: { model_tier: { choice: "sonnet" } } },
+      response: { answers: { model: { choice: "claude-sonnet-5-5", confidence: 0.94 } } },
     },
     metrics: {
       taskComplexity: 0.82,
@@ -24,13 +24,32 @@ test("formats the last routing decision", () => {
 
   assert.match(output, /Task complexity     0\.82/);
   assert.match(output, /Prompt: Explain the router/);
-  assert.match(output, /Current tier: HAIKU/);
+  assert.match(output, /Current model: HAIKU/);
   assert.match(output, /Context tokens: 6200/);
   assert.match(output, /Recommended tier: SONNET/);
   assert.match(output, /Selected model: SONNET/);
   assert.match(output, /Confidence: 94%/);
   // The sentence wraps inside the box rather than being cut at its edge.
   assert.match(output, /Decision: the router's\s*│\n│ recommendation/);
+});
+
+test("shows Jev's own pick when policy overruled it", () => {
+  const output = formatExplanation({
+    tier: "opus",
+    model: "claude-opus-5-5",
+    confidence: 0.97,
+    reason: "downgrade-not-worth-cache-rebuild/no-change",
+    jev: { response: { answers: { model: { choice: "claude-haiku-4-5-20251001" } } } },
+  });
+  assert.match(output, /Recommended tier: HAIKU/);
+  assert.match(output, /Selected model: CLAUDE-OPUS-5-5/);
+});
+
+test("reads the recommendation from Codex and from sessions recorded before the rename", () => {
+  const codex = { tier: "opus", jev: { response: { answers: { model: { choice: "gpt-5.6-luna" } } } } };
+  assert.match(formatExplanation(codex), /Recommended tier: HAIKU/);
+  const old = { tier: "opus", jev: { response: { answers: { model_tier: { choice: "sonnet" } } } } };
+  assert.match(formatExplanation(old), /Recommended tier: SONNET/);
 });
 
 test("shows the concrete provider model when available", () => {

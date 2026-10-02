@@ -1,12 +1,13 @@
 import http from "node:http";
 import https from "node:https";
 import { createHash, randomUUID } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { pipeline } from "node:stream";
 import { availableTiers, shouldUseExactModel } from "./config.mjs";
 import { askJev } from "./router.mjs";
 import { decide } from "./policy.mjs";
-import { log } from "./log.mjs";
-import { writeDecision, writeStatus } from "./status.mjs";
+import { debug } from "./log.mjs";
+import { writeDecision, markManual, dumpBody } from "./status.mjs";
+import { upstreamHeaders, prewarmJev } from "./proxy.mjs";
 
 const CHATGPT_BASE_URL = "https://chatgpt.com/backend-api/codex";
 const API_BASE_URL = "https://api.openai.com/v1";
@@ -141,7 +142,7 @@ export const upstreamFor = (
 ) => /\/models(?:\?|$)/.test(path) || headers["chatgpt-account-id"] ? chatgptBaseURL : apiBaseURL;
 
 export function jevDecisionEvents({ tier, model = codexModelOf(tier), confidence, reason }) {
-  const detail = confidence == null ? reason : `${reason}, confidence ${confidence.toFixed(2)}`;
+  const detail = Number.isFinite(confidence) ? `${reason}, confidence ${confidence.toFixed(2)}` : reason;
   const id = `jev-${randomUUID()}`;
   const text = reason.startsWith("jev-unavailable")
     ? `[Jev] unavailable; using ${model}. Add JEV_API_KEY=... to ~/.jev-router.env and restart jev-codex.`
@@ -161,8 +162,13 @@ export function jevDecisionEvents({ tier, model = codexModelOf(tier), confidence
   return events.map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join("");
 }
 
-const debug = (line) => process.env.JEV_DEBUG && log(line);
 const upstreamPath = (base, path) => `${new URL(base).pathname.replace(/\/$/, "")}${path}`;
+
+// Conversations whose routing state is kept per proxy.
+const MAX_CONVERSATIONS = 50;
+// How much of a response is held back looking for the first event before giving up on
+// showing the routing decision and passing the stream through as it is.
+const MAX_INSPECT_BYTES = 64 * 1024;
 
 export async function startCodexProxy({
   chatgptBaseURL = CHATGPT_BASE_URL,
@@ -172,26 +178,49 @@ export async function startCodexProxy({
 } = {}) {
   const states = new Map();
   const models = new Map();
+  // Least recently used first and bounded, so a conversation still in use is not the one evicted
+  // and a long Codex session does not grow this without limit.
+  const stateOf = (key) => {
+    const state = states.get(key);
+    if (state) {
+      states.delete(key);
+      states.set(key, state);
+    }
+    return state;
+  };
+  const remember = (key, state) => {
+    states.delete(key);
+    if (states.size >= MAX_CONVERSATIONS) states.delete(states.keys().next().value);
+    states.set(key, state);
+  };
 
   const server = http.createServer((req, res) => {
+    // Codex drops a request when the user interrupts it. Unless that reaches the API, it keeps
+    // generating, and billing, the rest of a response nobody will read.
+    let upstream = null;
+    res.on("close", () => {
+      if (!res.writableFinished) upstream?.destroy();
+    });
+
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", async () => {
       let out = Buffer.concat(chunks);
       let routing;
       if (req.method === "POST" && /\/responses(?:\?|$)/.test(req.url ?? "")) {
+        let body;
+        let known;
         try {
-          const body = JSON.parse(out.toString());
-          if (process.env.JEV_DUMP) {
-            writeFileSync(`${process.env.JEV_DUMP}.${Date.now()}.json`, JSON.stringify(body, null, 2));
-          }
+          body = JSON.parse(out.toString());
+          dumpBody(body);
           if (body.model === CODEX_AUTO_MODEL) {
             const key = codexConversationKey(body);
+            known = stateOf(key);
             const candidates = codexModels(models).filter((model) =>
               availableTiers().includes(model.tier),
             );
             const available = [...new Set(candidates.map((model) => model.tier))];
-            const currentModel = states.get(key)?.model ?? modelForTier(candidates, "opus");
+            const currentModel = known?.model ?? modelForTier(candidates, "opus");
             const current = codexTierOf(currentModel) ?? "opus";
             const prompt = codexNewTurnPrompt(body);
             const explaining = prompt?.includes("<jev-explain>") || /^\$jev-explain\b/i.test(prompt ?? "");
@@ -206,7 +235,9 @@ export async function startCodexProxy({
                 jev: jev && { ...jev, choice: chosen?.tier },
                 current,
                 available,
-                contextTokens,
+                // Nothing is cached yet for a conversation this proxy has not routed, so there
+                // is no cache for a downgrade to throw away.
+                contextTokens: known ? contextTokens : 0,
               });
               tier = decision.tier;
               model =
@@ -215,7 +246,7 @@ export async function startCodexProxy({
                   : tier === current
                     ? currentModel
                     : modelForTier(candidates, tier);
-              states.set(key, { tier, model });
+              remember(key, { tier, model });
               routing = {
                 prompt,
                 tier,
@@ -233,20 +264,29 @@ export async function startCodexProxy({
           } else {
             const prompt = codexNewTurnPrompt(body);
             const explaining = prompt?.includes("<jev-explain>") || /^\$jev-explain\b/i.test(prompt ?? "");
-            if (prompt && !explaining) writeStatus(statusId, { manual: true, at: Date.now() });
+            // Keeps the routing history `$jev-explain` reads; a whole-file write blanked it.
+            if (prompt && !explaining) markManual(statusId, body.model);
           }
           out = Buffer.from(JSON.stringify(body));
         } catch (err) {
-          debug(`codex passthrough, could not process body: ${err.message}`);
+          debug(`codex could not process body: ${err.message}`);
+          // The sentinel is not a model the API knows; forwarding it fails the user's turn.
+          if (body?.model === CODEX_AUTO_MODEL) {
+            applyCodexTier(body, known?.tier ?? "opus", models, known?.model ?? codexModelOf("opus"));
+            out = Buffer.from(JSON.stringify(body));
+            routing = undefined;
+          }
         }
       }
+
+      // The user gave up while Jev was being asked; there is nobody to send this turn for.
+      if (res.destroyed) return;
 
       const base = upstreamFor(req.headers, req.url, chatgptBaseURL, apiBaseURL);
       const target = new URL(base);
       const transport = target.protocol === "http:" ? http : https;
-      const headers = { ...req.headers, host: target.host };
-      delete headers["content-length"];
-      const upstream = transport.request(
+      const headers = upstreamHeaders(req.headers, target.host, out);
+      upstream = transport.request(
         {
           hostname: target.hostname,
           port: target.port || undefined,
@@ -259,6 +299,7 @@ export async function startCodexProxy({
           const isModels = req.method === "GET" && /\/models(?:\?|$)/.test(req.url ?? "");
           if (isModels) {
             const body = [];
+            response.on("error", (err) => res.destroy(err));
             response.on("data", (chunk) => body.push(chunk));
             response.on("end", () => {
               let data = Buffer.concat(body);
@@ -279,38 +320,57 @@ export async function startCodexProxy({
           const inspectForDecision = routing && response.statusCode >= 200 && response.statusCode < 300;
           if (inspectForDecision) delete responseHeaders["content-length"];
           res.writeHead(response.statusCode, responseHeaders);
-          if (!inspectForDecision) {
-            response.pipe(res);
-            return;
-          }
-          let pending = "";
-          let inspected = false;
-          response.on("data", (chunk) => {
-            if (inspected) return void res.write(chunk);
-            pending += chunk.toString();
-            const end = pending.indexOf("\n\n");
-            if (end < 0) return;
-            const first = pending.slice(0, end + 2);
-            res.write(first);
-            const isSSE = /^(?:event|data):/m.test(first);
-            if (isSSE) res.write(jevDecisionEvents(routing));
-            debug(`codex decision display ${isSSE ? "inject" : "skip"}`);
-            res.write(pending.slice(end + 2));
-            pending = "";
-            inspected = true;
-          });
-          response.on("end", () => {
-            if (pending) {
+          // Ties the two streams together both ways: a client that leaves stops the upstream
+          // read, and an upstream that drops mid-stream fails the client fast.
+          const passThrough = () =>
+            pipeline(response, res, (err) => {
+              if (err) debug(`codex stream ended early: ${err.message}`);
+            });
+          if (!inspectForDecision) return void passThrough();
+
+          // Hold the stream until its first event, slip the routing decision in after it, then
+          // hand the rest to `pipeline` so backpressure applies again. Searched as bytes: the
+          // separator is ASCII, and decoding chunk by chunk would split multi-byte characters.
+          let pending = Buffer.alloc(0);
+          const onEnd = () => {
+            if (pending.length) {
               debug("codex decision display skip");
               res.write(pending);
             }
             res.end();
-          });
+          };
+          const onData = (chunk) => {
+            pending = Buffer.concat([pending, chunk]);
+            const end = pending.indexOf("\n\n");
+            if (end < 0 && pending.length < MAX_INSPECT_BYTES) return;
+            response.off("data", onData);
+            response.off("end", onEnd);
+            if (end < 0) {
+              debug("codex decision display skip");
+              res.write(pending);
+            } else {
+              const first = pending.subarray(0, end + 2);
+              res.write(first);
+              const isSSE = /^(?:event|data):/m.test(first.toString("utf8"));
+              if (isSSE) res.write(jevDecisionEvents(routing));
+              debug(`codex decision display ${isSSE ? "inject" : "skip"}`);
+              res.write(pending.subarray(end + 2));
+            }
+            pending = Buffer.alloc(0);
+            passThrough();
+          };
+          response.on("error", (err) => res.destroy(err));
+          response.on("data", onData);
+          response.on("end", onEnd);
         },
       );
       upstream.on("error", (err) => {
+        // Destroyed on purpose after the client left; there is no one to tell.
+        if (res.destroyed) return;
         debug(`codex upstream error: ${err.message}`);
-        if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
+        // Mid-stream, an error body would be appended to an event stream as garbage.
+        if (res.headersSent) return void res.destroy(err);
+        res.writeHead(502, { "content-type": "application/json" });
         res.end(JSON.stringify({ error: { message: err.message, type: "proxy_error" } }));
       });
       if (out.length) upstream.write(out);
@@ -318,6 +378,7 @@ export async function startCodexProxy({
     });
   });
 
+  if (route === askJev) prewarmJev();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   return { port: server.address().port, close: () => server.close() };
 }

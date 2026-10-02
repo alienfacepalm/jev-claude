@@ -1,9 +1,12 @@
-import { spawn } from "node:child_process";
-import { accessSync, constants, copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CODEX_AUTO_MODEL, startCodexProxy } from "./codex-proxy.mjs";
+import { loadEnv, childEnv } from "./env.mjs";
+import { resolveCommand, launchSpec, spawnSpec } from "./launch.mjs";
+
+export { loadEnv };
 
 const PROVIDER = "jev";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -16,39 +19,13 @@ export function installCodexSkill(home = homedir()) {
   return target;
 }
 
-export function loadEnv() {
-  for (const file of [
-    join(process.cwd(), ".env"),
-    join(homedir(), ".jev-router.env"),
-    join(homedir(), ".jev-claude.env"),
-  ]) {
-    try {
-      process.loadEnvFile(file);
-    } catch {
-      // Missing or unreadable; values may still come from the real environment.
-    }
-  }
-}
-
+/**
+ * How to launch Codex. npm installs both a `.cmd` and a `.ps1` shim; the `.cmd` comes first
+ * because its script can be run directly, while a `.ps1` needs PowerShell and a policy bypass.
+ */
 export function resolveCodex() {
-  const win = process.platform === "win32";
-  const exts = win ? [".exe", ".ps1", ".cmd", ".bat"] : [""];
-  for (const dir of (process.env.PATH ?? "").split(win ? ";" : ":")) {
-    if (!dir) continue;
-    for (const ext of exts) {
-      const file = join(dir.replace(/^"|"$/g, ""), `codex${ext}`);
-      try {
-        accessSync(file, constants.F_OK);
-        if (/\.ps1$/i.test(file)) {
-          return { file: "powershell.exe", prefix: ["-NoProfile", "-File", file], shell: false };
-        }
-        return { file, prefix: [], shell: /\.(cmd|bat)$/i.test(file) };
-      } catch {
-        // Not here; keep looking.
-      }
-    }
-  }
-  return null;
+  const file = resolveCommand("codex", { exts: [".exe", ".cmd", ".bat", ".ps1"] });
+  return file ? launchSpec(file) : null;
 }
 
 export const codexArgs = (baseURL, args) => [
@@ -104,12 +81,8 @@ export async function runCodex() {
     );
   }
 
-  const childArgs = [...command.prefix, ...args];
-  const child = spawn(
-    command.file,
-    command.shell ? childArgs.map((arg) => (/\s/.test(arg) ? `"${arg}"` : arg)) : childArgs,
-    { stdio: "inherit", shell: command.shell, env: process.env },
-  );
+  // The Jev key is jev's alone; Codex and every command it runs go without it.
+  const child = spawnSpec(command, args, { stdio: "inherit", env: childEnv() });
   child.on("error", (err) => {
     close();
     process.stderr.write(`[jev] could not start Codex: ${err.message}\n`);

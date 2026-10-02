@@ -32,8 +32,25 @@ test("an explicit user override beats Jev", () => {
 test("detectOverride only fires on a real instruction", () => {
   assert.equal(detectOverride("switch to opus"), "opus");
   assert.equal(detectOverride("use luna"), "haiku");
-  assert.equal(detectOverride("use strong"), "opus");
+  assert.equal(detectOverride("use the strong model"), "opus");
+  assert.equal(detectOverride("Use Claude Haiku for this one"), "haiku");
   assert.equal(detectOverride("the opus of his career"), null);
+});
+
+test("detectOverride ignores ordinary prose that mentions a tier word", () => {
+  for (const prompt of [
+    "help me with fast fourier transform code",
+    "replace the polling loop with long polling",
+    "the test only fails on fast CI runners",
+    "write tests with long input strings",
+    "turn on fast refresh in vite",
+    "merge with sol branch",
+    "refactor this to rely on strong typing",
+    "use haiku-style commit messages",
+    "use long variable names",
+  ]) {
+    assert.equal(detectOverride(prompt), null, prompt);
+  }
 });
 
 test("keeps the current model when Jev is unreachable", () => {
@@ -63,6 +80,12 @@ test("keeps a tier stronger than the default on a low-confidence answer", () => 
   const out = decide({ ...base, current: "fable", jev: unsure("haiku") });
   assert.equal(out.tier, "fable");
   assert.match(out.reason, /no-change/);
+});
+
+test("an answer without a confidence is treated as unsure", () => {
+  const out = decide({ ...base, current: "haiku", jev: { choice: "haiku" } });
+  assert.equal(out.tier, "opus");
+  assert.equal(out.reason, "low-confidence-default");
 });
 
 test("a low-confidence answer cannot reach fable", () => {
