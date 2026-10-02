@@ -75,6 +75,12 @@ claude-opus-5-5 (91%) (keeping the cache) · ⤷ haiku,sonnet · my-project · 3
 ⏸ manual Opus 4.6 · my-project · 21% context
 ```
 
+When your account offers a newer version of a tier's model than the router was tuned for, the
+line ends with a notice such as `new claude-opus-6: /jev-calibrate`. Routing already uses the
+newer model; the notice means its guidance and costs were measured on the previous one. It clears
+once the tier's `id` in `src/config.mjs` is updated. Only new versions of known model lines are
+detected, not new model names.
+
 Claude Code otherwise remains unchanged, including its keybindings, tools, permission prompts,
 `/compact`, `/resume`, and session handling. An existing custom `statusLine` is preserved;
 set `JEV_NO_STATUSLINE=1` to disable Jev's status line.
@@ -191,8 +197,10 @@ One Jev call per fresh user turn selects a shared abstract tier:
 
 - explicit requests such as `use opus`, `switch to luna`, or `use the strong model` win;
   a tier word in ordinary prose (`replace this with long polling`) is not a request;
-- failure, timeout, or an unrecognised Jev answer keeps the current model;
-- low confidence never downgrades and caps upgrades at the balanced tier;
+- failure, timeout, or an unrecognised Jev answer keeps the current model; a conversation
+  starts on the balanced tier;
+- an answer below 0.6 confidence runs one tier below Jev's pick, never below the balanced tier
+  or the tier already in use, so an unsure pick of the long tier runs on the strong one;
 - large conversations refuse downgrades that would waste more prompt-cache work than they save;
 - unavailable tiers step upward rather than silently choosing a weaker model;
 - the long tier is offered by default but never stepped up into as a substitute; `JEV_ALLOW_FABLE=0` disables it.

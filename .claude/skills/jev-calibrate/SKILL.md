@@ -19,10 +19,14 @@ cheaper one would, prefer the stronger, because a failed turn is paid for twice.
 - Search for independent per-task measurements of the new models (Artificial Analysis and similar),
   at the effort levels the router uses. Per-task cost and score matter; per-token price alone
   misleads, because models spend very different numbers of tokens.
-- Check what effort Claude Code actually sends: run one tiny prompt through `jev-claude` with
-  `JEV_DUMP=1`, read `output_config.effort` from the dumps in the status directory, then delete
-  the dumps (they hold the whole request). The tier effort in `TIERS` only applies when the
-  request names none.
+- Check what effort Claude Code actually sends. Ask the user first, since this spends a Claude
+  request on their account: run one tiny prompt through `jev-claude` with `JEV_DUMP=1`, read
+  `output_config.effort` from the dumps in the status directory, then delete the dumps (they
+  hold the whole request). The tier effort in `TIERS` only applies when the request names none;
+  as of 2026-10 Claude Code sends `high` on every request.
+- The status line only notices newer versions of the tiers the router already knows. A new model
+  line (a new name, not a new version) is not detected: look for one in the models table, and if
+  it fits a tier, add it to `TIERS` with its `family`.
 
 Report what changed before editing anything. If nothing did, say so and stop.
 
@@ -39,10 +43,12 @@ Report what changed before editing anything. If nothing did, say so and stop.
 
 ## 3. Measure, one change at a time
 
-Run `node scripts/calibrate.mjs --runs 2` before the first edit and after each one. Keep a change
-only if the hit count does not drop and the tiers it targets clear the confidence bar in both
-runs. Report each version's summary line side by side. Stop after three iterations whatever the
-result, and report rather than keep tuning.
+Run `node scripts/calibrate.mjs --runs 2` before the first edit and after each one. It reports
+two scores: how often Jev picked the intended tier (what the guidance controls) and where the turn
+finally ran (which also depends on policy: an unsure pick runs one tier lower by design, shown as
+`step`). Keep a guidance change only if the pick score does not drop and the tiers it targets
+clear the confidence bar in both runs. Report each version's summary line side by side. Stop
+after three iterations whatever the result, and report rather than keep tuning.
 
 Lessons already learned here:
 

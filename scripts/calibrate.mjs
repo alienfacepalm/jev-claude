@@ -3,6 +3,10 @@
 // rather than against one lucky run. Jev's confidence moves a few hundredths between identical
 // runs, so each prompt is asked more than once.
 //
+// Two scores, because they answer different questions. Whether Jev picked the intended tier is
+// what the guidance controls. Where the turn finally ran also depends on policy: an unsure pick
+// runs a tier lower by design, which is reported as `step`, not as a miss.
+//
 // Needs JEV_API_KEY. Calls the real Jev, never Claude. Not part of `pnpm test`.
 //   node scripts/calibrate.mjs [--runs 2]
 import { loadEnv } from "../src/env.mjs";
@@ -24,7 +28,9 @@ const current = THRESHOLDS.uncertainDefault;
 const cases = CASES.filter((c) => available.includes(c.want));
 const skipped = CASES.length - cases.length;
 
-let hits = 0;
+let picks = 0;
+let landed = 0;
+let stepped = 0;
 let asked = 0;
 let failed = 0;
 const byTier = {};
@@ -33,7 +39,7 @@ for (let run = 1; run <= runs; run++) {
   console.log(`--- run ${run}`);
   for (const { want, prompt } of cases) {
     asked++;
-    const tally = (byTier[want] ??= { hits: 0, asked: 0 });
+    const tally = (byTier[want] ??= { picks: 0, asked: 0 });
     tally.asked++;
     const answer = await askJev({
       prompt,
@@ -56,12 +62,16 @@ for (let run = 1; run <= runs; run++) {
     });
     const confidence = Number(answer.confidence);
     confidences.push(confidence);
-    if (tier === want) {
-      hits++;
-      tally.hits++;
+    const picked = chosen?.tier === want;
+    if (picked) {
+      picks++;
+      tally.picks++;
     }
+    if (tier === want) landed++;
+    else if (picked) stepped++;
+    const mark = tier === want ? "ok  " : picked ? "step" : "MISS";
     console.log(
-      `${tier === want ? "ok  " : "MISS"} want=${want.padEnd(6)} jev=${(chosen?.tier ?? "?").padEnd(6)} ` +
+      `${mark} want=${want.padEnd(6)} jev=${(chosen?.tier ?? "?").padEnd(6)} ` +
         `conf=${confidence.toFixed(2)} final=${tier.padEnd(6)} | ${prompt.slice(0, 60)}`,
     );
   }
@@ -71,10 +81,11 @@ confidences.sort((a, b) => a - b);
 const median = confidences.length ? confidences[Math.floor(confidences.length / 2)].toFixed(2) : "n/a";
 const low = confidences.filter((c) => c < THRESHOLDS.minConfidence).length;
 const tiers = Object.entries(byTier)
-  .map(([tier, t]) => `${tier} ${t.hits}/${t.asked}`)
+  .map(([tier, t]) => `${tier} ${t.picks}/${t.asked}`)
   .join(", ");
 console.log(
-  `\n${hits}/${asked} on the intended tier (${tiers}) · median confidence ${median} · ` +
+  `\nJev picked the intended tier ${picks}/${asked} (${tiers}) · ran there ${landed}/${asked}, ` +
+    `${stepped} stepped down as unsure · median confidence ${median} · ` +
     `${low} below the ${THRESHOLDS.minConfidence} bar` +
     (failed ? ` · ${failed} unanswered` : "") +
     (skipped ? ` · ${skipped} cases skipped for unavailable tiers` : ""),

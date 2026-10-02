@@ -9,10 +9,10 @@ import { choice, score } from "@typesafe-ai/sdk";
  * those fields have to be stripped when routing down to it.
  */
 export const TIERS = [
-  { name: "haiku", id: "claude-haiku-4-5-20251001", family: "haiku", thinking: false, effort: false, price: 1 },
-  { name: "sonnet", id: "claude-sonnet-5-5", family: "sonnet", thinking: true, effort: true, floor: "high", price: 2 },
-  { name: "opus", id: "claude-opus-5-5", family: "opus", thinking: true, effort: true, floor: "medium", price: 4 },
-  { name: "fable", id: "claude-fable-5-1", family: "fable", thinking: true, effort: true, floor: "high", price: 10 },
+  { name: "haiku", id: "claude-haiku-4-5-20251001", family: "haiku", thinking: false, effort: false },
+  { name: "sonnet", id: "claude-sonnet-5-5", family: "sonnet", thinking: true, effort: true, floor: "high" },
+  { name: "opus", id: "claude-opus-5-5", family: "opus", thinking: true, effort: true, floor: "medium" },
+  { name: "fable", id: "claude-fable-5-1", family: "fable", thinking: true, effort: true, floor: "high" },
 ];
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
@@ -32,9 +32,6 @@ export const effortFloor = (name, env = process.env) => {
   const chosen = env[`JEV_${name.toUpperCase()}_EFFORT`]?.trim().toLowerCase();
   return EFFORTS.includes(chosen) ? chosen : tier.floor;
 };
-
-/** Input price per million tokens, for telling Jev what "cheapest" costs. A cached snapshot. */
-export const priceOf = (name) => TIERS.find((t) => t.name === name)?.price ?? null;
 
 export const TIER_NAMES = TIERS.map((t) => t.name);
 
