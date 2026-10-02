@@ -37,7 +37,8 @@ export function shimScript(file) {
   try {
     const m = /"%~?dp0%?\\([^"]+?\.[cm]?js)"/i.exec(readFileSync(file, "utf8"));
     if (!m) return null;
-    const script = join(dirname(file), m[1]);
+    // The shim spells the path with backslashes; split them so it resolves on any platform.
+    const script = join(dirname(file), ...m[1].split("\\"));
     accessSync(script, constants.F_OK);
     return script;
   } catch {
