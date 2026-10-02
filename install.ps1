@@ -23,10 +23,26 @@
     if ($LASTEXITCODE) { throw "[jev] $failure" }
   }
 
-  # 1. Node.js 20.12 or later.
-  if (-not (Have node)) { throw '[jev] Node.js 20.12 or later is required: https://nodejs.org' }
+  # 1. Node.js 22 or later, the oldest release line Node.js still supports.
+  function Node-Help {
+    if (Have nvm) {
+      Say 'With nvm-windows: nvm install 24, then nvm use 24, then run this installer again.'
+    } else {
+      Say 'Install the LTS: winget install OpenJS.NodeJS.LTS (or from https://nodejs.org), then open a new terminal.'
+    }
+    Say 'More ways, including nvm-windows, fnm, and Volta: https://github.com/alienfacepalm/jev-claude#installing-nodejs'
+  }
+  if (-not (Have node)) {
+    Say 'Node.js 22 or later is required (24 LTS recommended).'
+    Node-Help
+    throw '[jev] Node.js is not installed.'
+  }
   $nodeVersion = [version](node -p 'process.versions.node')
-  if ($nodeVersion -lt [version]'20.12') { throw "[jev] Node.js 20.12 or later is required; this is $nodeVersion." }
+  if ($nodeVersion.Major -lt 22) {
+    Say "Node.js 22 or later is required (24 LTS recommended); this is $nodeVersion."
+    Node-Help
+    throw '[jev] Node.js is too old.'
+  }
 
   # 2. pnpm, through Corepack (which ships with Node) when it is missing.
   if (-not (Have pnpm)) {

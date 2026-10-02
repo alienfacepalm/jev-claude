@@ -14,7 +14,8 @@ or tested in this fork (see [OpenAI Codex](#openai-codex)).
 
 ## Install
 
-You need [Node.js](https://nodejs.org) 20.12 or later, [git](https://git-scm.com/downloads), and
+You need [Node.js](https://nodejs.org) 22 or later (24 LTS recommended; see
+[Installing Node.js](#installing-nodejs)), [git](https://git-scm.com/downloads), and
 [Claude Code](https://code.claude.com/docs/en/setup), signed in with your Claude account or run
 on an Anthropic API key (see [Using an Anthropic API key](#using-an-anthropic-api-key)). You also
 need a Jev API key: sign in at
@@ -64,6 +65,52 @@ Then open `~/.jev-router.env` and paste your key after `JEV_API_KEY=`.
 [`.env.example`](.env.example) explains each setting. To use a key for one project only, copy it
 to `.env` in that project instead. (`pnpm link --global`, used by older guides, does not exist in
 current pnpm.)
+
+### Installing Node.js
+
+jev-claude needs Node.js 22 or later: 22 is the oldest release line Node.js still supports
+(until April 2027), and 24 is the current LTS. Check what you have with `node --version`.
+
+A version manager is the easiest way to get it and switch later. Pick one:
+
+**nvm** (macOS, Linux, WSL). Install it with the
+[command in its README](https://github.com/nvm-sh/nvm#installing-and-updating), open a new
+terminal, then:
+
+```bash
+nvm install 24
+nvm alias default 24
+```
+
+**nvm-windows** (Windows; a separate project with similar commands). Run the installer from
+[nvm-windows](https://github.com/coreybutler/nvm-windows/releases), open a new terminal, then:
+
+```powershell
+nvm install 24
+nvm use 24
+```
+
+**fnm** (macOS, Linux, Windows). Install it with `brew install fnm`, `winget install Schniz.fnm`,
+or the [script in its README](https://github.com/Schniz/fnm#installation), add its
+[shell setup line](https://github.com/Schniz/fnm#shell-setup), then:
+
+```bash
+fnm install 24
+fnm default 24
+```
+
+**Volta** (macOS, Linux, Windows). Install it with `curl https://get.volta.sh | bash`, or
+`winget install Volta.Volta` on Windows, then `volta install node@24`.
+
+Or install Node.js directly:
+
+| System | Command |
+| --- | --- |
+| Windows | `winget install OpenJS.NodeJS.LTS`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
+| macOS | `brew install node`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
+| Linux | A version manager above. Distribution packages are often older than 22; check with `node --version` |
+
+Open a new terminal after installing, so it finds the new `node`.
 
 ## Usage
 

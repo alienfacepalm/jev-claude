@@ -20,10 +20,28 @@ fail() {
   exit 1
 }
 
-# 1. Node.js 20.12 or later.
-command -v node >/dev/null 2>&1 || fail "Node.js 20.12 or later is required: https://nodejs.org"
-node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 20 || (a === 20 && b >= 12) ? 0 : 1)' ||
-  fail "Node.js 20.12 or later is required; this is $(node --version)."
+# 1. Node.js 22 or later, the oldest release line Node.js still supports.
+node_help() {
+  # nvm is a shell function that a piped script cannot see, so look for its files instead.
+  if [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+    say "With nvm: nvm install 24 && nvm alias default 24, then run this installer again."
+  elif command -v nvm.exe >/dev/null 2>&1; then
+    say "With nvm-windows: nvm install 24, then nvm use 24, then run this installer again."
+  else
+    say "Install the LTS from https://nodejs.org, or see the README for nvm, fnm, Volta, and package managers:"
+  fi
+  say "https://github.com/alienfacepalm/jev-claude#installing-nodejs"
+}
+if ! command -v node >/dev/null 2>&1; then
+  say "Node.js 22 or later is required (24 LTS recommended)."
+  node_help
+  exit 1
+fi
+if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'; then
+  say "Node.js 22 or later is required (24 LTS recommended); this is $(node --version)."
+  node_help
+  exit 1
+fi
 
 # 2. pnpm, through Corepack (which ships with Node) when it is missing.
 if ! command -v pnpm >/dev/null 2>&1; then
