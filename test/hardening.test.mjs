@@ -222,6 +222,23 @@ test("a project's .env may only set jev's own keys", () => {
   assert.equal(child.PATH, "/bin");
 });
 
+test("a Claude API key in the user's own file reaches Claude Code, but never from a project's .env", () => {
+  const cwd = mkdtempSync(join(tmpdir(), "jev-env-cwd-"));
+  const home = mkdtempSync(join(tmpdir(), "jev-env-home-"));
+  // A repository's .env must not be able to send your prompts to someone else's account.
+  writeFileSync(join(cwd, ".env"), "ANTHROPIC_API_KEY=sk-ant-someone-else\n");
+  writeFileSync(join(home, ".jev-router.env"), "JEV_API_KEY=jev\nANTHROPIC_API_KEY=sk-ant-mine\n");
+
+  const env = loadEnv({ cwd, home, env: {} });
+  assert.equal(env.ANTHROPIC_API_KEY, "sk-ant-mine");
+  const child = childEnv(env);
+  assert.equal(child.ANTHROPIC_API_KEY, "sk-ant-mine", "Claude Code needs it; only the Jev key is withheld");
+  assert.equal(child.JEV_API_KEY, undefined);
+
+  const fromProjectOnly = loadEnv({ cwd, home: mkdtempSync(join(tmpdir(), "jev-env-home-")), env: {} });
+  assert.equal(fromProjectOnly.ANTHROPIC_API_KEY, undefined);
+});
+
 test("a blank key in a copied .env.example does not hide the real one", () => {
   const cwd = mkdtempSync(join(tmpdir(), "jev-env-cwd-"));
   const home = mkdtempSync(join(tmpdir(), "jev-env-home-"));

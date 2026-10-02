@@ -108,6 +108,47 @@ test("keeps available Claude model versions as separate Jev choices", () => {
   );
 });
 
+test("a Claude API key reaches Anthropic untouched, on routed and manual requests alike", async (t) => {
+  const seen = [];
+  const upstream = http.createServer((req, res) => {
+    req.on("data", () => {});
+    req.on("end", () => {
+      seen.push({ url: req.url, key: req.headers["x-api-key"], auth: req.headers.authorization });
+      res.setHeader("content-type", "application/json");
+      res.end(req.url.startsWith("/v1/models") ? '{"data":[]}' : '{"id":"msg_1","type":"message"}');
+    });
+  });
+  await new Promise((resolve) => upstream.listen(0, "127.0.0.1", resolve));
+  t.after(() => upstream.close());
+  const calibrationFile = join(STATUS_DIR, `calibration-key-test-${process.pid}.json`);
+  t.after(() => rmSync(calibrationFile, { force: true }));
+  const { port, close } = await startProxy({
+    upstreamURL: `http://127.0.0.1:${upstream.address().port}`,
+    route: async () => ({ choice: "claude-sonnet-5-5", confidence: 0.9, ms: 1 }),
+    calibrationFile,
+  });
+  t.after(close);
+
+  const headers = { "content-type": "application/json", "x-api-key": "sk-ant-api03-test" };
+  await fetch(`http://127.0.0.1:${port}/v1/models`, { headers });
+  for (const model of ["jev-router", "claude-opus-5-5"]) {
+    await fetch(`http://127.0.0.1:${port}/v1/messages`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ model, tools: [{ name: "Bash" }], messages: [{ role: "user", content: "hi" }] }),
+    });
+  }
+  // An auth token, as ANTHROPIC_AUTH_TOKEN or a gateway sends it, passes through the same way.
+  await fetch(`http://127.0.0.1:${port}/v1/messages`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: "Bearer gateway-token" },
+    body: JSON.stringify({ model: "claude-opus-5-5", messages: [{ role: "user", content: "hi" }] }),
+  });
+
+  assert.deepEqual(seen.map((s) => s.key), ["sk-ant-api03-test", "sk-ant-api03-test", "sk-ant-api03-test", undefined]);
+  assert.equal(seen[3].auth, "Bearer gateway-token");
+});
+
 test("Claude proxy sends exact account models to Jev and routes the chosen version", async (t) => {
   const seen = [];
   const upstream = http.createServer((req, res) => {

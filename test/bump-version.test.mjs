@@ -1,6 +1,36 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bumpLevel, nextVersion } from "../scripts/bump-version.mjs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { bumpLevel, nextVersion, messagesBetween } from "../scripts/bump-version.mjs";
+
+test("a release counts every commit since the last tag, not just the last push", (t) => {
+  const cwd = mkdtempSync(join(tmpdir(), "jev-bump-"));
+  t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const git = (...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  const commit = (message) => {
+    git("commit", "-q", "--allow-empty", "-m", message);
+    return git("rev-parse", "HEAD");
+  };
+  const first = commit("chore(release): v0.4.0");
+  git("tag", "v0.4.0");
+  commit("feat: pushed first, but its run failed");
+  const before = commit("docs: also in the failed push");
+  const after = commit("fix: the push whose run succeeds");
+
+  const messages = messagesBetween(before, after, { cwd });
+  assert.equal(messages.length, 3, "everything since v0.4.0");
+  assert.equal(bumpLevel(messages), "minor", "the earlier feat still counts");
+
+  rmSync(join(cwd, ".git", "refs", "tags", "v0.4.0"));
+  assert.equal(messagesBetween(before, after, { cwd }).length, 1, "with no tag, only the pushed range");
+  assert.equal(messagesBetween("0".repeat(40), first, { cwd }).length, 1, "a first push counts its last commit");
+});
 
 test("a feature is a minor bump, anything else a patch", () => {
   assert.equal(bumpLevel(["fix: keep the cache", "feat(statusline): show versions"]), "minor");

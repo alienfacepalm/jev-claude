@@ -15,8 +15,9 @@ or tested in this fork (see [OpenAI Codex](#openai-codex)).
 ## Install
 
 You need [Node.js](https://nodejs.org) 20.12 or later, [git](https://git-scm.com/downloads), and
-[Claude Code](https://code.claude.com/docs/en/setup) signed in with your usual account (no
-Anthropic API key is needed). You also need a Jev API key: sign in at
+[Claude Code](https://code.claude.com/docs/en/setup), signed in with your Claude account or run
+on an Anthropic API key (see [Using an Anthropic API key](#using-an-anthropic-api-key)). You also
+need a Jev API key: sign in at
 [console.typesafe.ai](https://console.typesafe.ai) and create one on the
 [API keys page](https://console.typesafe.ai/keys). The installer asks for it.
 
@@ -34,10 +35,11 @@ The installer:
 1. checks for Node.js and Claude Code, and installs [pnpm](https://pnpm.io) if it is missing;
 2. downloads jev-claude to `~/jev-claude` (or updates it there);
 3. installs the `jev-claude` command;
-4. asks for your Jev key and saves it to `~/.jev-router.env`, readable only by you.
+4. asks for your Jev key, and optionally an Anthropic API key, and saves them to
+   `~/.jev-router.env`, readable only by you.
 
-Run it again at any time to update. To install somewhere else, set `JEV_CLAUDE_DIR` first; to skip
-the key prompt, set `JEV_API_KEY`. From a clone, run `./install.sh`, or `.\install.ps1` in
+Run it again at any time to update. To install somewhere else, set `JEV_CLAUDE_DIR` first; to save
+the keys without being asked, set `JEV_API_KEY` and `ANTHROPIC_API_KEY`. From a clone, run `./install.sh`, or `.\install.ps1` in
 PowerShell (`powershell -ExecutionPolicy Bypass -File .\install.ps1` if scripts are blocked).
 
 Then start it from any project:
@@ -72,6 +74,28 @@ check (see [Setup check](#setup-check)). Every Claude Code argument is passed th
 jev-claude --resume
 jev-claude -p "fix the failing test"
 ```
+
+### Using an Anthropic API key
+
+By default Claude Code runs on your Claude subscription sign-in. To run it on an Anthropic API key
+instead, billed per token to that key's account, create a key in the
+[Claude Console](https://platform.claude.com) and add it to `~/.jev-router.env`:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+The installer offers to do this for you, and setting `ANTHROPIC_API_KEY` in your shell works too.
+`jev-claude` passes the key to Claude Code and the proxy forwards it to Anthropic untouched, so
+routing works the same either way; on an API key, it is what keeps the per-token bill down.
+
+In an interactive session, Claude Code asks once whether to use the key and remembers the answer;
+change it later with **Use custom API key** in `/config`. In print mode (`-p`) the key is always
+used. `ANTHROPIC_AUTH_TOKEN`, as LLM gateways use, is forwarded the same way and takes precedence
+over the key ([Claude Code authentication](https://code.claude.com/docs/en/authentication)).
+
+A project's `.env` cannot set `ANTHROPIC_API_KEY`, so a cloned repository can never send your work
+to someone else's account. `/jev-calibrate` shows which credentials a session runs on.
 
 ## How a model is chosen
 
@@ -146,6 +170,7 @@ Run `/jev-calibrate` in a `jev-claude` session for a read-only report on your se
 
 ```text
 Routing      on - Jev Router picks a model for each turn
+Claude       your Claude Code sign-in
 Tuned for    haiku claude-haiku-4-5-20251001, sonnet claude-sonnet-5-5, opus claude-opus-5-5, fable claude-fable-5-1
 Your account claude-haiku-4-5-20251001, claude-sonnet-5-5, claude-opus-5-5, claude-fable-5-1
 Newer models none - the router is tuned for the newest models your account offers
@@ -207,6 +232,7 @@ in your shell's environment.
 | Variable | Effect |
 | --- | --- |
 | `JEV_API_KEY` | Your Jev key; routing is off without it. `TYPESAFE_API_KEY` also works. |
+| `ANTHROPIC_API_KEY` | Optional: run Claude Code on this Anthropic API key instead of your sign-in (see [Using an Anthropic API key](#using-an-anthropic-api-key)). Not read from a project's `.env`. |
 | `JEV_ALLOW_FABLE` | Fable is offered by default; `0`, `false`, `no` or `off` turns it off. |
 | `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) for requests that name none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. Claude Code normally sends its own. |
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
@@ -225,7 +251,8 @@ Jev key itself is removed from the environment Claude Code runs with.
 ## How it works
 
 `jev-claude` starts a local proxy and launches the real Claude Code pointed at it. Claude Code's
-own authorization is forwarded untouched; the proxy never reads or stores it.
+own authorization, a subscription sign-in or an API key, is forwarded untouched; the proxy never
+reads or stores it.
 
 ```text
 you -> Claude Code -> jev-claude proxy -> Anthropic
@@ -305,7 +332,8 @@ jev-claude started as an import of [jev-router](https://github.com/gargpratyush/
   line flags models newer than the router's tuning, and sub-agents show their model's version.
 - **Setup check and calibration.** `/jev-calibrate`, offered once on first launch, and the
   calibration script and cases for re-tuning when new models ship.
-- **Easier setup.** One-line installers for macOS, Linux, and Windows, and `.env.example`.
+- **Easier setup.** One-line installers for macOS, Linux, and Windows, `.env.example`, and
+  documented support for running on an Anthropic API key.
 - **Hardening.** A project's `.env` can no longer redirect traffic or run code, private files are
   owner-only, prompt overrides need an explicit instruction, Esc stops generation upstream, and
   the saved Claude Code model is restored even when a session is killed.

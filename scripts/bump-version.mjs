@@ -31,12 +31,19 @@ export function nextVersion(version, level) {
 }
 
 /**
- * Full messages of the commits in `before..after`. A branch's first push has no `before` (git
- * sends all zeros), so only `after` itself counts then.
+ * Full messages of the commits being released: everything since the last release tag, so commits
+ * from a push whose run failed are not lost. Without a tag, the pushed range `before..after`; a
+ * branch's first push has no `before` (git sends all zeros), so only `after` itself counts then.
  */
-function messagesBetween(before, after) {
-  const range = !before || /^0+$/.test(before) ? [after, "-1"] : [`${before}..${after}`];
-  return execFileSync("git", ["log", "--format=%B%x00", ...range], { encoding: "utf8" })
+export function messagesBetween(before, after, { cwd } = {}) {
+  const git = (...args) => execFileSync("git", args, { encoding: "utf8", cwd, stdio: ["ignore", "pipe", "ignore"] });
+  let range;
+  try {
+    range = [`${git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", after).trim()}..${after}`];
+  } catch {
+    range = !before || /^0+$/.test(before) ? [after, "-1"] : [`${before}..${after}`];
+  }
+  return git("log", "--format=%B%x00", ...range)
     .split("\0")
     .filter((m) => m.trim());
 }

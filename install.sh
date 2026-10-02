@@ -5,9 +5,10 @@
 #
 # or run ./install.sh from a clone. Running it again updates the install.
 #
-#   JEV_CLAUDE_DIR   where to clone (default ~/jev-claude); ignored when run from a clone
-#   JEV_CLAUDE_REPO  the repository to clone (default this one)
-#   JEV_API_KEY      your Jev key, to skip the prompt
+#   JEV_CLAUDE_DIR     where to clone (default ~/jev-claude); ignored when run from a clone
+#   JEV_CLAUDE_REPO    the repository to clone (default this one)
+#   JEV_API_KEY        your Jev key, to save it without the prompt
+#   ANTHROPIC_API_KEY  an Anthropic API key to run Claude Code on, to save it without the prompt
 set -euo pipefail
 
 REPO="${JEV_CLAUDE_REPO:-https://github.com/alienfacepalm/jev-claude.git}"
@@ -80,36 +81,75 @@ case "$(uname -s)" in
 esac
 pnpm add --global "link:$link_dir" >/dev/null
 
-# 6. The Jev key, kept in ~/.jev-router.env where only you can read it.
-if [ -f "$ENV_FILE" ] && grep -Eq '^(JEV_API_KEY|TYPESAFE_API_KEY)=.+' "$ENV_FILE"; then
+# 6. The keys, kept in ~/.jev-router.env where only you can read it.
+[ -f "$ENV_FILE" ] || cp "$DIR/.env.example" "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+# Sets NAME=value in the settings file: over an existing NAME= line or its commented-out
+# "# NAME=" placeholder from .env.example, or as a new line at the end.
+set_key() {
+  local name="$1" value="$2" tmp line done=0
+  tmp="$(mktemp)"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "$name="* | "# $name="*)
+        if [ "$done" = 0 ]; then
+          printf '%s=%s\n' "$name" "$value"
+          done=1
+        else
+          printf '%s\n' "$line"
+        fi
+        ;;
+      *) printf '%s\n' "$line" ;;
+    esac
+  done <"$ENV_FILE" >"$tmp"
+  [ "$done" = 1 ] || printf '%s=%s\n' "$name" "$value" >>"$tmp"
+  mv "$tmp" "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+}
+
+# Reads a secret from the terminal without showing it; empty when there is no terminal.
+ask_secret() {
+  local answer=""
+  if { : </dev/tty; } 2>/dev/null; then
+    printf '[jev] %s' "$1" >/dev/tty
+    IFS= read -rs answer </dev/tty || answer=""
+    printf '\n' >/dev/tty
+  fi
+  printf '%s' "$answer"
+}
+
+has_key() { grep -Eq "^($1)=.+" "$ENV_FILE"; }
+
+# The Jev key is required for routing.
+if has_key 'JEV_API_KEY|TYPESAFE_API_KEY'; then
   say "Using the Jev key already in $ENV_FILE"
 else
   key="${JEV_API_KEY:-}"
-  if [ -z "$key" ] && { : </dev/tty; } 2>/dev/null; then
+  if [ -z "$key" ]; then
     say "Get a Jev API key at https://console.typesafe.ai/keys"
-    printf '[jev] Paste it here (it will not be shown), or press Enter to add it later: ' >/dev/tty
-    IFS= read -rs key </dev/tty || key=""
-    printf '\n' >/dev/tty
+    key="$(ask_secret 'Paste it here (it will not be shown), or press Enter to add it later: ')"
   fi
-  [ -f "$ENV_FILE" ] || cp "$DIR/.env.example" "$ENV_FILE"
-  chmod 600 "$ENV_FILE"
   if [ -n "$key" ]; then
-    if grep -q '^JEV_API_KEY=' "$ENV_FILE"; then
-      tmp="$(mktemp)"
-      while IFS= read -r line || [ -n "$line" ]; do
-        case "$line" in
-          JEV_API_KEY=*) printf 'JEV_API_KEY=%s\n' "$key" ;;
-          *) printf '%s\n' "$line" ;;
-        esac
-      done <"$ENV_FILE" >"$tmp"
-      mv "$tmp" "$ENV_FILE"
-      chmod 600 "$ENV_FILE"
-    else
-      printf 'JEV_API_KEY=%s\n' "$key" >>"$ENV_FILE"
-    fi
-    say "Saved your key to $ENV_FILE"
+    set_key JEV_API_KEY "$key"
+    say "Saved your Jev key to $ENV_FILE"
   else
-    say "Add your key later: open $ENV_FILE and paste it after JEV_API_KEY="
+    say "Add your Jev key later: open $ENV_FILE and paste it after JEV_API_KEY="
+  fi
+fi
+
+# An Anthropic API key is optional: without one, Claude Code uses your own sign-in.
+if has_key 'ANTHROPIC_API_KEY'; then
+  say "Using the Anthropic API key already in $ENV_FILE"
+else
+  key="${ANTHROPIC_API_KEY:-}"
+  if [ -z "$key" ]; then
+    say "Optional: run Claude Code on an Anthropic API key, billed per token, instead of your Claude sign-in."
+    key="$(ask_secret 'Paste the key (it will not be shown), or press Enter to keep your sign-in: ')"
+  fi
+  if [ -n "$key" ]; then
+    set_key ANTHROPIC_API_KEY "$key"
+    say "Saved your Anthropic API key. Claude Code asks once, on its first start, whether to use it."
   fi
 fi
 

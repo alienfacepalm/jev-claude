@@ -4,9 +4,10 @@
 #
 # or run .\install.ps1 from a clone. Running it again updates the install.
 #
-#   $env:JEV_CLAUDE_DIR   where to clone (default ~\jev-claude); ignored when run from a clone
-#   $env:JEV_CLAUDE_REPO  the repository to clone (default this one)
-#   $env:JEV_API_KEY      your Jev key, to skip the prompt
+#   $env:JEV_CLAUDE_DIR     where to clone (default ~\jev-claude); ignored when run from a clone
+#   $env:JEV_CLAUDE_REPO    the repository to clone (default this one)
+#   $env:JEV_API_KEY        your Jev key, to save it without the prompt
+#   $env:ANTHROPIC_API_KEY  an Anthropic API key to run Claude Code on, to save it without the prompt
 #
 # Errors are thrown rather than exited on: run through `iex`, `exit` would close the window.
 & {
@@ -73,30 +74,55 @@
   Say 'Installing the jev-claude command'
   Run { pnpm add --global "link:$dir" *> $null } 'Could not install the jev-claude command'
 
-  # 6. The Jev key, kept in ~\.jev-router.env inside your own profile.
-  $hasKey = (Test-Path $envFile) -and (Select-String -Path $envFile -Pattern '^(JEV_API_KEY|TYPESAFE_API_KEY)=.+' -Quiet)
-  if ($hasKey) {
+  # 6. The keys, kept in ~\.jev-router.env inside your own profile.
+  if (-not (Test-Path $envFile)) { Copy-Item (Join-Path $dir '.env.example') $envFile }
+
+  # Sets NAME=value: over an existing NAME= line or its commented-out "# NAME=" placeholder from
+  # .env.example, or as a new line at the end.
+  function Set-Key([string]$name, [string]$value) {
+    $done = $false
+    $lines = @(Get-Content $envFile | ForEach-Object {
+      if (-not $done -and ($_ -match "^(# )?$name=")) { $done = $true; "$name=$value" } else { $_ }
+    })
+    if (-not $done) { $lines += "$name=$value" }
+    # UTF-8 without a byte-order mark, which Windows PowerShell's own writers would add.
+    [IO.File]::WriteAllLines($envFile, [string[]]$lines)
+  }
+  function Has-Key([string]$pattern) { [bool](Select-String -Path $envFile -Pattern "^($pattern)=.+" -Quiet) }
+  function Ask-Secret([string]$prompt) {
+    $secure = Read-Host "[jev] $prompt" -AsSecureString
+    [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+  }
+
+  # The Jev key is required for routing.
+  if (Has-Key 'JEV_API_KEY|TYPESAFE_API_KEY') {
     Say "Using the Jev key already in $envFile"
   } else {
     $key = $env:JEV_API_KEY
     if (-not $key) {
       Say 'Get a Jev API key at https://console.typesafe.ai/keys'
-      $secure = Read-Host '[jev] Paste it here (it will not be shown), or press Enter to add it later' -AsSecureString
-      $key = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+      $key = Ask-Secret 'Paste it here (it will not be shown), or press Enter to add it later'
     }
-    if (-not (Test-Path $envFile)) { Copy-Item (Join-Path $dir '.env.example') $envFile }
     if ($key) {
-      $lines = @(Get-Content $envFile)
-      if ($lines -match '^JEV_API_KEY=') {
-        $lines = $lines | ForEach-Object { if ($_ -match '^JEV_API_KEY=') { "JEV_API_KEY=$key" } else { $_ } }
-      } else {
-        $lines += "JEV_API_KEY=$key"
-      }
-      # UTF-8 without a byte-order mark, which Windows PowerShell's own writers would add.
-      [IO.File]::WriteAllLines($envFile, [string[]]$lines)
-      Say "Saved your key to $envFile"
+      Set-Key 'JEV_API_KEY' $key
+      Say "Saved your Jev key to $envFile"
     } else {
-      Say "Add your key later: open $envFile and paste it after JEV_API_KEY="
+      Say "Add your Jev key later: open $envFile and paste it after JEV_API_KEY="
+    }
+  }
+
+  # An Anthropic API key is optional: without one, Claude Code uses your own sign-in.
+  if (Has-Key 'ANTHROPIC_API_KEY') {
+    Say "Using the Anthropic API key already in $envFile"
+  } else {
+    $key = $env:ANTHROPIC_API_KEY
+    if (-not $key) {
+      Say 'Optional: run Claude Code on an Anthropic API key, billed per token, instead of your Claude sign-in.'
+      $key = Ask-Secret 'Paste the key (it will not be shown), or press Enter to keep your sign-in'
+    }
+    if ($key) {
+      Set-Key 'ANTHROPIC_API_KEY' $key
+      Say 'Saved your Anthropic API key. Claude Code asks once, on its first start, whether to use it.'
     }
   }
 

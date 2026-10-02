@@ -32,6 +32,19 @@ lines.push(
         : "on - Jev Router picks a model for each turn",
   ),
 );
+// Which Claude credentials the session runs on, in Claude Code's own order of precedence
+// (https://code.claude.com/docs/en/authentication). Never prints the key itself.
+lines.push(
+  row(
+    "Claude",
+    process.env.ANTHROPIC_AUTH_TOKEN
+      ? "auth token (ANTHROPIC_AUTH_TOKEN)"
+      : process.env.ANTHROPIC_API_KEY
+        ? "API key (ANTHROPIC_API_KEY), billed per token - if you approved it when Claude Code asked; " +
+          "otherwise your sign-in. Change it with 'Use custom API key' in /config."
+        : "your Claude Code sign-in",
+  ),
+);
 lines.push(row("Tuned for", TIERS.map((t) => `${t.name} ${t.id}`).join(", ")));
 
 if (at === null) {
