@@ -19,12 +19,17 @@ const { newer, models, at } = readCalibration();
 const row = (label, text) => `${label.padEnd(13)}${text}`;
 const lines = ["Jev Router setup check (read-only: nothing was changed)", ""];
 
+// jev-claude leaves a model the user set with ANTHROPIC_MODEL alone, so such a session starts on
+// that model rather than on the router.
+const pinned = process.env.ANTHROPIC_MODEL && process.env.ANTHROPIC_MODEL !== AUTO_MODEL;
 lines.push(
   row(
     "Routing",
-    routing
-      ? "on - Jev Router picks a model for each turn"
-      : "off - no JEV_API_KEY found. Add JEV_API_KEY=... to ~/.jev-router.env and restart jev-claude.",
+    !routing
+      ? "off - no JEV_API_KEY found. Add JEV_API_KEY=... to ~/.jev-router.env and restart jev-claude."
+      : pinned
+        ? `available, but this session started on ${process.env.ANTHROPIC_MODEL} because ANTHROPIC_MODEL is set. Choose Jev Router in /model to route.`
+        : "on - Jev Router picks a model for each turn",
   ),
 );
 lines.push(row("Tuned for", TIERS.map((t) => `${t.name} ${t.id}`).join(", ")));

@@ -170,27 +170,29 @@ const GUIDANCE = {
     signals: ["Rename, reformat, comment, or run one obvious command"],
     not_for: "Design judgement or multi-file reasoning.",
   },
-  // Sonnet and Opus are described from measurements at their configured efforts (Sonnet high, Opus
-  // medium), published September 2026 by Anthropic and Artificial Analysis. Opus scored higher on
-  // every benchmark: by 5-15 points on agentic coding, by 1-2 on knowledge work. Sonnet cost less
-  // per task, but 10-50% less rather than half, because it spends more tokens at high effort.
+  // Sonnet and Opus are described from measurements at the effort they actually run at: Claude Code
+  // sends `high` on every request (checked 2026-10), so both run at high and the tier floors above
+  // rarely apply. Anthropic's September 2026 launch charts at high: Opus led on every benchmark, by
+  // 5-21 points on agentic coding (Terminal-Bench 64.2 vs 43.0, CursorBench 56.0 vs 47.8,
+  // FrontierCode 54.0 vs 49.4) and ~70 Elo on knowledge work (AA-Briefcase 1705 vs 1634), at
+  // 1.6-2.6x Sonnet's cost per task.
   sonnet: {
     what:
-      "Well-scoped everyday work, and documents and knowledge work, where it lands within a point or two of Opus for less.",
+      "Well-scoped everyday work, and documents and knowledge work, where it does well for well under Opus's cost.",
     signals: [
       "Implement a specified function or change, add tests, or fix a bug whose cause is already known",
       "Write or edit documents, specs, summaries, or analysis",
     ],
     not_for:
-      "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-15 points higher on agentic coding.",
+      "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-21 points higher on agentic coding.",
   },
   opus: {
     what:
-      "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet - at only somewhat more per task, since it uses fewer tokens.",
+      "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet, for about twice the cost per task.",
     signals: [
       "Unknown-cause or intermittent bugs, multi-step changes across a codebase, cross-module design, API or behaviour-preserving changes, security, auth, concurrency, or migrations",
     ],
-    not_for: "Well-scoped changes and document or knowledge work, where Sonnet does nearly as well for less.",
+    not_for: "Well-scoped changes and routine document or knowledge work, where Sonnet does well for less.",
   },
   // From Anthropic's model guidance: Fable is the step up for the hardest long-running agentic and
   // research work, and for work where Opus at higher effort still falls short; Opus stays the
@@ -216,8 +218,8 @@ const GUIDANCE = {
 // published per-task comparison, so only their per-token price is stated.
 const COST = {
   haiku: "$1 / $5 per million input / output tokens; the cheapest, but it does no reasoning",
-  sonnet: "$2 / $10 per million tokens; at its effort, about 10-50% less per completed task than Opus",
-  opus: "$4 / $20 per million tokens, but it uses fewer tokens: about 1.1-1.9x Sonnet's cost per completed task, not 2x",
+  sonnet: "$2 / $10 per million tokens; about 40-60% less per completed task than Opus",
+  opus: "$4 / $20 per million tokens; about 1.6-2.6x Sonnet's cost per completed task",
   fable: "$10 / $50 per million tokens; the most expensive by far",
 };
 

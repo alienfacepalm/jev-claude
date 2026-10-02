@@ -64,7 +64,7 @@ test("ignores a tier name Jev invented", () => {
   assert.equal(decide({ ...base, jev: sure("gpt-9") }).tier, "sonnet");
 });
 
-test("lands a low-confidence answer on the default rather than acting on it", () => {
+test("an unsure pick of Opus runs one tier lower, on the default", () => {
   const out = decide({ ...base, current: "haiku", jev: unsure("opus") });
   assert.equal(out.tier, "sonnet");
   assert.equal(out.reason, "low-confidence-default");
