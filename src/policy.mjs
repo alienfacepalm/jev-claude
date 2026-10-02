@@ -1,8 +1,23 @@
 import { TIER_NAMES, THRESHOLDS, OVERRIDE_PATTERNS, rankOf } from "./config.mjs";
 
+/**
+ * The part of a prompt the user wrote themselves. Text carried into it - a sub-agent's report
+ * delivered as a message, injected reminders, code, quotations - routinely names a tier without
+ * asking for one: a review report quoting `"use strong" -> opus` forced Opus on the turn that
+ * delivered it.
+ */
+const ownWords = (prompt) =>
+  String(prompt ?? "")
+    .replace(/<agent-message[\s\S]*?<\/agent-message>/g, " ")
+    .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, " ")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`\n]*`/g, " ")
+    .replace(/"[^"\n]*"/g, " ");
+
 /** The tier the user named explicitly in the prompt, or null. */
 export function detectOverride(prompt) {
-  const hit = OVERRIDE_PATTERNS.find((p) => p.re.test(prompt ?? ""));
+  const text = ownWords(prompt);
+  const hit = OVERRIDE_PATTERNS.find((p) => p.re.test(text));
   return hit ? hit.tier : null;
 }
 

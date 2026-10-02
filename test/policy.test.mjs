@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { decide, detectOverride } from "../src/policy.mjs";
 import { QUESTIONS, shouldUseExactModel, availableTiers } from "../src/config.mjs";
 
@@ -27,6 +28,16 @@ test("an explicit user override beats Jev", () => {
   const out = decide({ ...base, prompt: "use haiku to fix this typo", jev: sure("opus") });
   assert.equal(out.tier, "haiku");
   assert.equal(out.reason, "override");
+});
+
+test("a sub-agent report quoting an override phrase does not force a model", () => {
+  // Captured from a real session: a test-review report delivered as a message quoted
+  // `"use strong" -> opus`, and that turn was forced onto Opus.
+  const prompt = readFileSync(new URL("./fixtures/subagent-handback-prompt.txt", import.meta.url), "utf8");
+  assert.equal(detectOverride(prompt), null);
+  const out = decide({ ...base, prompt, current: "opus", jev: sure("sonnet") });
+  assert.equal(out.tier, "sonnet", "Jev's confident answer is acted on, not the quoted phrase");
+  assert.equal(out.reason, "jev");
 });
 
 test("detectOverride only fires on a real instruction", () => {
