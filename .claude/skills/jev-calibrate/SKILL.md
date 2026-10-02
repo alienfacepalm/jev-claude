@@ -7,10 +7,11 @@ allowed-tools: Bash(node *)
 
 !`node "${CLAUDE_SKILL_DIR}/../../../bin/jev-check.mjs"`
 
-## Installed copy: report only
+## Report only
 
-If the report above says `Mode installed`, this is an installed copy of Jev Router. Return the
-report verbatim in a plain text code block. Then add at most two sentences, only about what needs
+If the report above says `Mode installed`, this is an installed copy of Jev Router. The same goes
+when the arguments are `check` (they are: `$ARGUMENTS`), which asks for the report alone, as the
+first-launch offer does. Return the report verbatim in a plain text code block. Then add at most two sentences, only about what needs
 the user's attention: routing being off, a model newer than the tuning, or tiers the account does
 not offer. Stop there. Do not edit files, run other tools, or search the web: tuning is done in
 the router's repository and reaches users through jev-router updates.

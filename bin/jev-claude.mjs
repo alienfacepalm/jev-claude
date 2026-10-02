@@ -104,7 +104,9 @@ if (
       "[jev] It only reads your setup and changes nothing, using a little of your Claude usage. [Y/n] ",
   );
   markOffered(accepted);
-  if (accepted) args.unshift("/jev-calibrate");
+  // `check` keeps it to the report even in the router's own repository, where /jev-calibrate
+  // would otherwise go on to re-tune: the offer promised to change nothing.
+  if (accepted) args.unshift("/jev-calibrate check");
 }
 
 if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
