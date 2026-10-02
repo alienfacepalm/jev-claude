@@ -1,6 +1,6 @@
 {
   "name": "jev-router",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Fork of jev-router for Claude Code: routes each turn to the model that gets the best result for the least cost, using TypeSafe Jev",
   "type": "module",
   "repository": {
