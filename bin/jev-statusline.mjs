@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+// Status line for Claude Code. Claude Code pipes session JSON on stdin and renders whatever
+// this prints. See https://code.claude.com/docs/en/statusline
+import { readStatus, agentView } from "../src/status.mjs";
+import { shortReason } from "../src/reasons.mjs";
+
+const DIM = "\x1b[2m";
+const RESET = "\x1b[0m";
+const COLOR = { haiku: "\x1b[32m", sonnet: "\x1b[36m", opus: "\x1b[35m", fable: "\x1b[33m" };
+
+// A status line replaces Claude Code's footer hints, so echo the basics it stops showing.
+const chunks = [];
+for await (const c of process.stdin) chunks.push(c);
+
+let input = {};
+try {
+  input = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+} catch {
+  // Malformed input still gets a usable line below.
+}
+
+const status = readStatus(input.session_id);
+const dir = (input.workspace?.current_dir ?? input.cwd ?? "").split(/[\\/]/).pop();
+const pct = Math.round(input.context_window?.used_percentage ?? 0);
+const { main, subagents } = agentView(status);
+
+/** The main thread's model, with confidence and the reason when it is not the obvious one. */
+function mainLine(entry) {
+  const color = COLOR[entry.tier] ?? "";
+  const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
+  // Said in words rather than in the reason code, which is an internal name; a plain
+  // recommendation has nothing to add, so it says nothing.
+  const said = shortReason(entry.reason);
+  const why = said ? ` ${DIM}(${said})${RESET}` : "";
+  return `${color}${entry.model ?? entry.tier}${RESET}${p}${why}`;
+}
+
+let routed = `${DIM}jev: waiting for first prompt${RESET}`;
+if (main?.manual || (!main && status?.manual)) {
+  // The user picked this model with /model, so show their choice rather than a tier.
+  routed = `${DIM}⏸ manual${RESET} ${input.model?.display_name ?? main?.model ?? ""}`.trimEnd();
+} else if (main) {
+  routed = mainLine(main);
+} else if (status) {
+  // A session routed before per-agent tracking existed, or by Codex, which has no agents.
+  routed = mainLine(status);
+}
+
+// Sub-agents run in parallel and each gets its own model, which is the whole point of showing
+// them: a sub-agent on Haiku should not look like the main thread dropping to Haiku. Tier
+// names rather than model ids, because three full ids do not fit on one line.
+let agents = "";
+if (subagents.length) {
+  const shown = subagents.slice(0, 3);
+  const names = shown.map((a) => {
+    const color = COLOR[a.tier] ?? "";
+    return `${color}${a.manual ? "⏸" : ""}${a.tier ?? a.model ?? "?"}${RESET}`;
+  });
+  const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
+  agents = ` ${DIM}·${RESET} ${DIM}⤷${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
+}
+
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir} ${DIM}· ${pct}% context${RESET}\n`);

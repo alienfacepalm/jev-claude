@@ -1,0 +1,7 @@
+# The entry points carry a `#!/usr/bin/env node` shebang, which the kernel reads literally:
+# stored with CRLF, the interpreter becomes `node\r` and macOS and Linux refuse to start them
+# (`env: node\r: No such file or directory`). Normalising on the way into the repository keeps
+# that from coming back from a Windows checkout.
+* text=auto eol=lf
+
+*.png binary
