@@ -1,4 +1,4 @@
-# Installs or updates jev-claude (Jev Router for Claude Code) on Windows:
+# Installs or updates jev-claude (a fork of jev-router, for Claude Code) on Windows:
 #
 #   irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex
 #

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs or updates jev-claude (Jev Router for Claude Code) on macOS, Linux, or Git Bash:
+# Installs or updates jev-claude (a fork of jev-router, for Claude Code) on macOS, Linux, or Git Bash:
 #
 #   curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | bash
 #

@@ -1,12 +1,16 @@
 # jev-claude
 
+> **jev-claude is a fork of [jev-router](https://github.com/gargpratyush/jev-router) by
+> [@gargpratyush](https://github.com/gargpratyush).** The routing proxy, the Jev integration, the
+> status line, and `/jev-explain` come from that project. This fork narrows it to Claude Code and
+> re-tunes the routing; see [Changes from jev-router](#changes-from-jev-router).
+
 Per-turn model routing for Claude Code. For each new prompt, Jev picks the Claude model that gets
 the best result for the least money: quality first, then cost, speed last. Claude Code itself is
 unchanged: its interface, tools, sessions, permissions, and sign-in all work as before.
 
-This is a fork of [jev-router](https://github.com/gargpratyush/jev-router), focused on Claude Code.
-The original also routed OpenAI Codex; that code is still here but is not maintained or tested in
-this fork (see [OpenAI Codex](#openai-codex)).
+The original jev-router also routed OpenAI Codex; that code is still here but is not maintained
+or tested in this fork (see [OpenAI Codex](#openai-codex)).
 
 ## Install
 
@@ -287,6 +291,26 @@ Pull after pushing to pick up that commit. The size of the bump comes from the
   have been tested on Windows 10 (PowerShell 7 and 5.1, Git Bash) with Claude Code 2.1.287;
   macOS and Linux run the same code but have not been tested yet.
 
+## Changes from jev-router
+
+jev-claude started as an import of [jev-router](https://github.com/gargpratyush/jev-router) by
+[@gargpratyush](https://github.com/gargpratyush). What this fork changes:
+
+- **Claude Code only.** The Codex code is kept but no longer maintained or tested.
+- **Routing re-tuned for value.** Jev is told each model's cost per completed task, from published
+  benchmarks, instead of its per-token price, and to prefer the stronger model when unsure a
+  cheaper one would succeed. Unsure answers run one tier below Jev's pick, new conversations
+  start on Sonnet, and Fable is offered by default for long-horizon work and adversarial reviews.
+- **Newest models automatically.** Each tier uses the newest version in your account, the status
+  line flags models newer than the router's tuning, and sub-agents show their model's version.
+- **Setup check and calibration.** `/jev-calibrate`, offered once on first launch, and the
+  calibration script and cases for re-tuning when new models ship.
+- **Easier setup.** One-line installers for macOS, Linux, and Windows, and `.env.example`.
+- **Hardening.** A project's `.env` can no longer redirect traffic or run code, private files are
+  owner-only, prompt overrides need an explicit instruction, Esc stops generation upstream, and
+  the saved Claude Code model is restored even when a session is killed.
+- **Tooling.** pnpm instead of npm, and automatic version bumps on `master`.
+
 ## Contributing
 
 Issues and pull requests are welcome. Use [Issues](https://github.com/alienfacepalm/jev-claude/issues)
@@ -307,4 +331,7 @@ settings. All contributions are reviewed, and only the repository owner merges p
 
 ## License
 
-MIT. Originally created as [jev-router](https://github.com/gargpratyush/jev-router).
+MIT, see [LICENSE](LICENSE). jev-claude is a fork of
+[jev-router](https://github.com/gargpratyush/jev-router) by
+[@gargpratyush](https://github.com/gargpratyush), also MIT-licensed; its copyright notice is kept
+in LICENSE.
