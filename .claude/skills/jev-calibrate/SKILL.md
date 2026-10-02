@@ -30,7 +30,8 @@ Report what changed before editing anything. If nothing did, say so and stop.
 
 - `TIERS`: the newest id per tier (the fallback for when the account catalog has not loaded),
   the capability flags, and `floor` (the tier's effort) - the vendor default unless a measurement
-  shows a better-value level.
+  shows a better-value level. A tier's `id` is also what the router counts as calibrated: the
+  status line flags any newer model in the account until that `id` is updated.
 - `COST`: per-task cost relative to the neighbouring tiers, with the source and month in the
   comment above it.
 - `GUIDANCE`: describe each tier by the type of task it does best, from the vendor positioning

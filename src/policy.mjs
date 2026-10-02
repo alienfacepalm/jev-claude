@@ -50,11 +50,13 @@ export function decide({ prompt, jev, current, available, contextTokens = 0 }) {
 
   // Written so a missing or non-numeric confidence counts as unsure rather than as certain.
   if (!(jev.confidence >= THRESHOLDS.minConfidence)) {
-    // The answer is not acted on at all: an unsure turn lands on the default, or stays where it
-    // is when that is already stronger. Fable is out of reach this way for the same reason it is
-    // never stepped up into - it bills extra, so only an explicit ask or a confident answer
-    // gets there.
-    return settle(TIER_NAMES[Math.max(rankOf(current), rankOf(THRESHOLDS.uncertainDefault))], "low-confidence-default");
+    // An unsure answer still says which way the work leans, so it runs one tier below the pick:
+    // an unsure Fable on Opus, an unsure Opus on Sonnet. Never below the default, which only a
+    // confident answer may go under, and never below the tier already in use. One step down also
+    // keeps Fable out of reach this way - it bills extra, so only an explicit ask or a confident
+    // answer gets there.
+    const stepDown = Math.max(rankOf(target) - 1, rankOf(THRESHOLDS.uncertainDefault), rankOf(current));
+    return settle(TIER_NAMES[stepDown], "low-confidence-default");
   }
 
   if (rankOf(target) < rankOf(current) && contextTokens > THRESHOLDS.downgradeMaxContextTokens) {

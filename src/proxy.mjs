@@ -16,7 +16,7 @@ import {
 import { askJev } from "./router.mjs";
 import { decide } from "./policy.mjs";
 import { debug } from "./log.mjs";
-import { writeDecision, markManual, dumpBody } from "./status.mjs";
+import { writeDecision, markManual, dumpBody, writeCalibration } from "./status.mjs";
 
 const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
 const TYPESAFE_BASE_URL = "https://api.typesafe.ai";
@@ -191,6 +191,19 @@ export function newestPerTier(models) {
 }
 
 const modelForTier = (models, tier) => models.find((model) => model.tier === tier)?.id ?? idOf(tier);
+
+/**
+ * Models the account offers that are newer than the version their tier was calibrated for.
+ *
+ * Routing already moves to a new release by itself, but the guidance, costs and effort in
+ * config.mjs were measured on the old one, so a newer model here is the signal to run
+ * `/jev-calibrate`. Updating a tier's `id` there marks it calibrated and clears the notice.
+ */
+export function newerThanCalibrated(catalog = []) {
+  return newestPerTier(claudeModels(catalog))
+    .filter((model) => compareVersions(versionOf(model), versionOf({ id: idOf(model.tier), tier: model.tier })) > 0)
+    .map((model) => model.id);
+}
 
 /**
  * Identifies the conversation a request belongs to. Claude Code runs sub-agents through the
@@ -467,6 +480,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
                 for (const model of JSON.parse(data.toString()).data ?? []) {
                   if (tierOf(model?.id)) catalog.set(model.id, model);
                 }
+                writeCalibration(newerThanCalibrated([...catalog.values()]));
               } catch (err) {
                 debug(`could not read Claude model catalog: ${err.message}`);
               }

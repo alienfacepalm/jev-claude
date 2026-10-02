@@ -7,6 +7,7 @@ import {
   applyTier,
   claudeModels,
   newestPerTier,
+  newerThanCalibrated,
   conversationKey,
   sessionOf,
   agentOf,
@@ -33,8 +34,10 @@ import {
   agentView,
   pruneStale,
   STATUS_DIR,
+  writeCalibration,
+  readCalibration,
 } from "../src/status.mjs";
-import { mkdirSync, statSync, utimesSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, statSync, utimesSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 test("reads the session id out of Claude Code's metadata", () => {
@@ -500,4 +503,27 @@ test("a sub-agent pinned to its own model does not pause the session", () => {
 
   markManual(sid, "claude-sonnet-5", { key: "m", label: "main", main: true });
   assert.equal(readStatus(sid).manual, true, "the main thread picking a model does pause it");
+});
+
+test("flags a model newer than the router was calibrated for, and nothing else", () => {
+  assert.deepEqual(newerThanCalibrated([]), [], "no catalog yet: nothing to report");
+  assert.deepEqual(
+    newerThanCalibrated([{ id: "claude-opus-5-5" }, { id: "claude-sonnet-5-5" }, { id: "claude-opus-4-8" }]),
+    [],
+    "the calibrated versions and older ones are not news",
+  );
+  assert.deepEqual(
+    newerThanCalibrated([{ id: "claude-opus-6" }, { id: "claude-opus-5-5" }, { id: "claude-sonnet-5-5" }]),
+    ["claude-opus-6"],
+  );
+});
+
+test("the calibration notice round-trips and reads empty when absent", () => {
+  const file = join(STATUS_DIR, `calibration-test-${process.pid}.json`);
+  assert.deepEqual(readCalibration(file), []);
+  writeCalibration(["claude-opus-6"], file);
+  assert.deepEqual(readCalibration(file), ["claude-opus-6"]);
+  writeCalibration([], file);
+  assert.deepEqual(readCalibration(file), []);
+  rmSync(file, { force: true });
 });

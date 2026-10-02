@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Status line for Claude Code. Claude Code pipes session JSON on stdin and renders whatever
 // this prints. See https://code.claude.com/docs/en/statusline
-import { readStatus, agentView } from "../src/status.mjs";
+import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
 
 const DIM = "\x1b[2m";
@@ -60,4 +60,11 @@ if (subagents.length) {
   agents = ` ${DIM}·${RESET} ${DIM}⤷${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
 }
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir} ${DIM}· ${pct}% context${RESET}\n`);
+// A model newer than the router's tuning: routing already uses it, but the guidance, costs and
+// effort were measured on the one before, so it is worth re-calibrating.
+const newer = readCalibration();
+const notice = newer.length
+  ? ` ${DIM}·${RESET} \x1b[33mnew ${newer[0]}${newer.length > 1 ? ` +${newer.length - 1}` : ""}: /jev-calibrate${RESET}`
+  : "";
+
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir} ${DIM}· ${pct}% context${RESET}${notice}\n`);

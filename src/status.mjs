@@ -166,6 +166,29 @@ export function agentView(status, { freshMs = 90_000, now = Date.now() } = {}) {
   };
 }
 
+// Shared across sessions rather than per session: which models are newer than the router's
+// calibration is a fact about the account, read whenever a session loads the model list.
+const CALIBRATION_FILE = join(DIR, "calibration.json");
+
+/** Records the account's models that are newer than the router was calibrated for. */
+export function writeCalibration(newer, file = CALIBRATION_FILE) {
+  try {
+    writePrivate(file, JSON.stringify({ newer, at: Date.now() }));
+  } catch {
+    // A missed notice is cosmetic and must never interfere with a request.
+  }
+}
+
+/** Model ids newer than the router's calibration, or an empty list. */
+export function readCalibration(file = CALIBRATION_FILE) {
+  try {
+    const { newer } = JSON.parse(readFileSync(file, "utf8"));
+    return Array.isArray(newer) ? newer : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Latest routing decision for a session, or null if none has been made yet. */
 export function readStatus(sessionId) {
   try {

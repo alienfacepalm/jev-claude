@@ -103,9 +103,15 @@ test("an answer without a confidence is treated as unsure", () => {
   assert.equal(out.reason, "low-confidence-default");
 });
 
+test("an unsure answer runs one tier below its pick", () => {
+  assert.equal(decide({ ...base, current: "sonnet", jev: unsure("opus") }).tier, "sonnet");
+  assert.equal(decide({ ...base, current: "sonnet", jev: unsure("fable") }).tier, "opus");
+  assert.equal(decide({ ...base, current: "haiku", jev: unsure("sonnet") }).tier, "sonnet", "never below the default");
+});
+
 test("a low-confidence answer cannot reach fable", () => {
   const out = decide({ ...base, current: "haiku", jev: unsure("fable") });
-  assert.equal(out.tier, "sonnet");
+  assert.equal(out.tier, "opus", "one step below fable, never fable itself");
   assert.equal(out.reason, "low-confidence-default");
 });
 

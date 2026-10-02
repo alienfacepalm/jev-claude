@@ -73,21 +73,22 @@ export const availableTiers = (env = process.env) =>
 
 export const THRESHOLDS = {
   /**
-   * Below this Jev confidence the answer is not acted on: the turn lands on `uncertainDefault`,
-   * or stays on a stronger tier already in use.
+   * Below this Jev confidence the pick is not followed exactly: the turn runs one tier below it,
+   * and no lower than `uncertainDefault` or the tier already in use.
    *
-   * A pick between 0.3 and 0.6 is close to a coin flip, so it is not followed down to Haiku or
-   * up to a tier the work may not need; the turn settles on `uncertainDefault` instead. Measured
-   * picks that were sound ran 0.78-0.99.
+   * A pick between 0.3 and 0.6 is close to a coin flip, so it is not followed down to Haiku or all
+   * the way up to a tier the work may not need, but it still says which way the work leans. In
+   * calibration Jev named the right tier for hard work far more often than it was sure of it.
+   * Sound picks measured 0.75-0.96.
    */
   minConfidence: 0.6,
   /**
-   * Where an unsure answer lands, and the tier a conversation starts on before anything has been
-   * routed (which is also where a turn stays if Jev cannot be reached).
+   * The floor for an unsure answer, and the tier a conversation starts on before anything has
+   * been routed (which is also where a turn stays if Jev cannot be reached).
    *
-   * Sonnet by the user's choice: a capable model that costs half of Opus, with Jev's confident
-   * answers still free to move a turn up to Opus or Fable. It never lands below the tier already in
-   * use, which only a confident answer may give up.
+   * Sonnet by the user's choice: a capable model, cheaper per task than Opus, with Jev's answers
+   * still free to move a turn up. It never lands below the tier already in use, which only a
+   * confident answer may give up.
    */
   uncertainDefault: "sonnet",
   /**
