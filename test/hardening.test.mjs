@@ -13,6 +13,7 @@ import { resolveCommand, shimScript, launchSpec, spawnSpec, quoteForCmd } from "
 
 const HAIKU = idOf("haiku");
 const OPUS = idOf("opus");
+const SONNET = idOf("sonnet");
 const sure = (choice) => async () => ({ choice, confidence: 0.97, ms: 1 });
 const metadata = (session) => ({ user_id: JSON.stringify({ session_id: session }) });
 
@@ -81,7 +82,7 @@ test("a routing failure never forwards the sentinel", async (t) => {
     throw new Error("router blew up");
   });
   await send({ model: "jev-router", tools: [{ name: "Bash" }], messages: [{ role: "user", content: "hello" }] });
-  assert.equal(seen[0].model, OPUS);
+  assert.equal(seen[0].model, SONNET, "a failure lands on the default tier, never the sentinel");
 });
 
 test("print mode keeps the conversation's tier when the session id appears later", async (t) => {

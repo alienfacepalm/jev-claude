@@ -6,6 +6,7 @@ import {
   newTurnPrompt,
   applyTier,
   claudeModels,
+  newestPerTier,
   conversationKey,
   sessionOf,
   agentOf,
@@ -23,7 +24,7 @@ test("only the sentinel model is routed", () => {
 test("the sentinel is not mistaken for a real tier", () => {
   assert.equal(tierOf("jev-router"), null);
 });
-import { tierOf, isAuto } from "../src/config.mjs";
+import { tierOf, isAuto, effortFloor } from "../src/config.mjs";
 import {
   writeDecision,
   writeStatus,
@@ -322,12 +323,32 @@ test("an unknown tier leaves the request untouched", () => {
   assert.equal(body.model, "claude-sonnet-4-6");
 });
 
-test("names the effort when the request does not, so a tier change is not also a depth change", () => {
-  // Opus 5.5 defaults to medium and Sonnet 5.5 to high, so leaving this to the API would make
-  // routing up to Opus think less than the Sonnet it came from.
-  const body = { model: "jev-router", thinking: { type: "adaptive" } };
-  applyTier(body, "opus");
-  assert.deepEqual(body.output_config, { effort: "high" });
+test("names each tier's own effort when the request does not", () => {
+  const opus = { model: "jev-router", thinking: { type: "adaptive" } };
+  applyTier(opus, "opus");
+  assert.deepEqual(opus.output_config, { effort: "medium" });
+  const sonnet = { model: "jev-router", thinking: { type: "adaptive" } };
+  applyTier(sonnet, "sonnet");
+  assert.deepEqual(sonnet.output_config, { effort: "high" });
+});
+
+test("JEV_<TIER>_EFFORT overrides a tier's effort, and a bad value is ignored", () => {
+  assert.equal(effortFloor("opus", { JEV_OPUS_EFFORT: "High" }), "high");
+  assert.equal(effortFloor("sonnet", { JEV_SONNET_EFFORT: "low" }), "low");
+  assert.equal(effortFloor("opus", { JEV_OPUS_EFFORT: "turbo" }), "medium", "unknown value falls back to the default");
+  assert.equal(effortFloor("opus", {}), "medium");
+  assert.equal(effortFloor("haiku", { JEV_HAIKU_EFFORT: "high" }), null, "haiku takes no effort");
+});
+
+test("a new major version is picked as the newest of its tier, dated or not", () => {
+  const ids = (catalog) => newestPerTier(claudeModels(catalog)).map((m) => m.id);
+  assert.deepEqual(ids([{ id: "claude-opus-5-5" }, { id: "claude-opus-6" }, { id: "claude-opus-4-8" }]), ["claude-opus-6"]);
+  assert.deepEqual(ids([{ id: "claude-sonnet-5-5" }, { id: "claude-sonnet-5-10" }]), ["claude-sonnet-5-10"]);
+  assert.deepEqual(
+    ids([{ id: "claude-haiku-4-5-20251001" }, { id: "claude-haiku-4-6" }]),
+    ["claude-haiku-4-6"],
+    "a date suffix is not a minor version",
+  );
 });
 
 test("keeps an effort the request already carries", () => {

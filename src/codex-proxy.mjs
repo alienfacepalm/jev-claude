@@ -2,7 +2,7 @@ import http from "node:http";
 import https from "node:https";
 import { createHash, randomUUID } from "node:crypto";
 import { pipeline } from "node:stream";
-import { availableTiers, shouldUseExactModel } from "./config.mjs";
+import { availableTiers, shouldUseExactModel, THRESHOLDS } from "./config.mjs";
 import { askJev } from "./router.mjs";
 import { decide } from "./policy.mjs";
 import { debug } from "./log.mjs";
@@ -220,8 +220,8 @@ export async function startCodexProxy({
               availableTiers().includes(model.tier),
             );
             const available = [...new Set(candidates.map((model) => model.tier))];
-            const currentModel = known?.model ?? modelForTier(candidates, "opus");
-            const current = codexTierOf(currentModel) ?? "opus";
+            const currentModel = known?.model ?? modelForTier(candidates, THRESHOLDS.uncertainDefault);
+            const current = codexTierOf(currentModel) ?? THRESHOLDS.uncertainDefault;
             const prompt = codexNewTurnPrompt(body);
             const explaining = prompt?.includes("<jev-explain>") || /^\$jev-explain\b/i.test(prompt ?? "");
             let tier = current;
@@ -272,7 +272,8 @@ export async function startCodexProxy({
           debug(`codex could not process body: ${err.message}`);
           // The sentinel is not a model the API knows; forwarding it fails the user's turn.
           if (body?.model === CODEX_AUTO_MODEL) {
-            applyCodexTier(body, known?.tier ?? "opus", models, known?.model ?? codexModelOf("opus"));
+            const fallback = THRESHOLDS.uncertainDefault;
+            applyCodexTier(body, known?.tier ?? fallback, models, known?.model ?? codexModelOf(fallback));
             out = Buffer.from(JSON.stringify(body));
             routing = undefined;
           }

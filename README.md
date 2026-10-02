@@ -195,7 +195,7 @@ One Jev call per fresh user turn selects a shared abstract tier:
 - low confidence never downgrades and caps upgrades at the balanced tier;
 - large conversations refuse downgrades that would waste more prompt-cache work than they save;
 - unavailable tiers step upward rather than silently choosing a weaker model;
-- the long tier is disabled unless `JEV_ALLOW_FABLE=1`.
+- the long tier is offered by default but never stepped up into as a substitute; `JEV_ALLOW_FABLE=0` disables it.
 
 Tool-loop continuations keep the tier chosen at the start of the turn. Main conversations and
 sub-agents are pinned separately. Routing is fail-open: Jev failure never blocks the CLI.
@@ -205,10 +205,11 @@ sub-agents are pinned separately. Routing is fail-open: Jev failure never blocks
 | Variable | Interface | Effect |
 | --- | --- | --- |
 | `JEV_API_KEY` | Both | Enables routing. `TYPESAFE_API_KEY` also works. |
-| `JEV_ALLOW_FABLE` | Both | Enables the opt-in long tier. |
+| `JEV_ALLOW_FABLE` | Both | The long tier is on by default; `0`, `false`, `no` or `off` disables it. It bills extra usage credits. |
 | `JEV_DEBUG` | Both | Logs decisions and rewrites to `~/.jev-claude.log` in interactive sessions. |
 | `JEV_DUMP` | Both | Dumps request bodies (whole conversations) for debugging wire-format changes. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
 | `JEV_NO_STATUSLINE` | Claude | Disables the injected Claude status line. |
+| `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Claude | Reasoning effort (`low`, `medium`, `high`, `xhigh`, `max`) used for a tier when the request names none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. |
 | `JEV_CODEX_FAST_MODEL` | Codex | Fast model; defaults to `gpt-5.6-luna`. |
 | `JEV_CODEX_BALANCED_MODEL` | Codex | Balanced model; defaults to `gpt-5.6-terra`. |
 | `JEV_CODEX_STRONG_MODEL` | Codex | Strong model; defaults to `gpt-5.6-sol`. |
@@ -218,8 +219,8 @@ Existing environment variables have highest precedence, followed by `.env` in th
 directory, `~/.jev-router.env`, and the legacy `~/.jev-claude.env`.
 
 The launch directory is often someone else's repository, so its `.env` may set only
-`JEV_API_KEY`, `TYPESAFE_API_KEY`, `JEV_DEBUG`, `JEV_ALLOW_FABLE`, `JEV_NO_STATUSLINE`, and
-the `JEV_CODEX_*_MODEL` variables. Anything that could redirect traffic or run code, such as
+`JEV_API_KEY`, `TYPESAFE_API_KEY`, `JEV_DEBUG`, `JEV_ALLOW_FABLE`, `JEV_NO_STATUSLINE`, the
+`JEV_<TIER>_EFFORT` variables, and the `JEV_CODEX_*_MODEL` variables. Anything that could redirect traffic or run code, such as
 `ANTHROPIC_BASE_URL`, `TYPESAFE_BASE_URL`, or `NODE_OPTIONS`, is ignored there; set it in your
 shell or in `~/.jev-router.env`. The Jev key itself is removed from the environment Claude Code
 and Codex run with.

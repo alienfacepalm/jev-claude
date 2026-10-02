@@ -25,7 +25,7 @@ const REASONS = [
   {
     match: "low-confidence-default",
     short: "router unsure",
-    long: "the router was unsure, so this fell back to the strong model",
+    long: "the router was unsure, so this fell back to the default model",
   },
   {
     match: "downgrade-not-worth-cache-rebuild",

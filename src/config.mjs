@@ -9,23 +9,29 @@ import { choice, score } from "@typesafe-ai/sdk";
  * those fields have to be stripped when routing down to it.
  */
 export const TIERS = [
-  { name: "haiku", id: "claude-haiku-4-5-20251001", family: "haiku", thinking: false, effort: false },
+  { name: "haiku", id: "claude-haiku-4-5-20251001", family: "haiku", thinking: false, effort: false, price: 1 },
   { name: "sonnet", id: "claude-sonnet-5-5", family: "sonnet", thinking: true, effort: true, floor: "high", price: 2 },
-  { name: "opus", id: "claude-opus-5-5", family: "opus", thinking: true, effort: true, floor: "high", price: 4 },
+  { name: "opus", id: "claude-opus-5-5", family: "opus", thinking: true, effort: true, floor: "medium", price: 4 },
   { name: "fable", id: "claude-fable-5-1", family: "fable", thinking: true, effort: true, floor: "high", price: 10 },
 ];
+
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 
 /**
  * The effort a tier is given when the request does not name one.
  *
- * The API's own default differs by model - Sonnet 5.5 thinks at `high`, Opus 5.5 at `medium` -
- * so a silent switch between them changes reasoning depth as well as model, in the opposite
- * direction to the one intended: routing "up" to Opus and landing on `medium` is a weaker think
- * than the Sonnet it came from, at twice the price. Naming the floor keeps a tier change a
- * change of model alone. A request that carries its own effort is left as it is: that is the
- * user's choice, made in Claude Code, and it outranks this.
+ * Each tier has its own default (Sonnet `high`, Opus `medium`, matching what the API itself
+ * does for those models) rather than one level for all, so a tier is run at the depth that suits
+ * it. `JEV_<TIER>_EFFORT` (for example `JEV_OPUS_EFFORT=high`) overrides it; an unrecognised
+ * value is ignored rather than sent to the API. A request that carries its own effort is left
+ * as it is: that is the user's choice, made in Claude Code, and it outranks this.
  */
-export const effortFloor = (name) => TIERS.find((t) => t.name === name)?.floor ?? null;
+export const effortFloor = (name, env = process.env) => {
+  const tier = tierSpec(name);
+  if (!tier?.floor) return null;
+  const chosen = env[`JEV_${name.toUpperCase()}_EFFORT`]?.trim().toLowerCase();
+  return EFFORTS.includes(chosen) ? chosen : tier.floor;
+};
 
 /** Input price per million tokens, for telling Jev what "cheapest" costs. A cached snapshot. */
 export const priceOf = (name) => TIERS.find((t) => t.name === name)?.price ?? null;
@@ -54,25 +60,36 @@ export const tierOf = (model) =>
   TIERS.find((t) => typeof model === "string" && model.includes(t.family))?.name ?? null;
 
 /**
- * Fable bills extra usage credits, so it is opt-in. Everything else is covered by a normal
- * subscription.
+ * Every tier is on offer by default, Fable included. Fable bills extra usage credits rather
+ * than being covered by a normal subscription, so `JEV_ALLOW_FABLE=0` (or `false`/`no`) takes it
+ * off the menu. Even when allowed, policy never steps up into it as a substitute; only an explicit
+ * ask or a confident Jev answer reaches it.
  */
-export const availableTiers = () =>
-  TIER_NAMES.filter((n) => n !== "fable" || process.env.JEV_ALLOW_FABLE === "1");
+export const fableAllowed = (env = process.env) =>
+  !/^(0|false|no|off)$/i.test(env.JEV_ALLOW_FABLE?.trim() ?? "");
+
+export const availableTiers = (env = process.env) =>
+  TIER_NAMES.filter((n) => n !== "fable" || fableAllowed(env));
 
 export const THRESHOLDS = {
-  /** Below this Jev confidence we refuse to downgrade and cap upgrades at `uncertainCeiling`. */
-  minConfidence: 0.3,
   /**
-   * Where an unsure answer lands.
+   * Below this Jev confidence the answer is not acted on: the turn lands on `uncertainDefault`,
+   * or stays on a stronger tier already in use.
    *
-   * Picking between four tiers at this confidence is close to a guess, and the two ways to be
-   * wrong do not cost the same: a weak model on hard work burns the whole turn and is retried
-   * on a stronger one anyway, while a strong model on easy work costs the difference once. So
-   * an unsure turn settles here rather than on the guess - and never below the tier already in
+   * A pick between 0.3 and 0.6 is close to a coin flip, so it is not followed down to Haiku or
+   * up to a tier the work may not need; the turn settles on `uncertainDefault` instead. Measured
+   * picks that were sound ran 0.78-0.99.
+   */
+  minConfidence: 0.6,
+  /**
+   * Where an unsure answer lands, and the tier a conversation starts on before anything has been
+   * routed (which is also where a turn stays if Jev cannot be reached).
+   *
+   * Sonnet by the user's choice: a capable model that costs half of Opus, with Jev's confident
+   * answers still free to move a turn up to Opus or Fable. It never lands below the tier already in
    * use, which only a confident answer may give up.
    */
-  uncertainDefault: "opus",
+  uncertainDefault: "sonnet",
   /**
    * Switching models invalidates the prompt cache; the next turn re-sends the whole
    * conversation. Measured at ~23.6k cache-creation tokens switching into Opus, so a
@@ -165,10 +182,23 @@ const GUIDANCE = {
     signals: ["Unknown-cause debugging, cross-module design, security, auth, concurrency, or migrations"],
     not_for: "Routine work with a clear implementation, which sonnet does as well for half the cost.",
   },
+  // From Anthropic's model guidance: Fable is the step up for the hardest long-running agentic and
+  // research work, and for work where Opus at higher effort still falls short; Opus stays the
+  // default for most work, complex agentic coding included. Context size is not a reason to pick
+  // it: Sonnet and Opus share its 1M window. Adversarial plan review is the user's own addition.
   fable: {
-    what: "Very large or long-running work beyond a normal focused session.",
-    signals: ["Whole-repo migration, unusually large context, or multi-hour autonomous execution"],
-    not_for: "Anything a strong model can finish in one focused session.",
+    what:
+      "Long-horizon autonomous work, the most demanding reasoning, and adversarial review that hardens a plan, spec, or design by hunting for how it fails.",
+    // Kept to a few signals that do not overlap Opus's. A longer list of everything Fable is good
+    // at measured worse: Jev split between Opus and Fable, and a red-team prompt that scored 0.80
+    // on a short list fell to 0.31, under the confidence bar.
+    signals: [
+      "Long-horizon autonomous work: a whole-repo migration, a large system built end to end from a spec, or a full deliverable such as financial analysis with spreadsheets and slides",
+      "Adversarially review, red-team, stress-test, or poke holes in a plan, spec, or design to harden it",
+      "A problem that has already defeated a strong model, such as a bug two attempts have missed",
+    ],
+    not_for:
+      "Writing the plan or spec itself, ordinary code review, or security-focused analysis, where Fable's safety classifiers can decline.",
   },
 };
 
@@ -178,7 +208,7 @@ export const questionForModels = (models) =>
     [
       "Pick the cheapest exact model that can fully complete this coding request in one pass, without retrying on a stronger model.",
       "Each tier is offered as its newest version only. Judge required reasoning, not requested reply length.",
-      "Every model here runs at high effort, so a stronger tier buys a stronger model and not more thinking.",
+      "Reasoning effort is set per tier and is not something to choose between; judge only which model the work needs.",
       "Changing tier mid-conversation discards the prompt cache and re-reads the whole history, so prefer the current model where the work has not changed shape.",
     ],
     Object.fromEntries(

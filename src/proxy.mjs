@@ -8,6 +8,8 @@ import {
   idOf,
   availableTiers,
   tierSpec,
+  effortFloor,
+  THRESHOLDS,
   isAuto,
   shouldUseExactModel,
 } from "./config.mjs";
@@ -123,13 +125,27 @@ export function applyTier(body, tierName, model = idOf(tierName)) {
   if (!tier.effort && body.output_config) {
     delete body.output_config.effort;
     if (Object.keys(body.output_config).length === 0) delete body.output_config;
-  } else if (tier.effort && tier.floor && !body.output_config?.effort) {
-    // Nothing asked for an effort, so the model's own default would apply - and those differ
-    // between tiers, which would make a routing decision quietly change reasoning depth too.
-    body.output_config = { ...body.output_config, effort: tier.floor };
+  } else if (tier.effort && !body.output_config?.effort) {
+    // Nothing asked for an effort, so name the tier's configured one rather than leaving the
+    // model's own default to apply.
+    const effort = effortFloor(tierName);
+    if (effort) body.output_config = { ...body.output_config, effort };
   }
   return body;
 }
+
+/**
+ * `[major, minor]` read from a model id: `claude-opus-6` is [6, 0], `claude-opus-5-5` is [5, 5],
+ * `claude-haiku-4-5-20251001` is [4, 5] (the date is not a minor version). Unreadable ids are
+ * [0, 0], which sorts them last.
+ */
+export function versionOf({ id = "", tier } = {}) {
+  const family = tierSpec(tier)?.family ?? "";
+  const m = new RegExp(`${family}-(\\d+)(?:-(\\d{1,2})(?!\\d))?`).exec(id);
+  return m ? [Number(m[1]), Number(m[2] ?? 0)] : [0, 0];
+}
+
+const compareVersions = (a, b) => a[0] - b[0] || a[1] - b[1];
 
 /**
  * Exact Claude models reported by the account, newest first; static ids are the cold-start
@@ -137,8 +153,9 @@ export function applyTier(body, tierName, model = idOf(tierName)) {
  *
  * The order is established here rather than assumed of the catalog: `/v1/models` lists every
  * version an account can reach (`claude-opus-4-5` through `claude-opus-5-5`), and whoever
- * takes the first entry of a tier gets whichever one the API happened to list first. Entries
- * without a release date keep their catalog order, which is the best guess left.
+ * takes the first entry of a tier gets whichever one the API happened to list first. The
+ * version in the id decides, so a new release such as `claude-opus-6` is picked up the moment
+ * the account can see it, with or without a release date; the date only breaks ties.
  */
 export function claudeModels(catalog = []) {
   const models = catalog
@@ -153,7 +170,7 @@ export function claudeModels(catalog = []) {
         model.max_input_tokens && `${model.max_input_tokens} input tokens`,
       ].filter(Boolean).join("; "),
     }))
-    .sort((a, b) => b.releasedAt.localeCompare(a.releasedAt));
+    .sort((a, b) => compareVersions(versionOf(b), versionOf(a)) || b.releasedAt.localeCompare(a.releasedAt));
   return models.length
     ? models
     : TIERS.map((tier) => ({ id: tier.id, tier: tier.name, releasedAt: "", description: tier.id }));
@@ -338,7 +355,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
             const key = agent.key;
             state = stateFor(key, sessionOf(body) ? conversationKey({ ...body, metadata: undefined }) : null);
             // What the prompt cache was built on, which is what a downgrade would discard.
-            const current = state.tier ?? "opus";
+            const current = state.tier ?? THRESHOLDS.uncertainDefault;
             const prompt = newTurnPrompt(body);
             const explaining = prompt?.includes("<jev-explain>");
             let fresh = null;
@@ -411,7 +428,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
           // Whatever failed, the sentinel is not a model the API knows, and forwarding it is a
           // certain 400 for the user's turn. The conversation's tier, or the safe default, is not.
           if (isAuto(body?.model)) {
-            const tier = state?.tier ?? "opus";
+            const tier = state?.tier ?? THRESHOLDS.uncertainDefault;
             applyTier(body, tier, state?.model ?? idOf(tier));
             out = Buffer.from(JSON.stringify(body));
           }
