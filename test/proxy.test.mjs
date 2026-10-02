@@ -132,6 +132,9 @@ test("Claude proxy sends exact account models to Jev and routes the chosen versi
   await new Promise((resolve) => upstream.listen(0, "127.0.0.1", resolve));
   t.after(() => upstream.close());
 
+  // A scratch file, so the test never writes the real status line notice.
+  const calibrationFile = join(STATUS_DIR, `calibration-proxy-test-${process.pid}.json`);
+  t.after(() => rmSync(calibrationFile, { force: true }));
   const { port, close } = await startProxy({
     upstreamURL: `http://127.0.0.1:${upstream.address().port}`,
     // Only the newest of each tier is on the menu, newest first: the older Opus the account
@@ -140,10 +143,14 @@ test("Claude proxy sends exact account models to Jev and routes the chosen versi
       assert.deepEqual(models.map((model) => model.id), ["claude-opus-5-5", "claude-sonnet-5-5"]);
       return { choice: "claude-opus-5-5", confidence: 0.91, ms: 1 };
     },
+    calibrationFile,
   });
   t.after(close);
 
   await fetch(`http://127.0.0.1:${port}/v1/models`).then((response) => response.json());
+  const recorded = readCalibration(calibrationFile);
+  assert.deepEqual(recorded.models, ["claude-opus-5-5", "claude-sonnet-5-5"], "the account's newest per tier");
+  assert.deepEqual(recorded.newer, [], "nothing newer than the router was tuned for");
   await fetch(`http://127.0.0.1:${port}/v1/messages`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -520,10 +527,13 @@ test("flags a model newer than the router was calibrated for, and nothing else",
 
 test("the calibration notice round-trips and reads empty when absent", () => {
   const file = join(STATUS_DIR, `calibration-test-${process.pid}.json`);
-  assert.deepEqual(readCalibration(file), []);
-  writeCalibration(["claude-opus-6"], file);
-  assert.deepEqual(readCalibration(file), ["claude-opus-6"]);
-  writeCalibration([], file);
-  assert.deepEqual(readCalibration(file), []);
+  assert.deepEqual(readCalibration(file), { newer: [], models: [], at: null });
+  writeCalibration({ newer: ["claude-opus-6"], models: ["claude-opus-6", "claude-sonnet-5-5"] }, file);
+  const read = readCalibration(file);
+  assert.deepEqual(read.newer, ["claude-opus-6"]);
+  assert.deepEqual(read.models, ["claude-opus-6", "claude-sonnet-5-5"]);
+  assert.equal(typeof read.at, "number");
+  writeCalibration({}, file);
+  assert.deepEqual(readCalibration(file).newer, []);
   rmSync(file, { force: true });
 });

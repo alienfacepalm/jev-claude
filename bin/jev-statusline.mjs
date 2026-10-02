@@ -62,7 +62,7 @@ if (subagents.length) {
 
 // A model newer than the router's tuning: routing already uses it, but the guidance, costs and
 // effort were measured on the one before, so it is worth re-calibrating.
-const newer = readCalibration();
+const { newer } = readCalibration();
 const notice = newer.length
   ? ` ${DIM}·${RESET} \x1b[33mnew ${newer[0]}${newer.length > 1 ? ` +${newer.length - 1}` : ""}: /jev-calibrate${RESET}`
   : "";

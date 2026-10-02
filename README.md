@@ -61,6 +61,12 @@ jev-codex exec "fix the failing test"
 For a local checkout, `pnpm link --global` installs both commands. Without it, run
 `node bin/jev-claude.mjs` or `node bin/jev-codex.mjs`.
 
+The first time you start `jev-claude` with no arguments in a terminal, it asks once whether to
+check your setup with `/jev-calibrate`. The check reads and changes nothing: it reports whether
+routing is on, the models the router is tuned for, the ones your account offers, and whether any
+are newer than the tuning. Run `/jev-calibrate` again at any time. The answer is remembered in
+`~/.jev-router/first-run.json`; delete that file to be asked again.
+
 ## Claude Code interface
 
 `jev-claude` launches Claude Code with **Jev Router** selected in `/model`. Selecting another

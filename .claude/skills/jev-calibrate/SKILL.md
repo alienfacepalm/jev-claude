@@ -1,11 +1,25 @@
 ---
 name: jev-calibrate
-description: Check for new Claude models and re-tune Jev Router's tiers, effort, costs and guidance against measured results.
+description: Check Jev Router's setup and models; in the router's own repository, re-tune it for new Claude models.
 disable-model-invocation: true
+allowed-tools: Bash(node *)
 ---
 
-Re-calibrate Jev Router for the current Claude models. The repo is the directory containing this
-skill's `.claude` folder: `${CLAUDE_SKILL_DIR}/../../..`. Work there, on a branch.
+!`node "${CLAUDE_SKILL_DIR}/../../../bin/jev-check.mjs"`
+
+## Installed copy: report only
+
+If the report above says `Mode installed`, this is an installed copy of Jev Router. Return the
+report verbatim in a plain text code block. Then add at most two sentences, only about what needs
+the user's attention: routing being off, a model newer than the tuning, or tiers the account does
+not offer. Stop there. Do not edit files, run other tools, or search the web: tuning is done in
+the router's repository and reaches users through jev-router updates.
+
+## Repository: re-calibrate
+
+If it says `Mode repository`, re-calibrate Jev Router for the current Claude models, using the
+report as part of step 1. The repo is the directory containing this skill's `.claude` folder:
+`${CLAUDE_SKILL_DIR}/../../..`. Work there, on a branch.
 
 The goal is the cheapest route to the best end result. Quality comes first, then cost; speed does
 not matter. When two models would both succeed, prefer the cheaper; when it is unclear whether the

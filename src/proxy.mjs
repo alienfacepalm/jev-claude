@@ -290,7 +290,7 @@ export function agentOf(body, mains) {
 // Conversations whose routing state is kept per proxy.
 const MAX_CONVERSATIONS = 50;
 
-export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = askJev } = {}) {
+export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = askJev, calibrationFile } = {}) {
   // Tier routed for each conversation's turn in flight, reused by its follow-up requests and
   // by the cache-rebuild guard, which needs to know what the prompt cache was built on.
   const convos = new Map();
@@ -480,7 +480,13 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
                 for (const model of JSON.parse(data.toString()).data ?? []) {
                   if (tierOf(model?.id)) catalog.set(model.id, model);
                 }
-                writeCalibration(newerThanCalibrated([...catalog.values()]));
+                writeCalibration(
+                  {
+                    newer: newerThanCalibrated([...catalog.values()]),
+                    models: newestPerTier(claudeModels([...catalog.values()])).map((model) => model.id),
+                  },
+                  calibrationFile,
+                );
               } catch (err) {
                 debug(`could not read Claude model catalog: ${err.message}`);
               }

@@ -170,22 +170,31 @@ export function agentView(status, { freshMs = 90_000, now = Date.now() } = {}) {
 // calibration is a fact about the account, read whenever a session loads the model list.
 const CALIBRATION_FILE = join(DIR, "calibration.json");
 
-/** Records the account's models that are newer than the router was calibrated for. */
-export function writeCalibration(newer, file = CALIBRATION_FILE) {
+/**
+ * Records the newest model per tier the account offers, and which of those are newer than the
+ * router was calibrated for.
+ */
+export function writeCalibration({ newer = [], models = [] } = {}, file = CALIBRATION_FILE) {
   try {
-    writePrivate(file, JSON.stringify({ newer, at: Date.now() }));
+    writePrivate(file, JSON.stringify({ newer, models, at: Date.now() }));
   } catch {
     // A missed notice is cosmetic and must never interfere with a request.
   }
 }
 
-/** Model ids newer than the router's calibration, or an empty list. */
+/** What the last model list said; `at` is null when no session has read one yet. */
 export function readCalibration(file = CALIBRATION_FILE) {
   try {
-    const { newer } = JSON.parse(readFileSync(file, "utf8"));
-    return Array.isArray(newer) ? newer : [];
+    const { newer, models, at } = JSON.parse(readFileSync(file, "utf8"));
+    // A file without the account's models predates them, so it says nothing about the account.
+    const known = Array.isArray(models) && typeof at === "number";
+    return {
+      newer: Array.isArray(newer) ? newer : [],
+      models: known ? models : [],
+      at: known ? at : null,
+    };
   } catch {
-    return [];
+    return { newer: [], models: [], at: null };
   }
 }
 

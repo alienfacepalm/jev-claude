@@ -10,6 +10,7 @@ import { LOG_FILE } from "../src/log.mjs";
 import { loadEnv, childEnv } from "../src/env.mjs";
 import { resolveCommand, launchSpec, spawnSpec } from "../src/launch.mjs";
 import { SETTINGS_FILE, writePrivate } from "../src/status.mjs";
+import { shouldOffer, wasOffered, markOffered, askYesNo } from "../src/first-run.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -86,6 +87,24 @@ if (!claude) {
       "[jev]   https://code.claude.com/docs/en/setup\n",
   );
   process.exit(1);
+}
+
+// Offered once, on the first plain interactive launch: a read-only report on the setup, so a new
+// user learns straight away whether routing is on and which models it will use. The prompt goes
+// first because `--add-dir` takes every argument after it as another directory.
+if (
+  shouldOffer({
+    args: process.argv.slice(2),
+    interactive: Boolean(process.stdin.isTTY && process.stdout.isTTY),
+    offered: wasOffered(),
+  })
+) {
+  const accepted = await askYesNo(
+    "[jev] First run: check your Jev Router setup now with /jev-calibrate?\n" +
+      "[jev] It only reads your setup and changes nothing, using a little of your Claude usage. [Y/n] ",
+  );
+  markOffered(accepted);
+  if (accepted) args.unshift("/jev-calibrate");
 }
 
 if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
