@@ -1,7 +1,7 @@
-const EMOJI = { model: "🤖 ", confidence: "🎯", effort: "🧠 ", dir: "📁 ", branch: "🌿 ", worktree: "🌳 ", context: "📊 ", waiting: "⏳ " };
+const EMOJI = { model: "🤖 ", confidence: "🎯", effort: "🧠 ", dir: "📁 ", branch: "🌿 ", worktree: "🌳 worktree ", context: "📊 ", waiting: "⏳ " };
 
-// Plain text for a console that cannot draw emoji. With no icon to say what they are, the branch
-// and worktree take their words, and the rest are labelled only where the bare value is vague.
+// Plain text for a console that cannot draw emoji. With no icon to say what it is, the branch
+// takes its word (the emoji set leaves it out, the icon being enough), and the rest are labelled only where the bare value is vague.
 const TEXT = { model: "", confidence: "conf", effort: "", dir: "dir ", branch: "branch ", worktree: "worktree ", context: "", waiting: "" };
 
 /**
