@@ -4,6 +4,7 @@
 import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
 import { shortName } from "../src/model-names.mjs";
+import { worktreeInfo } from "../src/worktree.mjs";
 
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
 const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
@@ -77,4 +78,11 @@ const notice = newer.length
   ? ` ${DIM}·${RESET} \x1b[33mnew ${newer[0]}${newer.length > 1 ? ` +${newer.length - 1}` : ""}: /jev-calibrate${RESET}`
   : "";
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir} ${DIM}· ${pct}% context${RESET}${notice}\n`);
+// Only inside a worktree: the directory name alone does not say which branch is checked out
+// there, and a worktree is exactly where one gets lost.
+const wt = worktreeInfo(input);
+const where = wt
+  ? ` ${DIM}·${RESET} \x1b[34m${wt.branch ? `⎇ ${wt.branch}` : "⎇ detached"}${RESET} ${DIM}(worktree ${wt.name})${RESET}`
+  : "";
+
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir}${where} ${DIM}· ${pct}% context${RESET}${notice}\n`);
