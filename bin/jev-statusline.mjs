@@ -9,6 +9,10 @@ import { locationInfo } from "../src/worktree.mjs";
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
 const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 
+// Longest branch name shown whole; a longer one is cut with an ellipsis so the rest of the line fits.
+const MAX_BRANCH = 28;
+const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 const COLOR = { haiku: "\x1b[32m", sonnet: "\x1b[36m", opus: "\x1b[35m", fable: "\x1b[33m" };
@@ -36,7 +40,7 @@ const { main, subagents } = agentView(status);
  */
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
-  const p = entry.confidence != null ? ` ${DIM}· confidence${RESET} ${Math.round(entry.confidence * 100)}%` : "";
+  const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
   const level = entry.effort ? ` ${DIM}· effort${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
@@ -82,8 +86,10 @@ const notice = newer.length
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
 // Every item on the line is a dimmed label and its value, so no name can be mistaken for another.
 const loc = locationInfo(input);
-const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${DIM}branch${RESET} \x1b[34m${loc.branch || "(detached)"}${RESET}` : "";
+const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${DIM}branch${RESET} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
 const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${DIM}worktree${RESET} \x1b[32m${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
+// A worktree is usually a directory of the same name, and saying it twice costs a whole item.
+const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${DIM}dir${RESET} ${dir}` : "";
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${DIM}dir${RESET} ${dir}${where} ${DIM}· context${RESET} ${pct}%${notice}\n`);
+process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}· ctx${RESET} ${pct}%${notice}\n`);
