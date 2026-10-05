@@ -5,6 +5,7 @@ import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
 import { shortName } from "../src/model-names.mjs";
 import { locationInfo } from "../src/worktree.mjs";
+import { icons } from "../src/icons.mjs";
 
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
 const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
@@ -13,6 +14,7 @@ const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 const MAX_BRANCH = 28;
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
+const I = icons();
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 const COLOR = { haiku: "\x1b[32m", sonnet: "\x1b[36m", opus: "\x1b[35m", fable: "\x1b[33m" };
@@ -41,12 +43,12 @@ const { main, subagents } = agentView(status);
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
   const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
-  const level = entry.effort ? ` ${DIM}· effort${RESET} ${entry.effort}` : "";
+  const level = entry.effort ? ` ${DIM}· ${I.effort}${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${DIM}model${RESET} ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `${DIM}${I.model}${RESET} ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
 let routed = `${DIM}jev: waiting for first prompt${RESET}`;
@@ -72,7 +74,7 @@ if (subagents.length) {
     return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
-  agents = ` ${DIM}·${RESET} ${DIM}agents${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
+  agents = ` ${DIM}·${RESET} ${DIM}${I.agents}${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
 }
 
 // A model newer than the router's tuning: routing already uses it, but the guidance, costs and
@@ -84,12 +86,12 @@ const notice = newer.length
 
 // The branch in any git checkout, and the worktree as well when in one: a directory name does
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
-// Every item on the line is a dimmed label and its value, so no name can be mistaken for another.
+// Every item on the line is a dimmed label (a glyph, or its word) and its value.
 const loc = locationInfo(input);
-const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${DIM}branch${RESET} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
-const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${DIM}worktree${RESET} \x1b[32m${loc.worktree}${RESET}` : "";
+const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${DIM}${I.branch}${RESET} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
+const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${DIM}${I.worktree}${RESET} \x1b[32m${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
 // A worktree is usually a directory of the same name, and saying it twice costs a whole item.
-const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${DIM}dir${RESET} ${dir}` : "";
+const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${DIM}${I.dir}${RESET} ${dir}` : "";
 
-process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}· ctx${RESET} ${pct}%${notice}\n`);
+process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}· ${I.context}${RESET} ${pct}%${notice}\n`);
