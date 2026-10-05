@@ -193,18 +193,19 @@ effort, so none is shown for it. Sub-agents follow `agents`, with their model an
 item is a dimmed label and its value:
 
 ```text
-model Sonnet 5.5 · confidence 94% · effort high · dir my-project · context 8%
-model Opus 5.5 · confidence 91% · effort medium (keeping the cache) · agents Haiku 4.5,Sonnet 5.5 · dir my-project · context 34%
-⏸ manual Opus 4.6 · dir my-project · context 21%
+model Sonnet 5.5 (94%) · effort high · dir my-project · ctx 8%
+model Opus 5.5 (91%) · effort medium (keeping the cache) · agents Haiku 4.5,Sonnet 5.5 · dir my-project · ctx 34%
+⏸ manual Opus 4.6 · dir my-project · ctx 21%
 ```
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
 worktree's name too. `(detached)` stands in for the branch when none is checked out, and a
-directory that is not a git checkout shows neither:
+directory that is not a git checkout shows neither. To keep the line short, a branch longer than 28
+characters is cut with `…`, and `dir` is left out when the worktree has the same name:
 
 ```text
-model Sonnet 5.5 · confidence 94% · effort high · dir my-project · branch fix/login · worktree login-fix · context 8%
+model Sonnet 5.5 (94%) · effort high · dir my-project · branch fix/login · worktree login-fix · ctx 8%
 ```
 
 When your account offers a newer version of a model than the router was tuned for, the line ends
