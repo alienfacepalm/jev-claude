@@ -11,7 +11,8 @@
   "bugs": "https://github.com/alienfacepalm/jev-claude/issues",
   "bin": {
     "jev-claude": "bin/jev-claude.mjs",
-    "jev-explain": "bin/jev-explain.mjs"
+    "jev-explain": "bin/jev-explain.mjs",
+    "jev-legend": "bin/jev-legend.mjs"
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\"",

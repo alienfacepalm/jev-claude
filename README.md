@@ -189,29 +189,41 @@ that name none.
 
 `jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
 reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
-effort, so none is shown for it. Sub-agents follow `agents`, with their model and version. Every
-item is a dimmed label and its value:
+effort, so none is shown for it. Sub-agents follow `∥`, with their model and version. Every item is
+a dimmed symbol and its value (`◆` model, `▲` effort, `∥` sub-agents, `▸` directory, `⌂` worktree,
+`≡` context):
 
 ```text
-model Sonnet 5.5 (94%) · effort high · dir my-project · ctx 8%
-model Opus 5.5 (91%) · effort medium (keeping the cache) · agents Haiku 4.5,Sonnet 5.5 · dir my-project · ctx 34%
-⏸ manual Opus 4.6 · dir my-project · ctx 21%
+◆ Sonnet 5.5 (94%) · ▲ high · ▸ my-project · ≡ 8%
+◆ Opus 5.5 (91%) · ▲ medium (keeping the cache) · ∥ Haiku 4.5,Sonnet 5.5 · ▸ my-project · ≡ 34%
+⏸ manual Opus 4.6 · ▸ my-project · ≡ 21%
 ```
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
 worktree's name too. `(detached)` stands in for the branch when none is checked out, and a
 directory that is not a git checkout shows neither. To keep the line short, a branch longer than 28
-characters is cut with `…`, and `dir` is left out when the worktree has the same name:
+characters is cut with `…`, and the directory is left out when the worktree has the same name. The
+branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k draw, so
+it needs a Powerline or Nerd Font in your terminal:
 
 ```text
-model Sonnet 5.5 (94%) · effort high · dir my-project · branch fix/login · worktree login-fix · ctx 8%
+◆ Sonnet 5.5 (94%) · ▲ high · ▸ my-project ·  fix/login · ⌂ login-fix · ≡ 8%
 ```
+
+Run `/jev-legend` for a key to what each symbol means. It is drawn from the same symbols the line
+prints, so it also reads correctly when the line has fallen back to words. A status line only
+prints what it is given, and Claude Code has no keybinding that runs a slash command, so a typed
+`/jev-legend` (Tab completes it) is the way to ask; outside a session, `jev-legend` prints it too.
 
 When your account offers a newer version of a model than the router was tuned for, the line ends
 with a notice such as `new claude-opus-6: /jev-calibrate`. Routing already uses the new model; the
 notice means the costs and guidance were measured on the previous one, and a jev-claude update
 will bring tuning for it. Only new versions of known models are noticed, not new model names.
+
+The legacy Windows console (the old cmd.exe and PowerShell window) cannot draw the glyphs, so there
+the line falls back to the dimmed words (`model Sonnet 5.5 (94%) · effort high · dir my-project · …`).
+Set `JEV_ICONS=symbols` or `text` to choose yourself.
 
 An existing custom `statusLine` in your Claude Code settings is kept. Set `JEV_NO_STATUSLINE=1` to
 turn Jev's off.
@@ -292,6 +304,7 @@ in your shell's environment.
 | `JEV_ALLOW_FABLE` | Fable is offered by default; `0`, `false`, `no` or `off` turns it off. |
 | `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) for requests that name none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. Claude Code normally sends its own. |
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
+| `JEV_ICONS` | `symbols` or `text`: the status line's labels. Symbols by default; on Windows, words in the legacy console, which cannot draw them. |
 | `JEV_DEBUG` | Logs routing decisions to `~/.jev-claude.log`. |
 | `JEV_DUMP` | Saves whole request bodies for debugging. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
 
