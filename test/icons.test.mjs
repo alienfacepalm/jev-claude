@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { icons } from "../src/icons.mjs";
 
-const isText = (set) => set.dir === "dir ";
+const isText = (set) => set.dir === "";
 
 test("emoji everywhere but the legacy Windows console", () => {
   assert.equal(isText(icons({}, "darwin")), false);
