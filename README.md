@@ -189,33 +189,28 @@ that name none.
 
 `jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
 reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
-effort, so none is shown for it. Sub-agents follow `⤷ agents`, with their model and version. Every item is an icon, a dimmed
-label and its value:
+effort, so none is shown for it. Sub-agents follow `agents`, with their model and version. Every
+item is a dimmed label and its value:
 
 ```text
-🤖 model Sonnet 5.5 · 🎯 confidence 94% · 🧠 effort high · 📁 dir my-project · 📊 context 8%
-🤖 model Opus 5.5 · 🎯 confidence 91% · 🧠 effort medium (keeping the cache) · ⤷ agents Haiku 4.5,Sonnet 5.5 · 📁 dir my-project · 📊 context 34%
-⏸ manual Opus 4.6 · 📁 dir my-project · 📊 context 21%
+model Sonnet 5.5 · confidence 94% · effort high · dir my-project · context 8%
+model Opus 5.5 · confidence 91% · effort medium (keeping the cache) · agents Haiku 4.5,Sonnet 5.5 · dir my-project · context 34%
+⏸ manual Opus 4.6 · dir my-project · context 21%
 ```
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
-worktree's name too, the branch (🌿) and the worktree (🌳). `(detached)` stands in for the branch when
-none is checked out, and a directory that is not a git checkout shows neither:
+worktree's name too. `(detached)` stands in for the branch when none is checked out, and a
+directory that is not a git checkout shows neither:
 
 ```text
-🤖 model Sonnet 5.5 · 🎯 confidence 94% · 🧠 effort high · 📁 dir my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 context 8%
+model Sonnet 5.5 · confidence 94% · effort high · dir my-project · branch fix/login · worktree login-fix · context 8%
 ```
 
 When your account offers a newer version of a model than the router was tuned for, the line ends
 with a notice such as `new claude-opus-6: /jev-calibrate`. Routing already uses the new model; the
 notice means the costs and guidance were measured on the previous one, and a jev-claude update
 will bring tuning for it. Only new versions of known models are noticed, not new model names.
-
-The icons are emoji, which Windows Terminal, the VS Code terminal and Git Bash draw. The legacy
-Windows console (the old cmd.exe and PowerShell window) cannot, so there the line falls back to
-the same line without the icons (`model Sonnet 5.5 · confidence 94% · effort high · dir my-project · …`). Set
-`JEV_ICONS=emoji` or `text` to choose yourself.
 
 An existing custom `statusLine` in your Claude Code settings is kept. Set `JEV_NO_STATUSLINE=1` to
 turn Jev's off.
@@ -296,7 +291,6 @@ in your shell's environment.
 | `JEV_ALLOW_FABLE` | Fable is offered by default; `0`, `false`, `no` or `off` turns it off. |
 | `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) for requests that name none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. Claude Code normally sends its own. |
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
-| `JEV_ICONS` | `emoji` or `text`: the status line's icons. Emoji by default; on Windows, plain text in the legacy console, which cannot draw them. |
 | `JEV_DEBUG` | Logs routing decisions to `~/.jev-claude.log`. |
 | `JEV_DUMP` | Saves whole request bodies for debugging. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
 
