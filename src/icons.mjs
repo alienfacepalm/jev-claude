@@ -1,8 +1,8 @@
 const EMOJI = { model: "🤖 ", confidence: "🎯", effort: "🧠 ", dir: "📁 ", branch: "🌿 ", worktree: "🌳 ", context: "📊 ", waiting: "⏳ " };
 
-// Plain text for a console that cannot draw emoji. The branch and worktree keep their words,
-// which already say what they are, and the rest are labelled only where the bare value is vague.
-const TEXT = { model: "", confidence: "conf", effort: "", dir: "dir ", branch: "", worktree: "", context: "", waiting: "" };
+// Plain text for a console that cannot draw emoji. With no icon to say what they are, the branch
+// and worktree take their words, and the rest are labelled only where the bare value is vague.
+const TEXT = { model: "", confidence: "conf", effort: "", dir: "dir ", branch: "branch ", worktree: "worktree ", context: "", waiting: "" };
 
 /**
  * The icon set for the status line. Emoji everywhere except the legacy Windows console (conhost,
