@@ -82,11 +82,11 @@ const notice = newer.length
 
 // The branch in any git checkout, and the worktree as well when in one: a directory name does
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
-// Each part carries an icon and its word, so neither a branch nor a worktree name can be
-// mistaken for the other. Every other item on the line has an icon too, so it reads at a glance.
+// Each part carries its own icon, so neither a branch nor a worktree name can be mistaken for
+// the other. Every other item on the line has an icon too, so it reads at a glance.
 const loc = locationInfo(input);
-const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} \x1b[34m${ICON.branch}branch ${loc.branch || "(detached)"}${RESET}` : "";
-const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} \x1b[32m${ICON.worktree}worktree ${loc.worktree}${RESET}` : "";
+const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} \x1b[34m${ICON.branch}${loc.branch || "(detached)"}${RESET}` : "";
+const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} \x1b[32m${ICON.worktree}${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
 
 process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${ICON.dir}${dir}${where} ${DIM}· ${ICON.context}${pct}% context${RESET}${notice}\n`);

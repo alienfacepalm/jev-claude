@@ -199,11 +199,11 @@ effort, so none is shown for it. Sub-agents follow `⤷`, with their model and v
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
-worktree's name too, each with an icon and its word. `(detached)` stands in for the branch when
+worktree's name too, each behind its own icon (🌿 branch, 🌳 worktree). `(detached)` stands in for the branch when
 none is checked out, and a directory that is not a git checkout shows neither:
 
 ```text
-🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 8% context
+🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 🌿 fix/login · 🌳 login-fix · 📊 8% context
 ```
 
 When your account offers a newer version of a model than the router was tuned for, the line ends

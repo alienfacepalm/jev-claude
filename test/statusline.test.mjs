@@ -50,14 +50,14 @@ test("a session recorded before effort was tracked still renders", () => {
 test("inside a worktree, the branch and the worktree are each named with an icon", () => {
   const id = `statusline-worktree-${process.pid}`;
   const line = render(id, {}, { worktree: { name: "login-fix", branch: "fix/login" } });
-  assert.match(line, / · 📁 proj · 🌿 branch fix\/login · 🌳 worktree login-fix · 📊 8% context$/);
+  assert.match(line, / · 📁 proj · 🌿 fix\/login · 🌳 login-fix · 📊 8% context$/);
 });
 
 test("a linked worktree whose branch cannot be read still names the worktree", () => {
   // /work/proj is not a repository, so there is no branch to look up.
   const line = render(`statusline-linked-${process.pid}`, { git_worktree: "scratch" });
-  assert.match(line, / · 📁 proj · 🌳 worktree scratch · /);
-  assert.doesNotMatch(line, /branch/);
+  assert.match(line, / · 📁 proj · 🌳 scratch · /);
+  assert.doesNotMatch(line, /🌿/);
 });
 
 test("the main working tree shows its branch and no worktree", () => {
@@ -65,15 +65,15 @@ test("the main working tree shows its branch and no worktree", () => {
   try {
     execFileSync("git", ["init", "-q", "-b", "main-line"], { cwd: dir });
     const line = render(`statusline-main-${process.pid}`, { current_dir: dir });
-    assert.match(line, / · 🌿 branch main-line · 📊 8% context$/);
-    assert.doesNotMatch(line, /worktree/);
+    assert.match(line, / · 🌿 main-line · 📊 8% context$/);
+    assert.doesNotMatch(line, /🌳/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
 test("a directory that is not a git checkout shows neither a branch nor a worktree", () => {
-  assert.doesNotMatch(render(`statusline-nogit-${process.pid}`), /branch|worktree/);
+  assert.doesNotMatch(render(`statusline-nogit-${process.pid}`), /🌿|🌳/);
 });
 
 test("JEV_ICONS=text draws the line without emoji", () => {
