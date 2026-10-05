@@ -15,6 +15,7 @@ const PROJECT_KEYS = new Set([
   "JEV_DEBUG",
   "JEV_ALLOW_FABLE",
   "JEV_NO_STATUSLINE",
+  "JEV_ICONS",
 ]);
 const isProjectKey = (key) =>
   PROJECT_KEYS.has(key) || /^JEV_[A-Z]+_EFFORT$/.test(key);
