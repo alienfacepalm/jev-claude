@@ -36,16 +36,16 @@ const { main, subagents } = agentView(status);
  */
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
-  const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
-  const level = entry.effort ? ` ${DIM}· effort${RESET} ${entry.effort}` : "";
+  const p = entry.confidence != null ? ` ${DIM}· 🎯${RESET} ${Math.round(entry.confidence * 100)}%` : "";
+  const level = entry.effort ? ` ${DIM}· 🧠 effort${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `🤖 ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
-let routed = `${DIM}jev: waiting for first prompt${RESET}`;
+let routed = `${DIM}⏳ jev: waiting for first prompt${RESET}`;
 if (main?.manual || (!main && status?.manual)) {
   // The user picked this model with /model, so show their choice rather than a tier.
   routed = `${DIM}⏸ manual${RESET} ${input.model?.display_name ?? main?.model ?? ""}`.trimEnd();
@@ -79,10 +79,12 @@ const notice = newer.length
   : "";
 
 // Only inside a worktree: the directory name alone does not say which branch is checked out
-// there, and a worktree is exactly where one gets lost.
+// there, and a worktree is exactly where one gets lost. Each part carries an icon and its word,
+// so neither a branch nor a worktree name can be mistaken for the other. Every other item on
+// the line has an icon too, so the line reads at a glance.
 const wt = worktreeInfo(input);
 const where = wt
-  ? ` ${DIM}·${RESET} \x1b[34m${wt.branch ? `⎇ ${wt.branch}` : "⎇ detached"}${RESET} ${DIM}(worktree ${wt.name})${RESET}`
+  ? ` ${DIM}·${RESET} \x1b[34m🌿 branch ${wt.branch ?? "(detached)"}${RESET} ${DIM}·${RESET} \x1b[32m🌳 worktree ${wt.name}${RESET}`
   : "";
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${dir}${where} ${DIM}· ${pct}% context${RESET}${notice}\n`);
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} 📁 ${dir}${where} ${DIM}· 📊 ${pct}% context${RESET}${notice}\n`);
