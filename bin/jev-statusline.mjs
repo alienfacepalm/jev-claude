@@ -4,11 +4,13 @@
 import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
 import { shortName } from "../src/model-names.mjs";
-import { worktreeInfo } from "../src/worktree.mjs";
+import { locationInfo } from "../src/worktree.mjs";
+import { icons } from "../src/icons.mjs";
 
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
 const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 
+const ICON = icons();
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 const COLOR = { haiku: "\x1b[32m", sonnet: "\x1b[36m", opus: "\x1b[35m", fable: "\x1b[33m" };
@@ -36,16 +38,16 @@ const { main, subagents } = agentView(status);
  */
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
-  const p = entry.confidence != null ? ` ${DIM}· 🎯${RESET} ${Math.round(entry.confidence * 100)}%` : "";
-  const level = entry.effort ? ` ${DIM}· 🧠 effort${RESET} ${entry.effort}` : "";
+  const p = entry.confidence != null ? ` ${DIM}· ${ICON.confidence}${RESET} ${Math.round(entry.confidence * 100)}%` : "";
+  const level = entry.effort ? ` ${DIM}· ${ICON.effort}effort${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `🤖 ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `${ICON.model}${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
-let routed = `${DIM}⏳ jev: waiting for first prompt${RESET}`;
+let routed = `${DIM}${ICON.waiting}jev: waiting for first prompt${RESET}`;
 if (main?.manual || (!main && status?.manual)) {
   // The user picked this model with /model, so show their choice rather than a tier.
   routed = `${DIM}⏸ manual${RESET} ${input.model?.display_name ?? main?.model ?? ""}`.trimEnd();
@@ -78,13 +80,13 @@ const notice = newer.length
   ? ` ${DIM}·${RESET} \x1b[33mnew ${newer[0]}${newer.length > 1 ? ` +${newer.length - 1}` : ""}: /jev-calibrate${RESET}`
   : "";
 
-// Only inside a worktree: the directory name alone does not say which branch is checked out
-// there, and a worktree is exactly where one gets lost. Each part carries an icon and its word,
-// so neither a branch nor a worktree name can be mistaken for the other. Every other item on
-// the line has an icon too, so the line reads at a glance.
-const wt = worktreeInfo(input);
-const where = wt
-  ? ` ${DIM}·${RESET} \x1b[34m🌿 branch ${wt.branch ?? "(detached)"}${RESET} ${DIM}·${RESET} \x1b[32m🌳 worktree ${wt.name}${RESET}`
-  : "";
+// The branch in any git checkout, and the worktree as well when in one: a directory name does
+// not say which branch is checked out there, and a worktree is exactly where one gets lost.
+// Each part carries an icon and its word, so neither a branch nor a worktree name can be
+// mistaken for the other. Every other item on the line has an icon too, so it reads at a glance.
+const loc = locationInfo(input);
+const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} \x1b[34m${ICON.branch}branch ${loc.branch || "(detached)"}${RESET}` : "";
+const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} \x1b[32m${ICON.worktree}worktree ${loc.worktree}${RESET}` : "";
+const where = branchPart + worktreePart;
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} 📁 ${dir}${where} ${DIM}· 📊 ${pct}% context${RESET}${notice}\n`);
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${ICON.dir}${dir}${where} ${DIM}· ${ICON.context}${pct}% context${RESET}${notice}\n`);

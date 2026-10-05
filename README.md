@@ -197,10 +197,10 @@ effort, so none is shown for it. Sub-agents follow `⤷`, with their model and v
 ⏸ manual Opus 4.6 · 📁 my-project · 📊 21% context
 ```
 
-Inside a git worktree (a Claude Code `--worktree` session, or any directory in a linked worktree
-from `git worktree add`) the line also shows the branch and the worktree after the directory, each with an icon and its
-word, and `(detached)` in place of the branch when none is checked out. The main working tree
-shows neither:
+In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
+Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
+worktree's name too, each with an icon and its word. `(detached)` stands in for the branch when
+none is checked out, and a directory that is not a git checkout shows neither:
 
 ```text
 🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 8% context
@@ -210,6 +210,11 @@ When your account offers a newer version of a model than the router was tuned fo
 with a notice such as `new claude-opus-6: /jev-calibrate`. Routing already uses the new model; the
 notice means the costs and guidance were measured on the previous one, and a jev-claude update
 will bring tuning for it. Only new versions of known models are noticed, not new model names.
+
+The icons are emoji, which Windows Terminal, the VS Code terminal and Git Bash draw. The legacy
+Windows console (the old cmd.exe and PowerShell window) cannot, so there the line falls back to
+plain text (`Sonnet 5.5 · conf 94% · effort high · dir my-project · branch fix/login · …`). Set
+`JEV_ICONS=emoji` or `text` to choose yourself.
 
 An existing custom `statusLine` in your Claude Code settings is kept. Set `JEV_NO_STATUSLINE=1` to
 turn Jev's off.
@@ -290,6 +295,7 @@ in your shell's environment.
 | `JEV_ALLOW_FABLE` | Fable is offered by default; `0`, `false`, `no` or `off` turns it off. |
 | `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) for requests that name none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. Claude Code normally sends its own. |
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
+| `JEV_ICONS` | `emoji` or `text`: the status line's icons. Emoji by default; on Windows, plain text in the legacy console, which cannot draw them. |
 | `JEV_DEBUG` | Logs routing decisions to `~/.jev-claude.log`. |
 | `JEV_DUMP` | Saves whole request bodies for debugging. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
 
