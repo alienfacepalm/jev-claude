@@ -22,20 +22,20 @@ function render(sessionId, workspace = {}, extra = {}, env = {}) {
 test("shows the effort the turn ran at next to the model and confidence", () => {
   const id = `statusline-effort-${process.pid}`;
   writeDecision(id, { tier: "sonnet", model: "claude-sonnet-5-5", confidence: 0.94, effort: "high", reason: "jev", at: Date.now() }, MAIN);
-  assert.equal(render(id), "🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 proj · 📊 8% context");
+  assert.equal(render(id), "🤖 model Sonnet 5.5 · 🎯 confidence 94% · 🧠 effort high · 📁 dir proj · 📊 context 8%");
 });
 
 test("shows a higher effort when Claude Code asked for one", () => {
   const id = `statusline-xhigh-${process.pid}`;
   writeDecision(id, { tier: "opus", model: "claude-opus-5-5", confidence: 0.91, effort: "xhigh", reason: "jev", at: Date.now() }, MAIN);
-  assert.match(render(id), /^🤖 Opus 5.5 · 🎯 91% · 🧠 effort xhigh · /);
+  assert.match(render(id), /^🤖 model Opus 5.5 · 🎯 confidence 91% · 🧠 effort xhigh · /);
 });
 
 test("says nothing about effort for Haiku, which takes none", () => {
   const id = `statusline-haiku-${process.pid}`;
   writeDecision(id, { tier: "haiku", model: "claude-haiku-4-5-20251001", confidence: 0.97, effort: null, reason: "jev", at: Date.now() }, MAIN);
   const line = render(id);
-  assert.match(line, /^🤖 Haiku 4.5 · 🎯 97% · 📁 proj/);
+  assert.match(line, /^🤖 model Haiku 4.5 · 🎯 confidence 97% · 📁 dir proj/);
   assert.doesNotMatch(line, /effort/);
 });
 
@@ -43,20 +43,20 @@ test("a session recorded before effort was tracked still renders", () => {
   const id = `statusline-old-${process.pid}`;
   writeDecision(id, { tier: "sonnet", model: "claude-sonnet-5-5", confidence: 0.8, reason: "jev", at: Date.now() }, MAIN);
   const line = render(id);
-  assert.match(line, /^🤖 Sonnet 5.5 · 🎯 80%/);
+  assert.match(line, /^🤖 model Sonnet 5.5 · 🎯 confidence 80%/);
   assert.doesNotMatch(line, /effort/);
 });
 
 test("inside a worktree, the branch and the worktree are each named with an icon", () => {
   const id = `statusline-worktree-${process.pid}`;
   const line = render(id, {}, { worktree: { name: "login-fix", branch: "fix/login" } });
-  assert.match(line, / · 📁 proj · 🌿 branch fix\/login · 🌳 worktree login-fix · 📊 8% context$/);
+  assert.match(line, / · 📁 dir proj · 🌿 branch fix\/login · 🌳 worktree login-fix · 📊 context 8%$/);
 });
 
 test("a linked worktree whose branch cannot be read still names the worktree", () => {
   // /work/proj is not a repository, so there is no branch to look up.
   const line = render(`statusline-linked-${process.pid}`, { git_worktree: "scratch" });
-  assert.match(line, / · 📁 proj · 🌳 worktree scratch · /);
+  assert.match(line, / · 📁 dir proj · 🌳 worktree scratch · /);
   assert.doesNotMatch(line, /🌿/);
 });
 
@@ -65,7 +65,7 @@ test("the main working tree shows its branch and no worktree", () => {
   try {
     execFileSync("git", ["init", "-q", "-b", "main-line"], { cwd: dir });
     const line = render(`statusline-main-${process.pid}`, { current_dir: dir });
-    assert.match(line, / · 🌿 branch main-line · 📊 8% context$/);
+    assert.match(line, / · 🌿 branch main-line · 📊 context 8%$/);
     assert.doesNotMatch(line, /🌳/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -80,6 +80,6 @@ test("JEV_ICONS=text draws the line without emoji", () => {
   const id = `statusline-text-${process.pid}`;
   writeDecision(id, { tier: "sonnet", model: "claude-sonnet-5-5", confidence: 0.94, effort: "high", reason: "jev", at: Date.now() }, MAIN);
   const line = render(id, {}, { worktree: { name: "login-fix", branch: "fix/login" } }, { JEV_ICONS: "text" });
-  assert.equal(line, "Sonnet 5.5 · conf 94% · effort high · dir proj · branch fix/login · worktree login-fix · 83% context".replace("83%", "8%"));
+  assert.equal(line, "model Sonnet 5.5 · confidence 94% · effort high · dir proj · branch fix/login · worktree login-fix · context 8%");
   assert.doesNotMatch(line, /\p{Extended_Pictographic}/u);
 });

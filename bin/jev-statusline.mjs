@@ -38,13 +38,13 @@ const { main, subagents } = agentView(status);
  */
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
-  const p = entry.confidence != null ? ` ${DIM}· ${ICON.confidence}${RESET} ${Math.round(entry.confidence * 100)}%` : "";
+  const p = entry.confidence != null ? ` ${DIM}· ${ICON.confidence}confidence${RESET} ${Math.round(entry.confidence * 100)}%` : "";
   const level = entry.effort ? ` ${DIM}· ${ICON.effort}effort${RESET} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${ICON.model}${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `${ICON.model}${DIM}model${RESET} ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
 let routed = `${DIM}${ICON.waiting}jev: waiting for first prompt${RESET}`;
@@ -70,7 +70,7 @@ if (subagents.length) {
     return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
-  agents = ` ${DIM}·${RESET} ${DIM}⤷${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
+  agents = ` ${DIM}·${RESET} ${ICON.agents}${DIM}agents${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
 }
 
 // A model newer than the router's tuning: routing already uses it, but the guidance, costs and
@@ -82,11 +82,11 @@ const notice = newer.length
 
 // The branch in any git checkout, and the worktree as well when in one: a directory name does
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
-// Each has its icon and a dimmed label, like "effort", so neither name can be mistaken for the
-// other. Every other item on the line has an icon too, so it reads at a glance.
+// Every item on the line is an icon, a dimmed label and its value, so it reads at a glance and
+// no name can be mistaken for another.
 const loc = locationInfo(input);
 const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} \x1b[34m${ICON.branch}${DIM}branch${RESET} \x1b[34m${loc.branch || "(detached)"}${RESET}` : "";
 const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} \x1b[32m${ICON.worktree}${DIM}worktree${RESET} \x1b[32m${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
 
-process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${ICON.dir}${dir}${where} ${DIM}· ${ICON.context}${pct}% context${RESET}${notice}\n`);
+process.stdout.write(`${routed}${agents} ${DIM}·${RESET} ${ICON.dir}${DIM}dir${RESET} ${dir}${where} ${DIM}· ${ICON.context}context${RESET} ${pct}%${notice}\n`);

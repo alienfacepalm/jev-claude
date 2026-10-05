@@ -189,21 +189,22 @@ that name none.
 
 `jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
 reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
-effort, so none is shown for it. Sub-agents follow `⤷`, with their model and version:
+effort, so none is shown for it. Sub-agents follow `⤷ agents`, with their model and version. Every item is an icon, a dimmed
+label and its value:
 
 ```text
-🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 📊 8% context
-🤖 Opus 5.5 · 🎯 91% · 🧠 effort medium (keeping the cache) · ⤷ Haiku 4.5,Sonnet 5.5 · 📁 my-project · 📊 34% context
-⏸ manual Opus 4.6 · 📁 my-project · 📊 21% context
+🤖 model Sonnet 5.5 · 🎯 confidence 94% · 🧠 effort high · 📁 dir my-project · 📊 context 8%
+🤖 model Opus 5.5 · 🎯 confidence 91% · 🧠 effort medium (keeping the cache) · ⤷ agents Haiku 4.5,Sonnet 5.5 · 📁 dir my-project · 📊 context 34%
+⏸ manual Opus 4.6 · 📁 dir my-project · 📊 context 21%
 ```
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
-worktree's name too, the branch (🌿) and the worktree (🌳), each with a dimmed label like "effort". `(detached)` stands in for the branch when
+worktree's name too, the branch (🌿) and the worktree (🌳). `(detached)` stands in for the branch when
 none is checked out, and a directory that is not a git checkout shows neither:
 
 ```text
-🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 8% context
+🤖 model Sonnet 5.5 · 🎯 confidence 94% · 🧠 effort high · 📁 dir my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 context 8%
 ```
 
 When your account offers a newer version of a model than the router was tuned for, the line ends
@@ -213,7 +214,7 @@ will bring tuning for it. Only new versions of known models are noticed, not new
 
 The icons are emoji, which Windows Terminal, the VS Code terminal and Git Bash draw. The legacy
 Windows console (the old cmd.exe and PowerShell window) cannot, so there the line falls back to
-plain text (`Sonnet 5.5 · conf 94% · effort high · dir my-project · branch fix/login · …`). Set
+the same line without the icons (`model Sonnet 5.5 · confidence 94% · effort high · dir my-project · …`). Set
 `JEV_ICONS=emoji` or `text` to choose yourself.
 
 An existing custom `statusLine` in your Claude Code settings is kept. Set `JEV_NO_STATUSLINE=1` to
