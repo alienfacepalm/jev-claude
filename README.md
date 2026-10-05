@@ -192,17 +192,18 @@ reasoning effort it ran at, and the reason when it was not simply Jev's pick. Ha
 effort, so none is shown for it. Sub-agents follow `⤷`, with their model and version:
 
 ```text
-claude-sonnet-5-5 (94%) · effort high · my-project · 8% context
-claude-opus-5-5 (91%) · effort medium (keeping the cache) · ⤷ Haiku 4.5,Sonnet 5.5 · my-project · 34% context
-⏸ manual Opus 4.6 · my-project · 21% context
+🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 📊 8% context
+🤖 Opus 5.5 · 🎯 91% · 🧠 effort medium (keeping the cache) · ⤷ Haiku 4.5,Sonnet 5.5 · 📁 my-project · 📊 34% context
+⏸ manual Opus 4.6 · 📁 my-project · 📊 21% context
 ```
 
 Inside a git worktree (a Claude Code `--worktree` session, or any directory in a linked worktree
-from `git worktree add`) the line also shows the branch and the worktree after the directory, and
-`⎇ detached` when no branch is checked out. The main working tree shows neither:
+from `git worktree add`) the line also shows the branch and the worktree after the directory, each with an icon and its
+word, and `(detached)` in place of the branch when none is checked out. The main working tree
+shows neither:
 
 ```text
-claude-sonnet-5-5 (94%) · effort high · my-project · ⎇ fix/login (worktree login-fix) · 8% context
+🤖 Sonnet 5.5 · 🎯 94% · 🧠 effort high · 📁 my-project · 🌿 branch fix/login · 🌳 worktree login-fix · 📊 8% context
 ```
 
 When your account offers a newer version of a model than the router was tuned for, the line ends
