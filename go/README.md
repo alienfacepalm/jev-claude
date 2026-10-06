@@ -33,7 +33,7 @@ executable in its own directory, so install the programs side by side. The repos
 ```sh
 cd go
 go build ./...                       # check everything compiles
-go build -o ../bin/ ./cmd/...        # the seven programs into ../bin (any directory works)
+go build -o /tmp/jev-go/ ./cmd/...   # the seven programs into one directory (any directory)
 ```
 
 ## Test
