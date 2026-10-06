@@ -187,3 +187,156 @@ pub fn check_cases(file: &str, run: &mut dyn FnMut(&Value) -> Result<Value, Stri
 pub fn obj(v: &Value) -> Object {
     v.as_object().cloned().unwrap_or_default()
 }
+
+// ---------------------------------------------------------------------------------------------
+// Loopback HTTP
+
+use http_body_util::BodyExt;
+use hyper::body::Bytes;
+use jev_router::http::{ChannelBody, ProxyBody, ReqBody, Url, connect};
+use std::sync::{Arc, Mutex};
+
+/// What a fake upstream saw for one request.
+#[derive(Debug, Clone)]
+pub struct Seen {
+    pub method: String,
+    pub url: String,
+    pub headers: hyper::HeaderMap,
+    pub body: Vec<u8>,
+}
+
+impl Seen {
+    pub fn json(&self) -> Value {
+        jsjson::parse_bytes(&self.body).unwrap_or(Value::Null)
+    }
+    pub fn header(&self, name: &str) -> Option<String> {
+        self.headers.get(name).map(|v| v.to_str().unwrap().to_string())
+    }
+}
+
+/// A reply from a fake upstream.
+pub struct Reply {
+    pub status: u16,
+    pub headers: Vec<(String, String)>,
+    pub body: ProxyBody,
+}
+
+impl Reply {
+    pub fn json(status: u16, body: &str) -> Reply {
+        Reply {
+            status,
+            headers: vec![("content-type".into(), "application/json".into())],
+            body: ProxyBody::Full(Some(Bytes::from(body.to_string()))),
+        }
+    }
+}
+
+pub type Handler = Arc<dyn Fn(&Seen) -> Reply + Send + Sync>;
+
+/// A loopback HTTP/1.1 server recording every request; returns its URL and the log.
+pub async fn serve(handler: Handler) -> (String, Arc<Mutex<Vec<Seen>>>) {
+    let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let log = seen.clone();
+    tokio::spawn(async move {
+        loop {
+            let Ok((stream, _)) = listener.accept().await else { return };
+            let (handler, log) = (handler.clone(), log.clone());
+            tokio::spawn(async move {
+                let service = hyper::service::service_fn(move |req: hyper::Request<hyper::body::Incoming>| {
+                    let (handler, log) = (handler.clone(), log.clone());
+                    async move {
+                        let (parts, body) = req.into_parts();
+                        let body = body.collect().await.map(|b| b.to_bytes().to_vec()).unwrap_or_default();
+                        let seen = Seen {
+                            method: parts.method.to_string(),
+                            url: parts.uri.to_string(),
+                            headers: parts.headers,
+                            body,
+                        };
+                        log.lock().unwrap().push(seen.clone());
+                        let reply = handler(&seen);
+                        let mut res = hyper::Response::builder().status(reply.status);
+                        for (k, v) in reply.headers {
+                            res = res.header(k, v);
+                        }
+                        Ok::<_, std::convert::Infallible>(res.body(reply.body).unwrap())
+                    }
+                });
+                let _ = hyper::server::conn::http1::Builder::new()
+                    .serve_connection(hyper_util::rt::TokioIo::new(stream), service)
+                    .await;
+            });
+        }
+    });
+    (format!("http://127.0.0.1:{port}"), seen)
+}
+
+/// A streamed reply body and the sender that feeds it.
+pub fn stream_reply() -> (tokio::sync::mpsc::Sender<Result<Bytes, jev_router::http::BoxError>>, ProxyBody) {
+    let (tx, body) = ChannelBody::new(4);
+    (tx, ProxyBody::Stream(body))
+}
+
+/// A client response: status, headers, body.
+pub struct Got {
+    pub status: u16,
+    pub headers: hyper::HeaderMap,
+    pub body: Vec<u8>,
+}
+
+impl Got {
+    pub fn json(&self) -> Value {
+        jsjson::parse_bytes(&self.body).unwrap_or(Value::Null)
+    }
+}
+
+/// Sends one request to `127.0.0.1:<port>` and reads the whole response.
+pub async fn request(port: u16, method: &str, path: &str, headers: &[(&str, &str)], body: &[u8]) -> Got {
+    let res = send(port, method, path, headers, body).await;
+    let status = res.status().as_u16();
+    let headers = res.headers().clone();
+    let body = res.into_body().collect().await.map(|b| b.to_bytes().to_vec()).unwrap_or_default();
+    Got { status, headers, body }
+}
+
+/// Sends one request and returns the response with its body unread.
+pub async fn send(
+    port: u16,
+    method: &str,
+    path: &str,
+    headers: &[(&str, &str)],
+    body: &[u8],
+) -> hyper::Response<hyper::body::Incoming> {
+    let url = Url::parse(&format!("http://127.0.0.1:{port}")).unwrap();
+    let mut client = connect(&url).await.unwrap();
+    let mut req = hyper::Request::builder().method(method).uri(path).header("host", format!("127.0.0.1:{port}"));
+    for (k, v) in headers {
+        req = req.header(*k, *v);
+    }
+    if !body.is_empty() {
+        req = req.header("content-length", body.len().to_string());
+    }
+    client.send_request(req.body(ReqBody::new(Bytes::copy_from_slice(body))).unwrap()).await.unwrap()
+}
+
+/// POSTs a JSON body to the proxy's `/v1/messages`.
+pub async fn post_json(port: u16, path: &str, body: &Value) -> Got {
+    request(port, "POST", path, &[("content-type", "application/json")], &jsjson::to_bytes(body)).await
+}
+
+/// A route that answers with a fixed choice and confidence.
+pub fn answer(choice: &str, confidence: f64) -> jev_router::proxy::RouteFn {
+    let choice = choice.to_string();
+    Arc::new(move |_args| {
+        let choice = choice.clone();
+        Box::pin(async move {
+            let mut o = Object::new();
+            o.insert("choice", Value::from(choice));
+            o.insert("confidence", Value::Number(confidence));
+            o.insert("ms", Value::Number(1.0));
+            Ok(Some(Value::Object(o)))
+        })
+    })
+}
