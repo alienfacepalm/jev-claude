@@ -34,7 +34,8 @@ pub fn temp_dir_in(env: &dyn Env) -> PathBuf {
             .or_else(|| non_empty(env, "TMP"))
             .or_else(|| non_empty(env, "SystemRoot").map(|r| format!("{r}\\temp")))
             .or_else(|| non_empty(env, "windir").map(|r| format!("{r}\\temp")))
-            .unwrap_or_default();
+            // Node concatenates the missing value: `undefined\temp`.
+            .unwrap_or_else(|| "undefined\\temp".to_string());
         let drive_root = path.len() == 3 && path.as_bytes()[1] == b':' && path.ends_with('\\');
         if path.len() > 1 && path.ends_with('\\') && !drive_root {
             path.pop();
@@ -137,6 +138,7 @@ mod tests {
         assert_eq!(temp_dir_in(&map(&[("TEMP", r"C:\")])), PathBuf::from(r"C:\"), "a drive root keeps its slash");
         assert_eq!(temp_dir_in(&map(&[("SystemRoot", r"C:\Windows")])), PathBuf::from(r"C:\Windows\temp"));
         assert_eq!(temp_dir_in(&map(&[("windir", r"C:\W")])), PathBuf::from(r"C:\W\temp"));
+        assert_eq!(temp_dir_in(&map(&[])), PathBuf::from(r"undefined\temp"), "Node's literal fallback");
         assert_eq!(home_dir_in(&map(&[("USERPROFILE", r"C:\Users\u")])), PathBuf::from(r"C:\Users\u"));
         assert!(!home_dir_in(&map(&[("USERPROFILE", "")])).as_os_str().is_empty(), "the profile directory");
     }
