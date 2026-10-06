@@ -1,6 +1,6 @@
 # jev-claude port specification
 
-Status: revision 2, after the first Fable review. Reference implementation: `node/` at commit
+Status: revision 3, verified by Fable (second review: PASS; its minor and major notes applied here). Reference implementation: `node/` at commit
 `2f9967f`, run on Node.js 24.21.0.
 
 This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
@@ -146,8 +146,10 @@ see, so each port puts them in its helper modules (2.1) and tests them directly.
   is spelled out), Rust uses `(?-u:\b)` and explicit ASCII classes, Go's RE2 classes are already
   ASCII.
 - **Case-insensitivity.** JavaScript's non-`u` `i` flag folds ASCII letters only for these
-  patterns (`ſ` does not match `s`, U+212A does not match `k`). Python with `re.ASCII` and Rust's
-  `(?i)` with Unicode off on ASCII-only patterns behave the same; Go's `(?i)` folds Unicode, so Go
+  patterns (`ſ` does not match `s`, U+212A does not match `k`). Python with `re.ASCII` behaves the
+  same. Rust's `(?i)` folds those in Unicode mode, and the pattern must stay in Unicode mode for the
+  `JSWS` class, so Rust scopes case-insensitivity to the literal words inside ASCII groups,
+  `(?i-u:use|switch to|...)`, or uses the lowering approach below. Go's `(?i)` folds Unicode, so Go
   must not use it: it matches against a copy of the text with ASCII `A-Z` lowered (same length,
   same offsets) using lower-case patterns.
 - **Lookahead.** Go's `regexp` and Rust's `regex` have none. Python may use the pattern as written.
@@ -156,9 +158,12 @@ see, so each port puts them in its helper modules (2.1) and tests them directly.
   - *Override patterns* (4.5), trailing `(?![-\w])`: search with the lookahead removed. If the
     character after the match is end of text or not in `[-A-Za-z0-9_]`, it matches. Otherwise
     search again starting at the failed match's **start + 1** (not its end), and repeat until a
-    match passes or none remains. (The removed-lookahead pattern has no variable-length tail that
-    could backtrack into a shorter passing match: `NAME` alternatives and `model`/`tier` are fixed
-    words, so the start+1 restart is complete.)
+    match passes or none remains. This is complete: the tail has no variable-length part that
+    could backtrack into a shorter passing match (`NAME` alternatives and `model`/`tier` are fixed
+    words), and start + 1 always falls inside the verb (`use`, `switch`, `route`), where no
+    alternative can begin. The restarted search must still see the real preceding character for
+    `\b`: Rust uses `Regex::find_at(text, start)`, never a search over a sub-slice; Go searches the
+    whole text from the start offset with its own `\b` check against the real preceding character.
   - *`versionOf`* (7.5) and *`shortName`* (12.3), `-(\d{1,2})(?!\d)` inside an optional group:
     after `-(\d+)` (the major), look at the text that follows. If it is `-` followed by a maximal
     digit run `R` with `1 <= len(R) <= 2`, the minor is `R`; in every other case (no `-`, no
@@ -191,20 +196,35 @@ parses and forwards, the Jev request and response, and every file written.
   `12345678901234567000`; `1.0` becomes `1`; `-0` stays negative zero).
 - Strings may contain lone surrogates from `\uD800`-style escapes; these parse and must survive a
   round trip as the same escape. Go and Rust therefore hold strings in a representation that can
-  carry them (WTF-8 bytes, or UTF-16 units); Python `str` already can. Converting such a string to
-  UTF-8 text (for hashing, regexes, printing) replaces each lone surrogate with U+FFFD, so
-  `conversationKey` hashes a lone surrogate as `EF BF BD`.
-- Objects preserve key order. A repeated key keeps its first position and takes its last value.
-- Go: no `map[string]any`; an ordered object type. Rust: no `serde_json::Value`. Python: `json.loads`
-  is acceptable with `parse_int` and `parse_constant` hooks that yield floats, and
-  `object_pairs_hook` for duplicates.
+  carry them (WTF-8 bytes, or UTF-16 units); Python `str` already can. Regex processing, trimming,
+  slicing, and concatenation operate on that surrogate-carrying representation (Rust
+  `regex::bytes` over WTF-8, or UTF-16; Go `regexp` over WTF-8 bytes; Python `str`), so a lone
+  surrogate in a prompt or label is still a lone surrogate in the Jev request and status file.
+  Only hashing and printing to a terminal convert to UTF-8, replacing each lone surrogate with
+  U+FFFD, so `conversationKey` hashes a lone surrogate as `EF BF BD`.
+- **Key order is JavaScript's object order**: keys that are canonical array indices (a decimal
+  integer string with no leading zeros except `"0"` itself, value below 2^32 - 1) come first in
+  ascending numeric order, then every other key in insertion order. So
+  `{"b":1,"2":2,"a":3,"1":4,"01":5}` re-serialises as `{"1":4,"2":2,"b":1,"a":3,"01":5}`. This
+  order governs stringify, every iteration over an object's keys or entries (`sanitizeSchema`,
+  `merge`, `agentView`), and object spread. A repeated key keeps its first position and takes its
+  last value.
+- The literals `NaN`, `Infinity`, `-Infinity` are not JSON and fail to parse.
+- Go: no `map[string]any`; an ordered object type implementing the order above. Rust: no
+  `serde_json::Value`. Python: `json.loads` is acceptable on the already U+FFFD-decoded `str`
+  (never on bytes, whose path sniffs UTF-16/32 BOMs), with `parse_int=float`, a `parse_constant`
+  that **raises** (so a body Node rejects takes the error path), and an `object_pairs_hook` that
+  builds the ordered object above.
 
 **Stringify** (`JSON.stringify` semantics, compact): no whitespace; object keys in order; strings
 escape `"` and `\`, `\b \f \n \r \t` by their short forms, other U+0000-U+001F as `\u00xx`
 (lowercase hex), lone surrogates as `\udxxx` (lowercase hex), and nothing else (non-ASCII, `/`,
-`<`, `>`, `&`, U+2028 stay literal); numbers in JavaScript `Number.prototype.toString` form
-(shortest round-trip digits; integers below 1e21 without exponent or `.0`, `1e+21`, `1.5e-7`,
-`-0` written as `0`); `NaN` and `±Infinity` written as `null`; `undefined` members omitted.
+`<`, `>`, `&`, U+2028 stay literal); numbers in JavaScript `Number.prototype.toString` form:
+shortest round-trip digits, fixed notation when the decimal exponent `n` (as in `d.ddd × 10^n`)
+satisfies `-7 < n < 21` (`0.000001`, `123456789012345680000`), otherwise exponent notation with an
+explicit sign (`1e-7`, `1e+21`, `5e-324`, `1.7976931348623157e+308`), `-0` written as `0`; `NaN`
+and `±Infinity` written as `null`; `undefined` object members omitted and `undefined` array
+elements written as `null`.
 **Indented** form (`JSON.stringify(v, null, 2)`, used for `restoreSavedModel` and `JEV_DUMP`): two
 spaces per level, `": "` after keys, `[]` and `{}` for empty containers.
 
@@ -236,8 +256,10 @@ sign before `0x` (`"-0x1"`) are NaN. This applies to `jev.confidence` in policy
 
 ### 3.7 Rounding and fixed-point formatting
 
-- `Math.round(x)` = `floor(x + 0.5)` computed so that exact ties round toward +infinity
-  (`2.5` -> 3, `-2.5` -> -2, `0.49999999999999994` -> 0); NaN stays NaN (printed `NaN`).
+- `Math.round(x)`: `r = floor(x)`; result `r + 1` when `x - r >= 0.5` (that subtraction is exact
+  for doubles), else `r`; `-0` for `-0.5 <= x < 0` and for `-0`; NaN and infinities pass through.
+  So `2.5` -> 3, `-2.5` -> -2, `0.49999999999999994` -> 0. The naive `floor(x + 0.5)` is wrong
+  (it gives 1 for that last input).
   Python `round()` and Go `math.Round` differ and must not be used.
 - `x.toFixed(2)`: as ECMAScript specifies: for negative `x`, `"-"` plus the result for `-x`
   (`-0` prints `0.00`); otherwise pick the integer `n` minimising `|n/100 - x|` over the exact
@@ -354,8 +376,8 @@ Ports replace `@typesafe-ai/sdk` 0.6.0 with their own client for exactly what No
 
 - `POST {base}/v1/systemone`. `base` is `TYPESAFE_BASE_URL` trimmed (3.5), blank counting as
   unset, trailing slashes removed; default `https://api.typesafe.ai`.
-- The key: `JEV_API_KEY` if present (even when empty: Node uses `??`), else `TYPESAFE_API_KEY`
-  trimmed, blank counting as unset. No key at all is a failure (5.3). Note the launcher's gate
+- The key: `JEV_API_KEY` if defined (even empty: Node uses `??`), else `TYPESAFE_API_KEY` if
+  defined (even empty, untrimmed). Both undefined is a failure (5.3). Note the launcher's gate
   (10, step 6) uses truthiness instead, so an empty `JEV_API_KEY` from the real environment with a
   real `TYPESAFE_API_KEY` routes but sends `Bearer ` with nothing; preserve that.
 - Headers: `Authorization: Bearer <key>`, `Accept: application/json`,
@@ -383,7 +405,8 @@ The whole parsed response is kept verbatim and recorded in status files (8.2).
 
 ### 5.3 Failure, timeouts, retries
 
-- **Failure** (the router returns null, 6.2): no key; an `models` list that is empty; non-2xx after
+- **Failure** (the router logs and returns null, 6.2; an empty `models` list is not a failure but
+  returns null before any request or log line, 6.1): no key; non-2xx after
   retries; connection error or timeout after retries; the 3000 ms deadline; a body that is not a
   JSON object; `answers` missing or not an object; any of `task_complexity`,
   `reasoning_required`, `tool_complexity` missing or null. Everything else is **success**, including
@@ -464,8 +487,10 @@ free-form) and return null.
 4. Forward to `upstream origin + upstream path with one trailing "/" removed + raw request target`,
    same method, headers per 7.7.
 5. `GET` whose raw target matches `^/v1/models(?:\?|$)`: buffer the response; **whatever its
-   status**, for each entry of `.data` (absent or non-array means none) whose `id` has a tier, set
-   `catalog[id] = entry`; then write the calibration file (8.3) with
+   status**, iterate `.data ?? []` as JavaScript's `for...of` does (absent or `null` means none; an
+   array its elements; a string its characters, none of which has a tier; any other value such as
+   an object, number, or boolean throws, which is debug-logged and the calibration file is **not**
+   written) and for each entry whose `id` has a tier set `catalog[id] = entry`; then write the calibration file (8.3) with
    `newer = newerThanCalibrated(catalog)` and `models = ids of newestPerTier(claudeModels(catalog))`
    (so an error body with an empty catalog records the four static ids). A body that does not
    parse is debug-logged and the calibration file is not written. Then reply with the upstream
@@ -499,8 +524,9 @@ free-form) and return null.
       - `currentModel = state.model ?? modelForTier(models, current)`; `modelForTier(models, t)`
         is the id of the first model of tier `t`, else `idOf(t)`.
       - `contextTokens = MathRound(utf16Length(stringify(body.messages)) / 4)` (3.2, 3.3, 3.7).
-        When `body.messages` is undefined, `JSON.stringify` returns undefined and reading its
-        `length` throws, so such a body takes the error path (7.2) at this point.
+        (`messages` is necessarily an array here: `newTurnPrompt` returned a prompt, and it throws,
+        taking the error path, when `messages` is a non-iterable non-array value such as an object
+        or a number.)
       - `jev = await route({prompt, current: currentModel, contextTokens, models})`.
       - `chosen` = the model in `models` whose id equals `jev?.choice`, else none.
       - `decision = decide({prompt, jev: chosen ? {...jev, choice: chosen.tier} : null, current,
@@ -788,7 +814,7 @@ to the running one>"`; Python `"<sys.executable>" -m jev_router.cli.statusline`.
 ### 10.2 Command resolution and launch (`node/src/launch.mjs`)
 
 - `resolveCommand(name, {exts, path, win})`: on Windows, for each `;`-separated PATH entry
-  (empty entries skipped, one pair of surrounding `"` stripped) and each suffix of `exts`, else of
+  (empty entries skipped, a leading `"` and a trailing `"` each removed independently) and each suffix of `exts`, else of
   `PATHEXT` split on `;`, else `.COM;.EXE;.BAT;.CMD`, accept the first path that **exists** (any
   kind, directories included, as Node's `F_OK`). Elsewhere, for each `:`-separated entry, accept
   `name` if it is executable (`X_OK`).
@@ -962,7 +988,7 @@ Required case files and what each must include beyond ordinary inputs:
 | `version-of`, `short-name`, `claude-models`, `newest-per-tier`, `newer-than-calibrated` | `claude-opus-4-20250514`, `claude-sonnet-4-20250514`, `claude-3-7-sonnet-20250219`, `anthropic.claude-opus-6`, ties on version |
 | `session-of`, `conversation-key` | numeric `session_id`; lone-surrogate text; non-JSON `user_id` |
 | `agent-of` | sequences sharing one `mains`, including more than 51 sessions |
-| `write-decision` | a sequence of `writeDecision`/`markManual` calls on one session (history cap 20, the 12-agent trim with ties, manual surviving a routed merge), compared as parsed JSON after each step |
+| `write-decision` | a sequence of `writeDecision`/`markManual` calls on one session (history cap 20, the 12-agent trim with ties, manual surviving a routed merge), compared as parsed JSON after each step; every decision carries an explicit `at`, and `at` values written by `markManual` (which uses the clock) are replaced by a placeholder on both sides before comparing |
 | `agent-view`, `main-decision` | freshness at the 90 s boundary, missing `at`, pre-agent statuses |
 | `effort-floor`, `forced-effort`, `fable-allowed`, `icons`, `reasons` | whitespace and case variants |
 | `format-explanation`, `format-agents`, `format-legend` | `contextSize` exactly `0.125`; NaN and missing metrics; manual; long prompts that wrap; fixed `now` |
@@ -973,7 +999,9 @@ Required case files and what each must include beyond ordinary inputs:
 | `stringify`, `parse` | number formats, escapes, lone surrogates, invalid UTF-8 bytes (hex-encoded input), duplicate keys, the UTF-16 length used for context tokens |
 | `math` | `MathRound`, `toFixed2`, `ToNumber` over the values in 3.6 and 3.7 |
 | `jev-request` | the full Jev request body for given models, prompt, current model and context size |
-| `status-line` | rendered output for given stdin JSON, status file, calibration file, `JEV_ICONS`, and `now` |
+| `status-line` | rendered output for given stdin JSON, status file, calibration file, and `JEV_ICONS`; the status line uses the real clock, so freshness is fixed through the data (`at` far in the future for fresh sub-agents, absent or 0 for stale ones) rather than an injected `now` |
+| `parse`, `stringify`, `sanitize-schema` (key order) | integer-like keys (`"0"`, `"2"`, `"01"`, `"4294967294"`, `"4294967295"`) mixed with ordinary keys |
+| `new-turn-prompt`, `agent-label` (surrogates) | a lone surrogate in the user text, which must survive into the result |
 
 The generator excludes inputs that would split a surrogate pair (3.2).
 
