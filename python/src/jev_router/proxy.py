@@ -689,6 +689,8 @@ _NO_BODY = {204, 304}
 
 class _Handler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    # Headers and body go out in separate writes; with Nagle on, the second waits for a delayed ACK.
+    disable_nagle_algorithm = True
     proxy: Proxy  # set on the subclass made per server
 
     def log_message(self, format, *args):  # noqa: A002 - signature fixed by the base class
@@ -792,6 +794,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                 connection = http.client.HTTPSConnection(target.hostname, target.port)
             watcher.upstream = connection
             connection.connect()
+            connection.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
             if watcher.gone:
                 watcher.abort_upstream()
                 self.close_connection = True
