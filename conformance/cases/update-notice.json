@@ -1,0 +1,143 @@
+[
+  {
+    "name": "newer",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.7.0"
+      },
+      "currentVersion": "0.6.5"
+    },
+    "expected": "[jev] Update available: 0.6.5 -> 0.7.0. Run `jev-claude --update`."
+  },
+  {
+    "name": "equal",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.7.0"
+      },
+      "currentVersion": "0.7.0"
+    },
+    "expected": null
+  },
+  {
+    "name": "older",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.7.0"
+      },
+      "currentVersion": "0.8.0"
+    },
+    "expected": null
+  },
+  {
+    "name": "not available",
+    "input": {
+      "state": {
+        "available": false,
+        "latest": "0.7.0"
+      },
+      "currentVersion": "0.6.5"
+    },
+    "expected": null
+  },
+  {
+    "name": "null state",
+    "input": {
+      "state": null,
+      "currentVersion": "0.6.5"
+    },
+    "expected": null
+  },
+  {
+    "name": "no current version",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.7.0"
+      },
+      "currentVersion": null
+    },
+    "expected": null
+  },
+  {
+    "name": "empty current version",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.7.0"
+      },
+      "currentVersion": ""
+    },
+    "expected": null
+  },
+  {
+    "name": "pre-release latest",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.8.0-beta.1"
+      },
+      "currentVersion": "0.7.9"
+    },
+    "expected": "[jev] Update available: 0.7.9 -> 0.8.0-beta.1. Run `jev-claude --update`."
+  },
+  {
+    "name": "pre-release same release",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": "0.8.0-beta"
+      },
+      "currentVersion": "0.8.0"
+    },
+    "expected": null
+  },
+  {
+    "name": "truthy available",
+    "input": {
+      "state": {
+        "available": "yes",
+        "latest": "1.0.0"
+      },
+      "currentVersion": "0.9.2"
+    },
+    "expected": "[jev] Update available: 0.9.2 -> 1.0.0. Run `jev-claude --update`."
+  },
+  {
+    "name": "empty latest",
+    "input": {
+      "state": {
+        "available": true,
+        "latest": ""
+      },
+      "currentVersion": "0.1.0"
+    },
+    "expected": null
+  },
+  {
+    "name": "missing latest",
+    "input": {
+      "state": {
+        "available": true
+      },
+      "currentVersion": "0.1.0"
+    },
+    "expected": null
+  },
+  {
+    "name": "checker output",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T12:00:00.000Z",
+        "available": true,
+        "latest": "0.10.0",
+        "remote": "abc"
+      },
+      "currentVersion": "0.9.2"
+    },
+    "expected": "[jev] Update available: 0.9.2 -> 0.10.0. Run `jev-claude --update`."
+  }
+]

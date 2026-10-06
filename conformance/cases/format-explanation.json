@@ -1,0 +1,805 @@
+[
+  {
+    "name": "routed",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "policy overruled jev",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "model": "claude-opus-5-5",
+        "confidence": 0.97,
+        "reason": "downgrade-not-worth-cache-rebuild/no-change",
+        "jev": {
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-haiku-4-5-20251001"
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: UNKNOWN          │\n│ Context tokens: unknown         │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: HAIKU         │\n│ Selected model: CLAUDE-OPUS-5-5 │\n│                                 │\n│ Confidence: 97%                 │\n│ Decision: kept this model - a   │\n│ cheaper model would have to     │\n│ re-read the whole conversation, │\n│ which costs more than it saves  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "model_tier from before the rename",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "jev": {
+          "response": {
+            "answers": {
+              "model_tier": {
+                "choice": "sonnet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: UNKNOWN          │\n│ Context tokens: unknown         │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: OPUS            │\n│                                 │\n│ Confidence: n/a                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "unrecognised choice shown as is",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "jev": {
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "mystery-9"
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: UNKNOWN          │\n│ Context tokens: unknown         │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: MYSTERY-9     │\n│ Selected model: OPUS            │\n│                                 │\n│ Confidence: n/a                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "null",
+    "input": {
+      "status": null
+    },
+    "expected": "Jev Router: no routing decision has been recorded for this session."
+  },
+  {
+    "name": "manual",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        },
+        "manual": true
+      }
+    },
+    "expected": "Jev Router: routing is paused because you selected a model manually."
+  },
+  {
+    "name": "contextSize exactly 0.125",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.125
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.13        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "ties and float edges",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.375,
+          "reasoningRequired": 1.005,
+          "toolComplexity": -0.125,
+          "contextSize": 2.675
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.38        │\n│ Reasoning required  1.00        │\n│ Tool complexity     -0.13       │\n│ Context size        2.67        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "NaN and non-finite metrics",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": {
+            "$number": "NaN"
+          },
+          "reasoningRequired": {
+            "$number": "Infinity"
+          },
+          "toolComplexity": "0.5",
+          "contextSize": null
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "missing metrics",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "$undefined": true
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "null metrics",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": null
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "partial metrics",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.1
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.10        │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "long prompt wraps",
+    "input": {
+      "status": {
+        "prompt": "Please look at the whole authentication flow across the api and worker modules and explain where tokens are refreshed",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Please look at the      │\n│ whole authentication flow       │\n│ across the api and worker       │\n│ modules and explain where       │\n│ tokens are refreshed            │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "word longer than a row",
+    "input": {
+      "status": {
+        "prompt": "Prompt xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx tail",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Prompt                  │\n│ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx │\n│ tail                            │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "prompt whitespace collapses",
+    "input": {
+      "status": {
+        "prompt": "  a  b\n\nc d  ",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: a b c d                 │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "no prompt",
+    "input": {
+      "status": {
+        "prompt": {
+          "$undefined": true
+        },
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "confidence rounding",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.945,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 95%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "confidence null",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": null,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: n/a                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "confidence string",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": "0.5",
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 50%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "no reason",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": {
+          "$undefined": true
+        },
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "null reason",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": null,
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "unavailable reason wraps",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev+unavailable/no-change",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: kept this model - the │\n│ chosen tier is not available on │\n│ this account, so the nearest    │\n│ one was used                    │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "low confidence reason",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "low-confidence-default",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        }
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router was        │\n│ unsure, so this ran one tier    │\n│ below its pick, and no lower    │\n│ than the default model          │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "no jev",
+    "input": {
+      "status": {
+        "tier": "sonnet",
+        "reason": "jev-unavailable/no-change",
+        "confidence": null,
+        "metrics": null,
+        "jev": null
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: UNKNOWN          │\n│ Context tokens: unknown         │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: SONNET          │\n│                                 │\n│ Confidence: n/a                 │\n│ Decision: kept this model - the │\n│ router could not be reached, so │\n│ the model was left alone        │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "long model id clipped",
+    "input": {
+      "status": {
+        "prompt": "Explain the router architecture",
+        "tier": "sonnet",
+        "confidence": 0.94,
+        "reason": "jev",
+        "jev": {
+          "request": {
+            "state": {
+              "session": {
+                "current_model": "haiku",
+                "context_tokens": 6200
+              }
+            }
+          },
+          "response": {
+            "answers": {
+              "model": {
+                "choice": "claude-sonnet-5-5",
+                "confidence": 0.94
+              }
+            }
+          }
+        },
+        "metrics": {
+          "taskComplexity": 0.82,
+          "reasoningRequired": 0.91,
+          "toolComplexity": 0.64,
+          "contextSize": 0.31
+        },
+        "model": "anthropic.claude-sonnet-5-5-20260901-preview-long"
+      }
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: Explain the router      │\n│ architecture                    │\n│ Current model: HAIKU            │\n│ Context tokens: 6200            │\n│                                 │\n│ Jev response                    │\n│ Task complexity     0.82        │\n│ Reasoning required  0.91        │\n│ Tool complexity     0.64        │\n│ Context size        0.31        │\n│                                 │\n│ Recommended tier: SONNET        │\n│ Selected model: ANTHROPIC.CLAUD │\n│                                 │\n│ Confidence: 94%                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  },
+  {
+    "name": "empty status",
+    "input": {
+      "status": {}
+    },
+    "expected": "┌─────────────────────────────────┐\n│ Jev Router                      │\n│                                 │\n│ Jev request                     │\n│ Prompt: not recorded            │\n│ Current model: UNKNOWN          │\n│ Context tokens: unknown         │\n│                                 │\n│ Jev response                    │\n│ Task complexity     n/a         │\n│ Reasoning required  n/a         │\n│ Tool complexity     n/a         │\n│ Context size        n/a         │\n│                                 │\n│ Recommended tier: UNKNOWN       │\n│ Selected model: UNKNOWN         │\n│                                 │\n│ Confidence: n/a                 │\n│ Decision: the router's          │\n│ recommendation                  │\n└─────────────────────────────────┘"
+  }
+]
