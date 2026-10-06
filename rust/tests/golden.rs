@@ -162,11 +162,12 @@ fn sessions_and_keys() {
 #[test]
 fn write_decision() {
     isolate_status();
-    let mut first_write = true;
+    // The once-per-process prune (SPEC 8.1) runs on the first status write; do that write now so
+    // it never runs during a sequence, as the case README requires.
+    status::write_status(&Value::from("write-decision-prune-first"), &Value::Object(Object::new()));
     check_cases("write-decision", &mut |i| {
         let mut files = Vec::new();
         for step in i.get("steps").as_array().unwrap() {
-            let was_first = std::mem::take(&mut first_write);
             let id = step.get("id");
             let agent = step.get("agent");
             let agent = agent.as_object().map(|a| status::Agent {
@@ -178,12 +179,6 @@ fn write_decision() {
                 status::write_decision(id, &obj(step.get("decision")), agent.as_ref())?;
             } else {
                 status::mark_manual(id, step.get("model"), agent.as_ref());
-            }
-            if was_first {
-                // The generator pins Date.now to 1.8e12 while it runs these steps, and Node's
-                // first status write in a process prunes files older than a week by that clock,
-                // which removes the file just written. Prune by the same clock to match.
-                status::prune_stale(status::STALE_AFTER_MS, 1_800_000_000_000.0);
             }
             let mut f = Object::new();
             f.insert("file", status::read_status(id));

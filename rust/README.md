@@ -120,11 +120,3 @@ Each is either required by SPEC.md or limited to inputs Node itself handles by c
 - Request headers that a client sends more than once are joined or de-duplicated with Node's
   rules before forwarding; response framing headers (`date`, `transfer-encoding`,
   `content-length`) are hyper's (SPEC 7.7 allows them).
-
-## Notes on the golden cases
-
-The first `write-decision` case expects the session file to be gone after its first step. That
-comes from the generator: it pins `Date.now` to 1.8e12 (January 2027) while running these steps,
-and Node's first status write in a process prunes files older than a week by that clock, which
-deletes the file it has just written. The Rust test reproduces it by pruning with the same clock
-after the first step; see the report on SPEC issues for why the case itself should change.
