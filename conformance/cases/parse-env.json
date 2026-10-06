@@ -1,0 +1,567 @@
+[
+  {
+    "name": "simple",
+    "input": {
+      "text": "A=1\nB=2\n"
+    },
+    "expected": {
+      "A": "1",
+      "B": "2"
+    }
+  },
+  {
+    "name": "hash in value",
+    "input": {
+      "text": "A=a#b"
+    },
+    "expected": {
+      "A": "a"
+    }
+  },
+  {
+    "name": "hash mid-file",
+    "input": {
+      "text": "A=a # comment\nB=b"
+    },
+    "expected": {
+      "A": "a",
+      "B": "b"
+    }
+  },
+  {
+    "name": "comment line",
+    "input": {
+      "text": "# comment\nA=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "comment without newline",
+    "input": {
+      "text": "A=1\n# trailing comment"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "blank lines",
+    "input": {
+      "text": "\n\nA=1\n\n\nB=2\n\n"
+    },
+    "expected": {
+      "A": "1",
+      "B": "2"
+    }
+  },
+  {
+    "name": "unclosed double quote with following line",
+    "input": {
+      "text": "A=\"value\nB=2"
+    },
+    "expected": {
+      "A": "\"value",
+      "B": "2"
+    }
+  },
+  {
+    "name": "unclosed double quote at end",
+    "input": {
+      "text": "A=\"value"
+    },
+    "expected": {
+      "A": "\"value"
+    }
+  },
+  {
+    "name": "unclosed single quote with following line",
+    "input": {
+      "text": "A='value\nB=2"
+    },
+    "expected": {
+      "A": "'value",
+      "B": "2"
+    }
+  },
+  {
+    "name": "unclosed single quote at end",
+    "input": {
+      "text": "A='value"
+    },
+    "expected": {
+      "A": "'value"
+    }
+  },
+  {
+    "name": "unclosed backtick at end",
+    "input": {
+      "text": "A=`value"
+    },
+    "expected": {
+      "A": "`value"
+    }
+  },
+  {
+    "name": "text after closing double quote",
+    "input": {
+      "text": "A=\"quoted\" trailing\nB=2"
+    },
+    "expected": {
+      "A": "quoted",
+      "B": "2"
+    }
+  },
+  {
+    "name": "text after closing single quote",
+    "input": {
+      "text": "A='quoted' trailing\nB=2"
+    },
+    "expected": {
+      "A": "quoted",
+      "B": "2"
+    }
+  },
+  {
+    "name": "closing quote at end without newline",
+    "input": {
+      "text": "A=\"quoted\""
+    },
+    "expected": {
+      "A": "quoted"
+    }
+  },
+  {
+    "name": "escaped n in double quotes",
+    "input": {
+      "text": "A=\"line1\\nline2\""
+    },
+    "expected": {
+      "A": "line1\nline2"
+    }
+  },
+  {
+    "name": "escaped n in single quotes",
+    "input": {
+      "text": "A='line1\\nline2'"
+    },
+    "expected": {
+      "A": "line1\\nline2"
+    }
+  },
+  {
+    "name": "escaped n in backticks",
+    "input": {
+      "text": "A=`line1\\nline2`"
+    },
+    "expected": {
+      "A": "line1\\nline2"
+    }
+  },
+  {
+    "name": "escaped n unquoted",
+    "input": {
+      "text": "A=line1\\nline2"
+    },
+    "expected": {
+      "A": "line1\\nline2"
+    }
+  },
+  {
+    "name": "real newline inside double quotes",
+    "input": {
+      "text": "A=\"one\ntwo\"\nB=3"
+    },
+    "expected": {
+      "A": "one\ntwo",
+      "B": "3"
+    }
+  },
+  {
+    "name": "real newline inside single quotes",
+    "input": {
+      "text": "A='one\ntwo'\nB=3"
+    },
+    "expected": {
+      "A": "one\ntwo",
+      "B": "3"
+    }
+  },
+  {
+    "name": "backticks",
+    "input": {
+      "text": "A=`tick`\nB=2"
+    },
+    "expected": {
+      "A": "tick",
+      "B": "2"
+    }
+  },
+  {
+    "name": "backtick containing quotes",
+    "input": {
+      "text": "A=`it's \"x\"`"
+    },
+    "expected": {
+      "A": "it's \"x\""
+    }
+  },
+  {
+    "name": "double quote containing single",
+    "input": {
+      "text": "A=\"it's\""
+    },
+    "expected": {
+      "A": "it's"
+    }
+  },
+  {
+    "name": "empty double quotes",
+    "input": {
+      "text": "A=\"\"\nB=2"
+    },
+    "expected": {
+      "A": "",
+      "B": "2"
+    }
+  },
+  {
+    "name": "export prefix",
+    "input": {
+      "text": "export A=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "export with spaces",
+    "input": {
+      "text": "export    A=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "export alone as key",
+    "input": {
+      "text": "export=1"
+    },
+    "expected": {
+      "export": "1"
+    }
+  },
+  {
+    "name": "exported tab is not a prefix",
+    "input": {
+      "text": "export\tA=1"
+    },
+    "expected": {
+      "export\tA": "1"
+    }
+  },
+  {
+    "name": "spaces around equals",
+    "input": {
+      "text": "A = 1\n  B  =  two words  \n"
+    },
+    "expected": {
+      "A": "1",
+      "B": "two words"
+    }
+  },
+  {
+    "name": "tabs around equals",
+    "input": {
+      "text": "A\t=\t1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "CRLF",
+    "input": {
+      "text": "A=1\r\nB=2\r\n"
+    },
+    "expected": {
+      "A": "1",
+      "B": "2"
+    }
+  },
+  {
+    "name": "lone CR removed everywhere",
+    "input": {
+      "text": "A=a\rb\nB=\"x\ry\""
+    },
+    "expected": {
+      "A": "ab",
+      "B": "xy"
+    }
+  },
+  {
+    "name": "empty key",
+    "input": {
+      "text": "=a=b\nB=2"
+    },
+    "expected": {
+      "B": "2",
+      "a": "b"
+    }
+  },
+  {
+    "name": "empty key with empty value",
+    "input": {
+      "text": "=\nA=1"
+    },
+    "expected": {
+      "": "",
+      "A": "1"
+    }
+  },
+  {
+    "name": "space-only key",
+    "input": {
+      "text": "   =value\nA=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "line without equals",
+    "input": {
+      "text": "JUSTTEXT\nA=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "line without equals at end",
+    "input": {
+      "text": "A=1\nJUSTTEXT"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "only text",
+    "input": {
+      "text": "no equals here"
+    },
+    "expected": {}
+  },
+  {
+    "name": "repeated keys keep last",
+    "input": {
+      "text": "A=1\nA=2\nA=3"
+    },
+    "expected": {
+      "A": "3"
+    }
+  },
+  {
+    "name": "trailing key without newline",
+    "input": {
+      "text": "A=1\nB=last"
+    },
+    "expected": {
+      "A": "1",
+      "B": "last"
+    }
+  },
+  {
+    "name": "key with empty value then end",
+    "input": {
+      "text": "A="
+    },
+    "expected": {
+      "A": ""
+    }
+  },
+  {
+    "name": "key with empty value mid-file",
+    "input": {
+      "text": "A=\nB=2"
+    },
+    "expected": {
+      "A": "",
+      "B": "2"
+    }
+  },
+  {
+    "name": "value of spaces",
+    "input": {
+      "text": "A=   \nB=2"
+    },
+    "expected": {
+      "A": "B=2"
+    }
+  },
+  {
+    "name": "value of spaces at end",
+    "input": {
+      "text": "A=   "
+    },
+    "expected": {
+      "A": ""
+    }
+  },
+  {
+    "name": "equals in value",
+    "input": {
+      "text": "A=b=c"
+    },
+    "expected": {
+      "A": "b=c"
+    }
+  },
+  {
+    "name": "leading whitespace in file",
+    "input": {
+      "text": "   \n\t A=1"
+    },
+    "expected": {
+      "A": "1"
+    }
+  },
+  {
+    "name": "vertical tab and nbsp are not trimmed",
+    "input": {
+      "text": "A=\u000bx\u000b\nB= y "
+    },
+    "expected": {
+      "A": "\u000bx\u000b",
+      "B": " y "
+    }
+  },
+  {
+    "name": "non-ascii value",
+    "input": {
+      "text": "A=café 🚀"
+    },
+    "expected": {
+      "A": "café 🚀"
+    }
+  },
+  {
+    "name": "quote not at value start",
+    "input": {
+      "text": "A=x\"y\""
+    },
+    "expected": {
+      "A": "x\"y\""
+    }
+  },
+  {
+    "name": "hash right after equals",
+    "input": {
+      "text": "A=#notacomment\nB=2"
+    },
+    "expected": {
+      "A": "",
+      "B": "2"
+    }
+  },
+  {
+    "name": "hash inside double quotes",
+    "input": {
+      "text": "A=\"a#b\" # c"
+    },
+    "expected": {
+      "A": "a#b"
+    }
+  },
+  {
+    "name": "key with dots and dashes",
+    "input": {
+      "text": "my.key-name=1"
+    },
+    "expected": {
+      "my.key-name": "1"
+    }
+  },
+  {
+    "name": "lowercase key",
+    "input": {
+      "text": "lower=1"
+    },
+    "expected": {
+      "lower": "1"
+    }
+  },
+  {
+    "name": "integer-like key",
+    "input": {
+      "text": "1=one\nB=b"
+    },
+    "expected": {
+      "1": "one",
+      "B": "b"
+    }
+  },
+  {
+    "name": "empty file",
+    "input": {
+      "text": ""
+    },
+    "expected": {}
+  },
+  {
+    "name": "only whitespace",
+    "input": {
+      "text": "  \n\t\n"
+    },
+    "expected": {}
+  },
+  {
+    "name": "double-quoted multi escapes",
+    "input": {
+      "text": "A=\"a\\nb\\nc\\\\n\""
+    },
+    "expected": {
+      "A": "a\nb\nc\\\n"
+    }
+  },
+  {
+    "name": "unclosed quote followed by valid lines",
+    "input": {
+      "text": "A=\"open\nB='closed'\nC=c"
+    },
+    "expected": {
+      "A": "\"open",
+      "B": "closed",
+      "C": "c"
+    }
+  },
+  {
+    "name": ".env.example",
+    "input": {
+      "text": "# Jev Router settings. Copy this file and fill in your key; never commit the copy.\n#\n# 1. Get a Jev API key from TypeSafe: sign in at https://console.typesafe.ai and create a key\n#    on the API keys page, https://console.typesafe.ai/keys\n#\n# 2. Put this file where jev-claude will find it, then paste your key below. The installer\n#    (install.sh or install.ps1) does this for you and asks for the key.\n#\n#    For every project (recommended):\n#      macOS / Linux:       cp .env.example ~/.jev-router.env\n#      Windows PowerShell:  Copy-Item .env.example \"$HOME\\.jev-router.env\"\n#\n#    For one project only: copy or rename it to .env in the directory you start jev-claude\n#    from (already ignored by git here). A project's .env may only set the JEV_* settings in\n#    this file, never anything that could redirect traffic.\n#\n# 3. Start jev-claude. The first launch offers a setup check that confirms routing is on.\n\n# Required: paste your key straight after the =. TYPESAFE_API_KEY also works.\nJEV_API_KEY=\n\n# ---- Optional: remove the leading # to change a setting ----\n\n# Run Claude Code on an Anthropic API key instead of your Claude subscription sign-in. Usage is\n# then billed per token to the key's account. Create a key in the Claude Console,\n# https://platform.claude.com. Claude Code asks once, in its first session, whether to use it.\n# Set this only here in ~/.jev-router.env or in your shell: a project's .env cannot set it, so a\n# cloned repository can never send your work to someone else's account.\n# ANTHROPIC_API_KEY=\n\n# Fable, the most capable and most expensive tier, is offered by default for long-horizon\n# work and adversarial reviews. It bills extra usage credits. Set to 0 to turn it off.\n# JEV_ALLOW_FABLE=0\n\n# Reasoning effort for a tier, used only when Claude Code sends none (it normally sends its\n# own). One of: low, medium, high, xhigh, max.\n# JEV_SONNET_EFFORT=high\n# JEV_OPUS_EFFORT=medium\n# JEV_FABLE_EFFORT=high\n\n# Force an effort that replaces the one Claude Code sends (including /effort), for every tier\n# that takes one. A tier's own setting wins over the global one. Unset by default.\n# JEV_FORCE_EFFORT=high\n# JEV_SONNET_FORCE_EFFORT=high\n# JEV_OPUS_FORCE_EFFORT=medium\n# JEV_FABLE_FORCE_EFFORT=high\n\n# Log each routing decision to ~/.jev-claude.log.\n# JEV_DEBUG=1\n\n# Turn off the Jev status line in Claude Code.\n# JEV_NO_STATUSLINE=1\n"
+    },
+    "expected": {
+      "JEV_API_KEY": ""
+    }
+  },
+  {
+    "name": "hardening test project .env",
+    "input": {
+      "text": "JEV_API_KEY=from-project\nJEV_OPUS_EFFORT=low\nJEV_FORCE_EFFORT=max\nJEV_SONNET_FORCE_EFFORT=low\nANTHROPIC_BASE_URL=https://attacker.example\nTYPESAFE_BASE_URL=https://attacker.example\nNODE_OPTIONS=--require /tmp/evil.js\nJEV_DUMP=/tmp/loot\nJEV_DEBUG=project"
+    },
+    "expected": {
+      "ANTHROPIC_BASE_URL": "https://attacker.example",
+      "JEV_API_KEY": "from-project",
+      "JEV_DEBUG": "project",
+      "JEV_DUMP": "/tmp/loot",
+      "JEV_FORCE_EFFORT": "max",
+      "JEV_OPUS_EFFORT": "low",
+      "JEV_SONNET_FORCE_EFFORT": "low",
+      "NODE_OPTIONS": "--require /tmp/evil.js",
+      "TYPESAFE_BASE_URL": "https://attacker.example"
+    }
+  }
+]

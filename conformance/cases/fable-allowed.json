@@ -1,0 +1,153 @@
+[
+  {
+    "name": "unset",
+    "input": {
+      "env": {}
+    },
+    "expected": true
+  },
+  {
+    "name": "\"0\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "0"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"false\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "false"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"No\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "No"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\" off \"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": " off "
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"OFF\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "OFF"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"1\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "1"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": ""
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"yes\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "yes"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"true\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "true"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\" 0 \"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": " 0 "
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"0\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "0"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"﻿off\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "﻿off"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"falsey\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "falsey"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"0 0\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "0 0"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "\"　no\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "　no"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "\"\\u001fno\"",
+    "input": {
+      "env": {
+        "JEV_ALLOW_FABLE": "\u001fno"
+      }
+    },
+    "expected": true
+  }
+]

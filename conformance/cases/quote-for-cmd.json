@@ -1,0 +1,233 @@
+[
+  {
+    "name": "\"name=\\\"Jev Router\\\"\"",
+    "input": {
+      "arg": "name=\"Jev Router\""
+    },
+    "expected": "^^^\"name=\\^^^\"Jev^^^ Router\\^^^\"^^^\""
+  },
+  {
+    "name": "\"fix a&b|c\"",
+    "input": {
+      "arg": "fix a&b|c"
+    },
+    "expected": "^^^\"fix^^^ a^^^&b^^^|c^^^\""
+  },
+  {
+    "name": "\"50% done\"",
+    "input": {
+      "arg": "50% done"
+    },
+    "expected": "^^^\"50^^^%^^^ done^^^\""
+  },
+  {
+    "name": "\"say \\\"hi\\\"\"",
+    "input": {
+      "arg": "say \"hi\""
+    },
+    "expected": "^^^\"say^^^ \\^^^\"hi\\^^^\"^^^\""
+  },
+  {
+    "name": "\"plain\"",
+    "input": {
+      "arg": "plain"
+    },
+    "expected": "^^^\"plain^^^\""
+  },
+  {
+    "name": "\"\"",
+    "input": {
+      "arg": ""
+    },
+    "expected": "^^^\"^^^\""
+  },
+  {
+    "name": "\" \"",
+    "input": {
+      "arg": " "
+    },
+    "expected": "^^^\"^^^ ^^^\""
+  },
+  {
+    "name": "\"a b\"",
+    "input": {
+      "arg": "a b"
+    },
+    "expected": "^^^\"a^^^ b^^^\""
+  },
+  {
+    "name": "\"C:\\\\path\\\\\"",
+    "input": {
+      "arg": "C:\\path\\"
+    },
+    "expected": "^^^\"C:\\path\\\\^^^\""
+  },
+  {
+    "name": "\"C:\\\\path with space\\\\\"",
+    "input": {
+      "arg": "C:\\path with space\\"
+    },
+    "expected": "^^^\"C:\\path^^^ with^^^ space\\\\^^^\""
+  },
+  {
+    "name": "\"back\\\\\\\"slash\"",
+    "input": {
+      "arg": "back\\\"slash"
+    },
+    "expected": "^^^\"back\\\\\\^^^\"slash^^^\""
+  },
+  {
+    "name": "\"two\\\\\\\\\\\"q\"",
+    "input": {
+      "arg": "two\\\\\"q"
+    },
+    "expected": "^^^\"two\\\\\\\\\\^^^\"q^^^\""
+  },
+  {
+    "name": "\"end\\\\\\\\\"",
+    "input": {
+      "arg": "end\\\\"
+    },
+    "expected": "^^^\"end\\\\\\\\^^^\""
+  },
+  {
+    "name": "\"\\\\\\\\server\\\\share\"",
+    "input": {
+      "arg": "\\\\server\\share"
+    },
+    "expected": "^^^\"\\\\server\\share^^^\""
+  },
+  {
+    "name": "\"trailing\\\\\"",
+    "input": {
+      "arg": "trailing\\"
+    },
+    "expected": "^^^\"trailing\\\\^^^\""
+  },
+  {
+    "name": "\"\\\"\"",
+    "input": {
+      "arg": "\""
+    },
+    "expected": "^^^\"\\^^^\"^^^\""
+  },
+  {
+    "name": "\"\\\"\\\"\"",
+    "input": {
+      "arg": "\"\""
+    },
+    "expected": "^^^\"\\^^^\"\\^^^\"^^^\""
+  },
+  {
+    "name": "\"^caret^\"",
+    "input": {
+      "arg": "^caret^"
+    },
+    "expected": "^^^\"^^^^caret^^^^^^^\""
+  },
+  {
+    "name": "\"!bang!\"",
+    "input": {
+      "arg": "!bang!"
+    },
+    "expected": "^^^\"^^^!bang^^^!^^^\""
+  },
+  {
+    "name": "\"(parens)\"",
+    "input": {
+      "arg": "(parens)"
+    },
+    "expected": "^^^\"^^^(parens^^^)^^^\""
+  },
+  {
+    "name": "\"[brackets]\"",
+    "input": {
+      "arg": "[brackets]"
+    },
+    "expected": "^^^\"^^^[brackets^^^]^^^\""
+  },
+  {
+    "name": "\"%PATH%\"",
+    "input": {
+      "arg": "%PATH%"
+    },
+    "expected": "^^^\"^^^%PATH^^^%^^^\""
+  },
+  {
+    "name": "\"`tick`\"",
+    "input": {
+      "arg": "`tick`"
+    },
+    "expected": "^^^\"^^^`tick^^^`^^^\""
+  },
+  {
+    "name": "\"<in>\"",
+    "input": {
+      "arg": "<in>"
+    },
+    "expected": "^^^\"^^^<in^^^>^^^\""
+  },
+  {
+    "name": "\"out>\"",
+    "input": {
+      "arg": "out>"
+    },
+    "expected": "^^^\"out^^^>^^^\""
+  },
+  {
+    "name": "\"semi;colon\"",
+    "input": {
+      "arg": "semi;colon"
+    },
+    "expected": "^^^\"semi^^^;colon^^^\""
+  },
+  {
+    "name": "\"com,ma\"",
+    "input": {
+      "arg": "com,ma"
+    },
+    "expected": "^^^\"com^^^,ma^^^\""
+  },
+  {
+    "name": "\"star*\"",
+    "input": {
+      "arg": "star*"
+    },
+    "expected": "^^^\"star^^^*^^^\""
+  },
+  {
+    "name": "\"what?\"",
+    "input": {
+      "arg": "what?"
+    },
+    "expected": "^^^\"what^^^?^^^\""
+  },
+  {
+    "name": "\"tab\\there\"",
+    "input": {
+      "arg": "tab\there"
+    },
+    "expected": "^^^\"tab\there^^^\""
+  },
+  {
+    "name": "\"naïve\"",
+    "input": {
+      "arg": "naïve"
+    },
+    "expected": "^^^\"naïve^^^\""
+  },
+  {
+    "name": "42",
+    "input": {
+      "arg": 42
+    },
+    "expected": "^^^\"42^^^\""
+  },
+  {
+    "name": "\"()[]%!^\\\"`<>&|;, *?\"",
+    "input": {
+      "arg": "()[]%!^\"`<>&|;, *?"
+    },
+    "expected": "^^^\"^^^(^^^)^^^[^^^]^^^%^^^!^^^^\\^^^\"^^^`^^^<^^^>^^^&^^^|^^^;^^^,^^^ ^^^*^^^?^^^\""
+  }
+]

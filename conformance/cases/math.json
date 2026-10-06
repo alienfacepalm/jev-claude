@@ -1,0 +1,1766 @@
+[
+  {
+    "name": "MathRound #0 2.5",
+    "input": {
+      "op": "MathRound",
+      "value": 2.5
+    },
+    "expected": 3
+  },
+  {
+    "name": "MathRound #1 -2.5",
+    "input": {
+      "op": "MathRound",
+      "value": -2.5
+    },
+    "expected": -2
+  },
+  {
+    "name": "MathRound #2 0.49999999999999994",
+    "input": {
+      "op": "MathRound",
+      "value": 0.49999999999999994
+    },
+    "expected": 0
+  },
+  {
+    "name": "MathRound #3 -0.5",
+    "input": {
+      "op": "MathRound",
+      "value": -0.5
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "MathRound #4 -0.4",
+    "input": {
+      "op": "MathRound",
+      "value": -0.4
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "MathRound #5 0.5",
+    "input": {
+      "op": "MathRound",
+      "value": 0.5
+    },
+    "expected": 1
+  },
+  {
+    "name": "MathRound #6 1.5",
+    "input": {
+      "op": "MathRound",
+      "value": 1.5
+    },
+    "expected": 2
+  },
+  {
+    "name": "MathRound #7 -1.5",
+    "input": {
+      "op": "MathRound",
+      "value": -1.5
+    },
+    "expected": -1
+  },
+  {
+    "name": "MathRound #8 -0.6",
+    "input": {
+      "op": "MathRound",
+      "value": -0.6
+    },
+    "expected": -1
+  },
+  {
+    "name": "MathRound #9 12.5",
+    "input": {
+      "op": "MathRound",
+      "value": 12.5
+    },
+    "expected": 13
+  },
+  {
+    "name": "MathRound #10 8",
+    "input": {
+      "op": "MathRound",
+      "value": 8
+    },
+    "expected": 8
+  },
+  {
+    "name": "MathRound #11 99.99",
+    "input": {
+      "op": "MathRound",
+      "value": 99.99
+    },
+    "expected": 100
+  },
+  {
+    "name": "MathRound #12 0",
+    "input": {
+      "op": "MathRound",
+      "value": 0
+    },
+    "expected": 0
+  },
+  {
+    "name": "MathRound #13 -0",
+    "input": {
+      "op": "MathRound",
+      "value": {
+        "$number": "-0"
+      }
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "MathRound #14 4503599627370495.5",
+    "input": {
+      "op": "MathRound",
+      "value": 4503599627370495.5
+    },
+    "expected": 4503599627370496
+  },
+  {
+    "name": "MathRound #15 4503599627370497",
+    "input": {
+      "op": "MathRound",
+      "value": 4503599627370497
+    },
+    "expected": 4503599627370497
+  },
+  {
+    "name": "MathRound #16 9007199254740992",
+    "input": {
+      "op": "MathRound",
+      "value": 9007199254740992
+    },
+    "expected": 9007199254740992
+  },
+  {
+    "name": "MathRound #17 -9007199254740992",
+    "input": {
+      "op": "MathRound",
+      "value": -9007199254740992
+    },
+    "expected": -9007199254740992
+  },
+  {
+    "name": "MathRound #18 1e+21",
+    "input": {
+      "op": "MathRound",
+      "value": 1e+21
+    },
+    "expected": 1e+21
+  },
+  {
+    "name": "MathRound #19 NaN",
+    "input": {
+      "op": "MathRound",
+      "value": {
+        "$number": "NaN"
+      }
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "MathRound #20 Infinity",
+    "input": {
+      "op": "MathRound",
+      "value": {
+        "$number": "Infinity"
+      }
+    },
+    "expected": {
+      "$number": "Infinity"
+    }
+  },
+  {
+    "name": "MathRound #21 -Infinity",
+    "input": {
+      "op": "MathRound",
+      "value": {
+        "$number": "-Infinity"
+      }
+    },
+    "expected": {
+      "$number": "-Infinity"
+    }
+  },
+  {
+    "name": "MathRound #22 0.6000000000000001",
+    "input": {
+      "op": "MathRound",
+      "value": 0.6000000000000001
+    },
+    "expected": 1
+  },
+  {
+    "name": "MathRound #23 0.3333333333333333",
+    "input": {
+      "op": "MathRound",
+      "value": 0.3333333333333333
+    },
+    "expected": 0
+  },
+  {
+    "name": "MathRound #24 94.49999999999999",
+    "input": {
+      "op": "MathRound",
+      "value": 94.49999999999999
+    },
+    "expected": 94
+  },
+  {
+    "name": "toFixed2 #0 0.125",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.125
+    },
+    "expected": "0.13"
+  },
+  {
+    "name": "toFixed2 #1 0.375",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.375
+    },
+    "expected": "0.38"
+  },
+  {
+    "name": "toFixed2 #2 1.005",
+    "input": {
+      "op": "toFixed2",
+      "value": 1.005
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 #3 0",
+    "input": {
+      "op": "toFixed2",
+      "value": 0
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 #4 -0",
+    "input": {
+      "op": "toFixed2",
+      "value": {
+        "$number": "-0"
+      }
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 #5 -0.125",
+    "input": {
+      "op": "toFixed2",
+      "value": -0.125
+    },
+    "expected": "-0.13"
+  },
+  {
+    "name": "toFixed2 #6 1",
+    "input": {
+      "op": "toFixed2",
+      "value": 1
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 #7 0.5",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.5
+    },
+    "expected": "0.50"
+  },
+  {
+    "name": "toFixed2 #8 0.005",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.005
+    },
+    "expected": "0.01"
+  },
+  {
+    "name": "toFixed2 #9 0.015",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.015
+    },
+    "expected": "0.01"
+  },
+  {
+    "name": "toFixed2 #10 2.675",
+    "input": {
+      "op": "toFixed2",
+      "value": 2.675
+    },
+    "expected": "2.67"
+  },
+  {
+    "name": "toFixed2 #11 123.456",
+    "input": {
+      "op": "toFixed2",
+      "value": 123.456
+    },
+    "expected": "123.46"
+  },
+  {
+    "name": "toFixed2 #12 -1.5",
+    "input": {
+      "op": "toFixed2",
+      "value": -1.5
+    },
+    "expected": "-1.50"
+  },
+  {
+    "name": "toFixed2 #13 0.3333333333333333",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.3333333333333333
+    },
+    "expected": "0.33"
+  },
+  {
+    "name": "toFixed2 #14 0.6666666666666666",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.6666666666666666
+    },
+    "expected": "0.67"
+  },
+  {
+    "name": "toFixed2 #15 0.92",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.92
+    },
+    "expected": "0.92"
+  },
+  {
+    "name": "toFixed2 #16 0.995",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.995
+    },
+    "expected": "0.99"
+  },
+  {
+    "name": "toFixed2 #17 9.995",
+    "input": {
+      "op": "toFixed2",
+      "value": 9.995
+    },
+    "expected": "9.99"
+  },
+  {
+    "name": "toFixed2 #18 0.5555555555555556",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.5555555555555556
+    },
+    "expected": "0.56"
+  },
+  {
+    "name": "toFixed2 #19 100000000000000000000",
+    "input": {
+      "op": "toFixed2",
+      "value": 100000000000000000000
+    },
+    "expected": "100000000000000000000.00"
+  },
+  {
+    "name": "toFixed2 #20 1e+21",
+    "input": {
+      "op": "toFixed2",
+      "value": 1e+21
+    },
+    "expected": "1e+21"
+  },
+  {
+    "name": "toFixed2 #21 1.5e+21",
+    "input": {
+      "op": "toFixed2",
+      "value": 1.5e+21
+    },
+    "expected": "1.5e+21"
+  },
+  {
+    "name": "toFixed2 #22 NaN",
+    "input": {
+      "op": "toFixed2",
+      "value": {
+        "$number": "NaN"
+      }
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 #23 Infinity",
+    "input": {
+      "op": "toFixed2",
+      "value": {
+        "$number": "Infinity"
+      }
+    },
+    "expected": "Infinity"
+  },
+  {
+    "name": "toFixed2 #24 -Infinity",
+    "input": {
+      "op": "toFixed2",
+      "value": {
+        "$number": "-Infinity"
+      }
+    },
+    "expected": "-Infinity"
+  },
+  {
+    "name": "toFixed2 #25 1e-7",
+    "input": {
+      "op": "toFixed2",
+      "value": 1e-7
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 #26 0.045",
+    "input": {
+      "op": "toFixed2",
+      "value": 0.045
+    },
+    "expected": "0.04"
+  },
+  {
+    "name": "toFixed2 #27 1.45",
+    "input": {
+      "op": "toFixed2",
+      "value": 1.45
+    },
+    "expected": "1.45"
+  },
+  {
+    "name": "toFixed2 #28 8.345",
+    "input": {
+      "op": "toFixed2",
+      "value": 8.345
+    },
+    "expected": "8.35"
+  },
+  {
+    "name": "toFixed2 #29 99.995",
+    "input": {
+      "op": "toFixed2",
+      "value": 99.995
+    },
+    "expected": "100.00"
+  },
+  {
+    "name": "ToNumber #0 0.9",
+    "input": {
+      "op": "ToNumber",
+      "value": 0.9
+    },
+    "expected": 0.9
+  },
+  {
+    "name": "ToNumber #1 null",
+    "input": {
+      "op": "ToNumber",
+      "value": null
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #2 true",
+    "input": {
+      "op": "ToNumber",
+      "value": true
+    },
+    "expected": 1
+  },
+  {
+    "name": "ToNumber #3 false",
+    "input": {
+      "op": "ToNumber",
+      "value": false
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #4 \"\"",
+    "input": {
+      "op": "ToNumber",
+      "value": ""
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #5 \" \"",
+    "input": {
+      "op": "ToNumber",
+      "value": " "
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #6 \"0.9\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0.9"
+    },
+    "expected": 0.9
+  },
+  {
+    "name": "ToNumber #7 \" 0x1 \"",
+    "input": {
+      "op": "ToNumber",
+      "value": " 0x1 "
+    },
+    "expected": 1
+  },
+  {
+    "name": "ToNumber #8 \"0x1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0x1"
+    },
+    "expected": 1
+  },
+  {
+    "name": "ToNumber #9 \"0X1F\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0X1F"
+    },
+    "expected": 31
+  },
+  {
+    "name": "ToNumber #10 \"0o7\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0o7"
+    },
+    "expected": 7
+  },
+  {
+    "name": "ToNumber #11 \"0O7\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0O7"
+    },
+    "expected": 7
+  },
+  {
+    "name": "ToNumber #12 \"0b1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0b1"
+    },
+    "expected": 1
+  },
+  {
+    "name": "ToNumber #13 \"0B11\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0B11"
+    },
+    "expected": 3
+  },
+  {
+    "name": "ToNumber #14 \"-0x1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-0x1"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #15 \"+0x1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "+0x1"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #16 \"Infinity\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "Infinity"
+    },
+    "expected": {
+      "$number": "Infinity"
+    }
+  },
+  {
+    "name": "ToNumber #17 \"+Infinity\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "+Infinity"
+    },
+    "expected": {
+      "$number": "Infinity"
+    }
+  },
+  {
+    "name": "ToNumber #18 \"-Infinity\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-Infinity"
+    },
+    "expected": {
+      "$number": "-Infinity"
+    }
+  },
+  {
+    "name": "ToNumber #19 \"infinity\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "infinity"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #20 \"1e3\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1e3"
+    },
+    "expected": 1000
+  },
+  {
+    "name": "ToNumber #21 \".5\"",
+    "input": {
+      "op": "ToNumber",
+      "value": ".5"
+    },
+    "expected": 0.5
+  },
+  {
+    "name": "ToNumber #22 \"5.\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "5."
+    },
+    "expected": 5
+  },
+  {
+    "name": "ToNumber #23 \"+.5\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "+.5"
+    },
+    "expected": 0.5
+  },
+  {
+    "name": "ToNumber #24 \"-.5e1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-.5e1"
+    },
+    "expected": -5
+  },
+  {
+    "name": "ToNumber #25 \"1_000\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1_000"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #26 \"١\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "١"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #27 \" 1 \"",
+    "input": {
+      "op": "ToNumber",
+      "value": " 1 "
+    },
+    "expected": 1
+  },
+  {
+    "name": "ToNumber #28 \"﻿2　\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "﻿2　"
+    },
+    "expected": 2
+  },
+  {
+    "name": "ToNumber #29 \" 3 \"",
+    "input": {
+      "op": "ToNumber",
+      "value": " 3 "
+    },
+    "expected": 3
+  },
+  {
+    "name": "ToNumber #30 \"1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #31 \"\\u001f1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "\u001f1"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #32 undefined",
+    "input": {
+      "op": "ToNumber",
+      "value": {
+        "$undefined": true
+      }
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #33 {}",
+    "input": {
+      "op": "ToNumber",
+      "value": {}
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #34 []",
+    "input": {
+      "op": "ToNumber",
+      "value": []
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #35 [null]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        null
+      ]
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #36 [null]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        {
+          "$undefined": true
+        }
+      ]
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #37 [0.9]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        0.9
+      ]
+    },
+    "expected": 0.9
+  },
+  {
+    "name": "ToNumber #38 [\"0.9\"]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        "0.9"
+      ]
+    },
+    "expected": 0.9
+  },
+  {
+    "name": "ToNumber #39 [[0.7]]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        [
+          0.7
+        ]
+      ]
+    },
+    "expected": 0.7
+  },
+  {
+    "name": "ToNumber #40 [1,2]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #41 \"0x\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0x"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #42 \"0xg\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0xg"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #43 \"1e\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1e"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #44 \"-\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #45 \"+\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "+"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #46 \".\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "."
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #47 \"00012\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "00012"
+    },
+    "expected": 12
+  },
+  {
+    "name": "ToNumber #48 \"-0\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-0"
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "ToNumber #49 \"  12  \"",
+    "input": {
+      "op": "ToNumber",
+      "value": "  12  "
+    },
+    "expected": 12
+  },
+  {
+    "name": "ToNumber #50 \"12px\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "12px"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #51 [\" 3 \"]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        " 3 "
+      ]
+    },
+    "expected": 3
+  },
+  {
+    "name": "ToNumber #52 [[]]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        []
+      ]
+    },
+    "expected": 0
+  },
+  {
+    "name": "ToNumber #53 [true]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        true
+      ]
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #54 [null,null]",
+    "input": {
+      "op": "ToNumber",
+      "value": [
+        null,
+        null
+      ]
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #55 \"0.6\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0.6"
+    },
+    "expected": 0.6
+  },
+  {
+    "name": "ToNumber #56 \"6e-1\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "6e-1"
+    },
+    "expected": 0.6
+  },
+  {
+    "name": "ToNumber #57 \"1e1000\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1e1000"
+    },
+    "expected": {
+      "$number": "Infinity"
+    }
+  },
+  {
+    "name": "ToNumber #58 \"-1e1000\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "-1e1000"
+    },
+    "expected": {
+      "$number": "-Infinity"
+    }
+  },
+  {
+    "name": "ToNumber #59 NaN",
+    "input": {
+      "op": "ToNumber",
+      "value": {
+        "$number": "NaN"
+      }
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #60 -0",
+    "input": {
+      "op": "ToNumber",
+      "value": {
+        "$number": "-0"
+      }
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "ToNumber #61 \"0b2\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0b2"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #62 \"0o8\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0o8"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #63 \"0x1.5\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "0x1.5"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #64 \"1,5\"",
+    "input": {
+      "op": "ToNumber",
+      "value": "1,5"
+    },
+    "expected": {
+      "$number": "NaN"
+    }
+  },
+  {
+    "name": "ToNumber #65 \"\\t\\n\\u000b\\f\\r 7 \"",
+    "input": {
+      "op": "ToNumber",
+      "value": "\t\n\u000b\f\r 7 "
+    },
+    "expected": 7
+  },
+  {
+    "name": "roundPercent #0 0.92",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.92
+    },
+    "expected": 92
+  },
+  {
+    "name": "roundPercent #1 0.945",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.945
+    },
+    "expected": 95
+  },
+  {
+    "name": "roundPercent #2 0.005",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.005
+    },
+    "expected": 1
+  },
+  {
+    "name": "roundPercent #3 0.015",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.015
+    },
+    "expected": 2
+  },
+  {
+    "name": "roundPercent #4 0.125",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.125
+    },
+    "expected": 13
+  },
+  {
+    "name": "roundPercent #5 1",
+    "input": {
+      "op": "roundPercent",
+      "value": 1
+    },
+    "expected": 100
+  },
+  {
+    "name": "roundPercent #6 0",
+    "input": {
+      "op": "roundPercent",
+      "value": 0
+    },
+    "expected": 0
+  },
+  {
+    "name": "roundPercent #7 -0.005",
+    "input": {
+      "op": "roundPercent",
+      "value": -0.005
+    },
+    "expected": {
+      "$number": "-0"
+    }
+  },
+  {
+    "name": "roundPercent #8 0.285",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.285
+    },
+    "expected": 28
+  },
+  {
+    "name": "roundPercent #9 0.575",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.575
+    },
+    "expected": 57
+  },
+  {
+    "name": "roundPercent #10 0.94",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.94
+    },
+    "expected": 94
+  },
+  {
+    "name": "roundPercent #11 0.97",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.97
+    },
+    "expected": 97
+  },
+  {
+    "name": "roundPercent #12 0.5",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.5
+    },
+    "expected": 50
+  },
+  {
+    "name": "roundPercent #13 0.995",
+    "input": {
+      "op": "roundPercent",
+      "value": 0.995
+    },
+    "expected": 100
+  },
+  {
+    "name": "toFixed2 of ToNumber #0 0.9",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": 0.9
+    },
+    "expected": "0.90"
+  },
+  {
+    "name": "toFixed2 of ToNumber #1 null",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": null
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #2 true",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": true
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #3 false",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": false
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #4 \"\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": ""
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #5 \" \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": " "
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #6 \"0.9\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0.9"
+    },
+    "expected": "0.90"
+  },
+  {
+    "name": "toFixed2 of ToNumber #7 \" 0x1 \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": " 0x1 "
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #8 \"0x1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0x1"
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #9 \"0X1F\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0X1F"
+    },
+    "expected": "31.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #10 \"0o7\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0o7"
+    },
+    "expected": "7.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #11 \"0O7\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0O7"
+    },
+    "expected": "7.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #12 \"0b1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0b1"
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #13 \"0B11\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0B11"
+    },
+    "expected": "3.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #14 \"-0x1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-0x1"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #15 \"+0x1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "+0x1"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #16 \"Infinity\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "Infinity"
+    },
+    "expected": "Infinity"
+  },
+  {
+    "name": "toFixed2 of ToNumber #17 \"+Infinity\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "+Infinity"
+    },
+    "expected": "Infinity"
+  },
+  {
+    "name": "toFixed2 of ToNumber #18 \"-Infinity\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-Infinity"
+    },
+    "expected": "-Infinity"
+  },
+  {
+    "name": "toFixed2 of ToNumber #19 \"infinity\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "infinity"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #20 \"1e3\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1e3"
+    },
+    "expected": "1000.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #21 \".5\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": ".5"
+    },
+    "expected": "0.50"
+  },
+  {
+    "name": "toFixed2 of ToNumber #22 \"5.\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "5."
+    },
+    "expected": "5.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #23 \"+.5\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "+.5"
+    },
+    "expected": "0.50"
+  },
+  {
+    "name": "toFixed2 of ToNumber #24 \"-.5e1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-.5e1"
+    },
+    "expected": "-5.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #25 \"1_000\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1_000"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #26 \"١\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "١"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #27 \" 1 \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": " 1 "
+    },
+    "expected": "1.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #28 \"﻿2　\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "﻿2　"
+    },
+    "expected": "2.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #29 \" 3 \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": " 3 "
+    },
+    "expected": "3.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #30 \"1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #31 \"\\u001f1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "\u001f1"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #32 undefined",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": {
+        "$undefined": true
+      }
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #33 {}",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": {}
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #34 []",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": []
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #35 [null]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        null
+      ]
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #36 [null]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        {
+          "$undefined": true
+        }
+      ]
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #37 [0.9]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        0.9
+      ]
+    },
+    "expected": "0.90"
+  },
+  {
+    "name": "toFixed2 of ToNumber #38 [\"0.9\"]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        "0.9"
+      ]
+    },
+    "expected": "0.90"
+  },
+  {
+    "name": "toFixed2 of ToNumber #39 [[0.7]]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        [
+          0.7
+        ]
+      ]
+    },
+    "expected": "0.70"
+  },
+  {
+    "name": "toFixed2 of ToNumber #40 [1,2]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #41 \"0x\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0x"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #42 \"0xg\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0xg"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #43 \"1e\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1e"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #44 \"-\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #45 \"+\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "+"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #46 \".\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "."
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #47 \"00012\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "00012"
+    },
+    "expected": "12.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #48 \"-0\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-0"
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #49 \"  12  \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "  12  "
+    },
+    "expected": "12.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #50 \"12px\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "12px"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #51 [\" 3 \"]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        " 3 "
+      ]
+    },
+    "expected": "3.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #52 [[]]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        []
+      ]
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #53 [true]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        true
+      ]
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #54 [null,null]",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": [
+        null,
+        null
+      ]
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #55 \"0.6\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0.6"
+    },
+    "expected": "0.60"
+  },
+  {
+    "name": "toFixed2 of ToNumber #56 \"6e-1\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "6e-1"
+    },
+    "expected": "0.60"
+  },
+  {
+    "name": "toFixed2 of ToNumber #57 \"1e1000\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1e1000"
+    },
+    "expected": "Infinity"
+  },
+  {
+    "name": "toFixed2 of ToNumber #58 \"-1e1000\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "-1e1000"
+    },
+    "expected": "-Infinity"
+  },
+  {
+    "name": "toFixed2 of ToNumber #59 NaN",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": {
+        "$number": "NaN"
+      }
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #60 -0",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": {
+        "$number": "-0"
+      }
+    },
+    "expected": "0.00"
+  },
+  {
+    "name": "toFixed2 of ToNumber #61 \"0b2\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0b2"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #62 \"0o8\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0o8"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #63 \"0x1.5\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "0x1.5"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #64 \"1,5\"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "1,5"
+    },
+    "expected": "NaN"
+  },
+  {
+    "name": "toFixed2 of ToNumber #65 \"\\t\\n\\u000b\\f\\r 7 \"",
+    "input": {
+      "op": "toFixed2OfToNumber",
+      "value": "\t\n\u000b\f\r 7 "
+    },
+    "expected": "7.00"
+  }
+]

@@ -1,0 +1,652 @@
+[
+  {
+    "name": "haiku with no env",
+    "input": {
+      "name": "haiku",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"High\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "High"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \" HIGH \"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": " HIGH "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"low\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "low"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"xhigh\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "xhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"max\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "max"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"turbo\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "turbo"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": ""
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \" max \"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": " max "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"﻿medium\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "﻿medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"high\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "high"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"\\u001fhigh\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "\u001fhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku \"Max\\n\"",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_EFFORT": "Max\n"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "sonnet with no env",
+    "input": {
+      "name": "sonnet",
+      "env": {}
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \"High\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "High"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \" HIGH \"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": " HIGH "
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \"low\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "sonnet \"xhigh\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "sonnet \"max\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "max"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "sonnet \"turbo\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "turbo"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \"\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": ""
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \" max \"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": " max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "sonnet \"﻿medium\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "﻿medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "sonnet \"high\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "high"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \"\\u001fhigh\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "\u001fhigh"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet \"Max\\n\"",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_EFFORT": "Max\n"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "opus with no env",
+    "input": {
+      "name": "opus",
+      "env": {}
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \"High\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "High"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "opus \" HIGH \"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": " HIGH "
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "opus \"low\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "opus \"xhigh\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "opus \"max\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "max"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "opus \"turbo\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "turbo"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \"\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": ""
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \" max \"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": " max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "opus \"﻿medium\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "﻿medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \"high\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "high"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \"\\u001fhigh\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "\u001fhigh"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus \"Max\\n\"",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_EFFORT": "Max\n"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "fable with no env",
+    "input": {
+      "name": "fable",
+      "env": {}
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \"High\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "High"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \" HIGH \"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": " HIGH "
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \"low\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "fable \"xhigh\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "fable \"max\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "max"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "fable \"turbo\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "turbo"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \"\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": ""
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \" max \"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": " max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "fable \"﻿medium\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "﻿medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "fable \"high\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "high"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \"\\u001fhigh\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "\u001fhigh"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable \"Max\\n\"",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_EFFORT": "Max\n"
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "nonsense with no env",
+    "input": {
+      "name": "nonsense",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"High\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "High"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \" HIGH \"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": " HIGH "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"low\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "low"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"xhigh\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "xhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"max\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "max"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"turbo\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "turbo"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": ""
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \" max \"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": " max "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"﻿medium\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "﻿medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"high\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "high"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"\\u001fhigh\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "\u001fhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense \"Max\\n\"",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_EFFORT": "Max\n"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "another tier's setting is ignored",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_SONNET_EFFORT": "low"
+      }
+    },
+    "expected": "medium"
+  }
+]
