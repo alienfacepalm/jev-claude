@@ -35,10 +35,16 @@ struct Fixture {
     base: PathBuf,
     origin: PathBuf,
     upstream: PathBuf,
+    _serial: std::sync::MutexGuard<'static, ()>,
 }
+
+/// Node runs a file's tests one after another; these share that, so dozens of git processes
+/// never compete with the 5 s local git timeout the library applies.
+static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 impl Fixture {
     fn new() -> Fixture {
+        let guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
         let base = temp_dir("jev-update-");
         let origin = base.join("origin.git");
         let upstream = base.join("upstream");
@@ -50,7 +56,7 @@ impl Fixture {
         git(&upstream, &["add", "."]);
         git(&upstream, &["commit", "-m", "first"]);
         git(&upstream, &["push", "-u", "origin", "master"]);
-        Fixture { base, origin, upstream }
+        Fixture { base, origin, upstream, _serial: guard }
     }
 
     fn release(&self, version: &str, files: &[(&str, &str)]) {
