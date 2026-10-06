@@ -22,6 +22,25 @@ jev-claude/
 └─ python/               # Python port: pyproject.toml, src/jev_router/, tests/
 ```
 
+## Implementations
+
+| | Node.js | Go | Rust | Python |
+| --- | --- | --- | --- | --- |
+| Status | reference; what the installers set up | complete | complete | complete |
+| Toolchain | Node 22+, pnpm | Go 1.23+ | Rust 1.85+ | CPython 3.12+ |
+| Dependencies | `@typesafe-ai/sdk` | standard library | hyper, tokio, rustls (`ring`), sha1, regex | standard library |
+| Unit tests | `pnpm test` | `cd go && go vet ./... && go test ./...` | `cd rust && cargo clippy --all-targets -- -D warnings && cargo test` | `python -m unittest discover -s python/tests -t python` |
+| Docs | this repository's README | [`go/README.md`](../go/README.md) | [`rust/README.md`](../rust/README.md) | [`python/README.md`](../python/README.md) |
+
+Every port implements the seven programs in [`SPEC.md`](../SPEC.md) 1.1 (`jev-claude`,
+`jev-statusline`, `jev-explain`, `jev-legend`, `jev-check`, `jev-update-check`, `jev-proxy-host`)
+and passes three layers of tests: its own port of `node/test/`, every golden case in
+`conformance/cases/` (generated from the Node functions), and the black-box harness in
+`conformance/harness/`, which drives any implementation's proxy and status line. Each port's
+README gives the commands for running the harness against it and lists where it knowingly
+differs from Node. The installers, the shim, the skills, and the plugin still use the Node
+implementation; choosing another one at install time is not built yet.
+
 ## Why the root keeps a package.json
 
 Installs are git clones that the installers link onto the PATH with
@@ -39,8 +58,10 @@ Code in `node/` distinguishes:
 - the **repository root**, the parent of `node/`: `.git`, the release version, and the
   `.claude/skills` directory handed to Claude Code with `--add-dir`.
 
-## Shared fixtures
+## Conformance
 
-`conformance/fixtures/` holds captured inputs (a real Claude Code request, a sub-agent hand-back
-prompt) that every implementation's tests read, so the ports are tested against the same data
-as the Node version. See [`conformance/README.md`](../conformance/README.md).
+`conformance/` is shared by every implementation: captured fixtures, the vendored env-file
+parser the ports copy, the golden cases (`node conformance/generate.mjs` regenerates them from
+the Node code, deterministically), and the harness (`node --test conformance/harness`, against
+Node by default). A change to Node's behaviour means regenerating the cases and re-running every
+port's tests. See [`conformance/README.md`](../conformance/README.md).
