@@ -234,7 +234,7 @@ fn cost(tier: &str) -> Option<&'static str> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
     pub id: JsStr,
-    pub tier: &'static str,
+    pub tier: String,
     pub released_at: Value,
     pub description: Option<JsStr>,
 }
@@ -244,7 +244,7 @@ impl Model {
     pub fn to_value(&self) -> Value {
         let mut o = Object::new();
         o.insert("id", Value::String(self.id.clone()));
-        o.insert("tier", self.tier.into());
+        o.insert("tier", self.tier.as_str().into());
         if !self.released_at.is_undefined() {
             o.insert("releasedAt", self.released_at.clone());
         }
@@ -254,9 +254,9 @@ impl Model {
         Value::Object(o)
     }
 
-    /// A model object such as tests and callers build by hand; None without a known tier.
+    /// A model object such as tests and callers build by hand; None without a string tier.
     pub fn from_value(v: &Value) -> Option<Model> {
-        let tier = TIER_NAMES.iter().find(|t| v.get("tier").is_str(t))?;
+        let tier = v.get("tier").as_str()?.to_string_lossy();
         Some(Model {
             id: v.get("id").to_js_string(),
             tier,
@@ -280,8 +280,8 @@ pub fn question_for_models(models: &[Model]) -> Value {
     for m in models {
         let mut entry = Object::new();
         entry.insert("model", Value::String(m.description.clone().unwrap_or_else(|| m.id.clone())));
-        entry.insert("cost", cost(m.tier).map_or(Value::Undefined, Value::from));
-        if let Some(g) = guidance(m.tier) {
+        entry.insert("cost", cost(&m.tier).map_or(Value::Undefined, Value::from));
+        if let Some(g) = guidance(&m.tier) {
             entry.insert("what", g.what.into());
             entry.insert("signals", string_array(g.signals));
             entry.insert("not_for", g.not_for.into());

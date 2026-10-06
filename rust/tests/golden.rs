@@ -387,3 +387,162 @@ fn config_tables_match_node() {
     let ids: Vec<&str> = config::TIERS.iter().map(|t| t.id).collect();
     assert_eq!(ids, ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"]);
 }
+
+/// Runs the real status line binary the way the case README describes.
+#[test]
+fn status_line_program() {
+    let exe = env!("CARGO_BIN_EXE_jev-statusline");
+    check_cases("status-line", &mut |i| {
+        let status_dir = temp_dir("jev-sl-status-");
+        let work = temp_dir("jev-sl-work-");
+        let scratch = temp_dir("jev-sl-home-");
+        let file = i.get("statusFile");
+        if let Some(name) = file.as_str() {
+            let path = status_dir.join(name.to_string_lossy());
+            if let Some(text) = i.get("statusText").as_str() {
+                std::fs::write(&path, text.as_bytes()).unwrap();
+            } else if !i.get("status").is_undefined() {
+                std::fs::write(&path, jsjson::to_bytes(i.get("status"))).unwrap();
+            }
+        }
+        let calibration = status_dir.join("calibration.json");
+        if let Some(text) = i.get("calibrationText").as_str() {
+            std::fs::write(&calibration, text.as_bytes()).unwrap();
+        } else if !i.get("calibration").is_undefined() {
+            std::fs::write(&calibration, jsjson::to_bytes(i.get("calibration"))).unwrap();
+        }
+        let mut cmd = std::process::Command::new(exe);
+        for (k, _) in std::env::vars_os() {
+            let k = k.to_string_lossy().to_string();
+            let upper = k.to_ascii_uppercase();
+            if ["JEV_", "TYPESAFE_", "ANTHROPIC_", "CLAUDE_"].iter().any(|p| upper.starts_with(p)) {
+                cmd.env_remove(&k);
+            }
+        }
+        cmd.current_dir(&work)
+            .env("JEV_STATUS_DIR", &status_dir)
+            .env("JEV_ICONS", i.get("icons").to_js_string().to_string_lossy())
+            .env("HOME", &scratch)
+            .env("USERPROFILE", &scratch)
+            .env("TEMP", &scratch)
+            .env("TMP", &scratch)
+            .env("TMPDIR", &scratch)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+        let mut child = cmd.spawn().map_err(|e| e.to_string())?;
+        {
+            use std::io::Write;
+            let mut stdin = child.stdin.take().unwrap();
+            stdin.write_all(i.get("stdin").to_js_string().to_string_lossy().as_bytes()).unwrap();
+        }
+        let out = child.wait_with_output().map_err(|e| e.to_string())?;
+        if !out.status.success() || !out.stderr.is_empty() {
+            return Err(format!("exit {:?}, stderr {}", out.status, String::from_utf8_lossy(&out.stderr)));
+        }
+        let mut o = Object::new();
+        o.insert("stdout", Value::from(String::from_utf8_lossy(&out.stdout).into_owned()));
+        Ok(Value::Object(o))
+    });
+}
+
+/// A loopback Jev that answers each request with the body it is given and records the request.
+struct FakeJev {
+    port: u16,
+    reply: std::sync::Arc<std::sync::Mutex<String>>,
+    seen: std::sync::Arc<std::sync::Mutex<Vec<(String, String, Vec<u8>)>>>,
+}
+
+async fn fake_jev() -> FakeJev {
+    use http_body_util::BodyExt;
+    let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let reply = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let (r, sn) = (reply.clone(), seen.clone());
+    tokio::spawn(async move {
+        loop {
+            let Ok((stream, _)) = listener.accept().await else { return };
+            let (r, sn) = (r.clone(), sn.clone());
+            tokio::spawn(async move {
+                let service = hyper::service::service_fn(move |req: hyper::Request<hyper::body::Incoming>| {
+                    let (r, sn) = (r.clone(), sn.clone());
+                    async move {
+                        let method = req.method().to_string();
+                        let path = req.uri().to_string();
+                        let body = req.into_body().collect().await.unwrap().to_bytes().to_vec();
+                        if method != "HEAD" {
+                            sn.lock().unwrap().push((method, path, body));
+                        }
+                        let text = r.lock().unwrap().clone();
+                        Ok::<_, std::convert::Infallible>(
+                            hyper::Response::builder()
+                                .header("content-type", "application/json")
+                                .body(http_body_util::Full::new(hyper::body::Bytes::from(text)))
+                                .unwrap(),
+                        )
+                    }
+                });
+                let _ = hyper::server::conn::http1::Builder::new()
+                    .serve_connection(hyper_util::rt::TokioIo::new(stream), service)
+                    .await;
+            });
+        }
+    });
+    FakeJev { port, reply, seen }
+}
+
+#[tokio::test]
+async fn jev_request() {
+    let jev = fake_jev().await;
+    jev_router::envx::set("TYPESAFE_BASE_URL", &format!("http://127.0.0.1:{}", jev.port));
+    jev_router::envx::set("JEV_API_KEY", "conformance-test-key");
+    let cases = load_cases("jev-request");
+    let mut failures = Vec::new();
+    for case in &cases {
+        let i = &case.input;
+        *jev.reply.lock().unwrap() = i.get("response").to_js_string().to_string_lossy();
+        jev.seen.lock().unwrap().clear();
+        let args = jev_router::router::RouteArgs {
+            prompt: i.get("prompt").to_js_string(),
+            current: i.get("current").to_js_string(),
+            context_tokens: i.get("contextTokens").to_number(),
+            models: models_of(i.get("models")),
+        };
+        let result = jev_router::router::ask_jev(args).await;
+        let seen = jev.seen.lock().unwrap().clone();
+        let e = &case.expected;
+        let mut problems = Vec::new();
+        match (seen.first(), e.get("body")) {
+            (None, Value::Null) => {}
+            (Some((method, path, body)), Value::String(expected_body)) => {
+                if !e.get("method").is_str(method) {
+                    problems.push(format!("method {method}"));
+                }
+                if path != "/v1/systemone" {
+                    problems.push(format!("path {path}"));
+                }
+                if body.as_slice() != expected_body.as_bytes() {
+                    problems.push(format!(
+                        "body differs:\n  got      {}\n  expected {}",
+                        String::from_utf8_lossy(body),
+                        expected_body.to_string_lossy()
+                    ));
+                }
+            }
+            (got, want) => problems.push(format!("request {got:?} vs {want:?}")),
+        }
+        let got = result.map_or(Value::Null, |v| {
+            let mut o = obj(&v);
+            assert!(matches!(o.remove("ms"), Some(Value::Number(n)) if n.fract() == 0.0), "integer ms");
+            Value::Object(o)
+        });
+        if let Some(d) = diff(e.get("result"), &got, "result") {
+            problems.push(d);
+        }
+        if !problems.is_empty() {
+            failures.push(format!("jev-request / {}: {}", case.name, problems.join("; ")));
+        }
+    }
+    assert!(failures.is_empty(), "{} of {} failed:\n{}", failures.len(), cases.len(), failures.join("\n"));
+}
