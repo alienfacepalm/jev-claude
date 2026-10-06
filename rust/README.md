@@ -107,8 +107,6 @@ Each is either required by SPEC.md or limited to inputs Node itself handles by c
   `child.kill()` does there. On Unix, SIGHUP and SIGTERM end Claude Code with `kill` (SIGKILL)
   rather than forwarding the same signal, since forwarding a signal needs `libc`. Unix is not
   gating (SPEC 16).
-- `jev-statusline` given the JSON value `null` on stdin renders as for `{}`; Node throws reading
-  `session_id` of `null` and prints nothing.
 - Where Node calls `toUpperCase()` or `includes()` on a value that is not a string (a numeric
   `current_model` in a status file, a numeric `reason`) and so throws, this port converts the
   value with `String()` or treats it as no reason.
