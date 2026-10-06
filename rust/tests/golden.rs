@@ -549,3 +549,53 @@ async fn jev_request() {
     }
     assert!(failures.is_empty(), "{} of {} failed:\n{}", failures.len(), cases.len(), failures.join("\n"));
 }
+
+/// Every case file in `conformance/cases` has a test above; a new file fails this until it does.
+#[test]
+fn every_case_file_is_checked() {
+    const CHECKED: [&str; 37] = [
+        "agent-label",
+        "agent-of",
+        "agent-view",
+        "apply-tier",
+        "claude-models",
+        "compare-versions",
+        "conversation-key",
+        "decide",
+        "detect-override",
+        "effort-floor",
+        "fable-allowed",
+        "forced-effort",
+        "format-agents",
+        "format-explanation",
+        "format-legend",
+        "icons",
+        "is-check-due",
+        "jev-request",
+        "location-info",
+        "main-decision",
+        "math",
+        "needs-install",
+        "new-turn-prompt",
+        "newer-than-calibrated",
+        "newest-per-tier",
+        "parse",
+        "parse-env",
+        "quote-for-cmd",
+        "reasons",
+        "sanitize-schema",
+        "session-of",
+        "short-name",
+        "status-line",
+        "stringify",
+        "update-notice",
+        "version-of",
+        "write-decision",
+    ];
+    let mut found: Vec<String> = std::fs::read_dir(repo_root().join("conformance").join("cases"))
+        .unwrap()
+        .filter_map(|e| e.ok()?.file_name().to_str()?.strip_suffix(".json").map(str::to_string))
+        .collect();
+    found.sort();
+    assert_eq!(found, CHECKED);
+}

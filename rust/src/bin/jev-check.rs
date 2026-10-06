@@ -1,6 +1,7 @@
 //! The read-only setup report behind /jev-calibrate (SPEC 13).
 use jev_router::config::{AUTO_MODEL, TIERS, fable_allowed, tier_of_str};
 use jev_router::envx::{self, ProcessEnv};
+use jev_router::jsjson::join_array;
 use jev_router::status::{calibration_file, read_calibration};
 use std::io::Write;
 
@@ -49,12 +50,9 @@ fn main() {
             "not read yet - Claude Code has not loaded the model list. Run /jev-calibrate again shortly.",
         )),
         Some(at) => {
-            let ids: Vec<String> = calibration.models.iter().map(|m| m.to_js_string().to_string_lossy()).collect();
-            let listed = if ids.is_empty() || ids.join(", ").is_empty() {
-                "no Claude models listed".to_string()
-            } else {
-                ids.join(", ")
-            };
+            // `models.join(", ") || "no Claude models listed"`: null elements join as empty.
+            let joined = join_array(&calibration.models, ", ").to_string_lossy();
+            let listed = if joined.is_empty() { "no Claude models listed".to_string() } else { joined };
             lines.push(row("Your account", &format!("{listed} (as of {})", jev_router::timefmt::display_utc(at))));
             let offered: Vec<Option<&str>> =
                 calibration.models.iter().map(|m| m.as_str().and_then(|s| tier_of_str(s.as_bytes()))).collect();
@@ -66,7 +64,7 @@ fn main() {
                     &format!("not offered to this account: {} (routing steps around them)", missing.join(", ")),
                 ));
             }
-            let newer: Vec<String> = calibration.newer.iter().map(|m| m.to_js_string().to_string_lossy()).collect();
+            let newer = &calibration.newer;
             lines.push(row(
                 "Newer models",
                 &if newer.is_empty() {
@@ -74,7 +72,7 @@ fn main() {
                 } else {
                     format!(
                         "{} - routing already uses them, but the router was tuned on the versions before. Update jev-router to get tuning for them.",
-                        newer.join(", ")
+                        join_array(newer, ", ").to_string_lossy()
                     )
                 },
             ));

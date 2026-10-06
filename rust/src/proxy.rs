@@ -486,9 +486,7 @@ impl Shared {
             convos.iter().position(|(c, _)| c == k).map(|i| convos.remove(i).1)
         };
         let mut s = take(&mut self.convos, key);
-        if s.is_none()
-            && let Some(f) = fallback
-        {
+        if let (None, Some(f)) = (&s, fallback) {
             s = take(&mut self.convos, f);
         }
         if s.is_none() && self.convos.len() >= MAX_CONVERSATIONS {
@@ -712,9 +710,7 @@ async fn process_inner(
     if matches!(body, Value::Null) {
         return Err("Cannot read properties of null (reading 'tools')".into());
     }
-    if let Some(o) = body.as_object_mut()
-        && let Some(tools) = o.get_mut("tools")
-    {
+    if let Some(tools) = body.as_object_mut().and_then(|o| o.get_mut("tools")) {
         match tools {
             Value::Undefined | Value::Null => {}
             Value::Array(items) => {

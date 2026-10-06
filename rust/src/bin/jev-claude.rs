@@ -56,11 +56,8 @@ fn status_line_args() -> Vec<String> {
     }
     let cwd = std::env::current_dir().unwrap_or_default();
     for dir in [cwd.join(".claude"), home_dir().join(".claude")] {
-        if let Ok(bytes) = std::fs::read(dir.join("settings.json"))
-            && let Ok(v) = jsjson::parse_bytes(&bytes)
-            && !v.is_nullish()
-            && v.get("statusLine").truthy()
-        {
+        let parsed = std::fs::read(dir.join("settings.json")).ok().and_then(|b| jsjson::parse_bytes(&b).ok());
+        if parsed.is_some_and(|v| !v.is_nullish() && v.get("statusLine").truthy()) {
             return vec![];
         }
     }
@@ -207,9 +204,7 @@ async fn main() {
                 std::process::exit(1);
             }
         };
-        if let Some(url) = &inherited
-            && envx::truthy("JEV_DEBUG")
-        {
+        if let (Some(url), true) = (&inherited, envx::truthy("JEV_DEBUG")) {
             eprint(&format!("[jev] upstream {url}\n"));
         }
         let mut set = vec![

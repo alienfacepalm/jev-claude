@@ -92,9 +92,8 @@ pub fn parse_env(input: &str) -> BTreeMap<String, String> {
             break;
         }
 
-        if content[0] == b'"'
-            && let Some(closing) = find(content, b'"', 1)
-        {
+        let closing_double = if content[0] == b'"' { find(content, b'"', 1) } else { None };
+        if let Some(closing) = closing_double {
             let value = &content[1..closing];
             let mut multi = Vec::with_capacity(value.len());
             let mut i = 0;
