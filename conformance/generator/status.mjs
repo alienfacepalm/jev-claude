@@ -92,6 +92,10 @@ export default function statusCases({ status }) {
     if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, tagClock(v)]));
     return value;
   };
+  // The once-per-process prune (SPEC 8.1) runs after the first successful write and compares file
+  // times against Date.now. Under the pinned clock it would delete the file just written, making
+  // the first step depend on when the generator ran, so it is triggered here, unpinned, first.
+  status.writeStatus("wd-prune-warmup", { at: 0 });
   const writeDecision = sequences.map(([name, steps]) => {
     const files = steps.map((step) =>
       pin(() => {
