@@ -43,6 +43,15 @@ def js_values(obj: dict) -> list:
     return [obj[k] for k in js_keys(obj)]
 
 
+def spread(value) -> dict:
+    """`{...value}` for a JSON value: an object's own keys, a string's or array's indices."""
+    if isinstance(value, dict):
+        return {k: value[k] for k in js_keys(value)}
+    if isinstance(value, (str, list)):
+        return {str(i): item for i, item in enumerate(value)}
+    return {}
+
+
 class ParseError(ValueError):
     """Raised where `JSON.parse` throws a SyntaxError."""
 
@@ -123,7 +132,7 @@ def stringify(value, indent: int | None = None):
 
     Returns `UNDEFINED` where JavaScript returns `undefined` (the value itself is undefined).
     """
-    gap = " " * indent if indent else ""
+    gap = " " * min(10, int(indent)) if indent else ""
     result = _serialize(value, gap, "")
     return UNDEFINED if result is None else result
 
