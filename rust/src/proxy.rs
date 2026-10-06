@@ -242,13 +242,13 @@ pub fn claude_models(catalog: &[Value]) -> Result<Vec<Model>, String> {
         let kept: Vec<Value> = parts.into_iter().filter(Value::truthy).collect();
         models.push(Model {
             id: id.as_str().unwrap().clone(),
-            tier,
+            tier: tier.to_string(),
             released_at: created.or(&Value::from("")).clone(),
             description: Some(join_array(&kept, "; ")),
         });
     }
     let sorted = try_sort(models, &|a: &Model, b: &Model| {
-        let v = compare_version(version_of(b.id.as_bytes(), b.tier), version_of(a.id.as_bytes(), a.tier));
+        let v = compare_version(version_of(b.id.as_bytes(), &b.tier), version_of(a.id.as_bytes(), &a.tier));
         if v != 0.0 && !v.is_nan() {
             return Ok(v);
         }
@@ -265,7 +265,12 @@ pub fn claude_models(catalog: &[Value]) -> Result<Vec<Model>, String> {
     if sorted.is_empty() {
         return Ok(TIERS
             .iter()
-            .map(|t| Model { id: t.id.into(), tier: t.name, released_at: "".into(), description: Some(t.id.into()) })
+            .map(|t| Model {
+                id: t.id.into(),
+                tier: t.name.to_string(),
+                released_at: "".into(),
+                description: Some(t.id.into()),
+            })
             .collect());
     }
     Ok(sorted)
@@ -291,8 +296,8 @@ pub fn newer_than_calibrated(catalog: &[Value]) -> Result<Vec<JsStr>, String> {
     Ok(newest_per_tier(&claude_models(catalog)?)
         .into_iter()
         .filter(|m| {
-            let calibrated = id_of(m.tier).unwrap_or("");
-            compare_version(version_of(m.id.as_bytes(), m.tier), version_of(calibrated.as_bytes(), m.tier)) > 0.0
+            let calibrated = id_of(&m.tier).unwrap_or("");
+            compare_version(version_of(m.id.as_bytes(), &m.tier), version_of(calibrated.as_bytes(), &m.tier)) > 0.0
         })
         .map(|m| m.id)
         .collect())
@@ -765,12 +770,12 @@ async fn process_inner(
         let catalog = ctx.shared.lock().unwrap().catalog_values();
         let available = available_tiers(&ProcessEnv);
         let all = claude_models(&catalog)?;
-        let filtered: Vec<Model> = all.into_iter().filter(|m| available.contains(&m.tier)).collect();
+        let filtered: Vec<Model> = all.into_iter().filter(|m| available.contains(&m.tier.as_str())).collect();
         let models = newest_per_tier(&filtered);
         let mut avail: Vec<&str> = Vec::new();
         for m in &models {
-            if !avail.contains(&m.tier) {
-                avail.push(m.tier);
+            if !avail.contains(&m.tier.as_str()) {
+                avail.push(m.tier.as_str());
             }
         }
         let current_model = state_model.clone().unwrap_or_else(|| model_for_tier(&models, &current));
@@ -788,7 +793,7 @@ async fn process_inner(
         let chosen = models.iter().find(|m| matches!(&choice, Value::String(c) if *c == m.id)).cloned();
         let tier_answer = chosen.as_ref().map(|c| {
             let mut a = jev.as_ref().unwrap().spread_of();
-            a.insert("choice", c.tier.into());
+            a.insert("choice", c.tier.as_str().into());
             Value::Object(a)
         });
         let routed_before = state.lock().unwrap().tier.is_some();
@@ -799,13 +804,14 @@ async fn process_inner(
             &avail,
             if routed_before { context_tokens } else { 0.0 },
         );
-        let model = if should_use_exact_model(&decision.reason, chosen.as_ref().map(|c| c.tier), &decision.tier) {
-            chosen.as_ref().unwrap().id.clone()
-        } else if decision.tier == current {
-            current_model.clone()
-        } else {
-            model_for_tier(&models, &decision.tier)
-        };
+        let model =
+            if should_use_exact_model(&decision.reason, chosen.as_ref().map(|c| c.tier.as_str()), &decision.tier) {
+                chosen.as_ref().unwrap().id.clone()
+            } else if decision.tier == current {
+                current_model.clone()
+            } else {
+                model_for_tier(&models, &decision.tier)
+            };
         {
             let mut s = state.lock().unwrap();
             s.tier = Some(decision.tier.clone());
