@@ -16,6 +16,7 @@ func TestTempFollowsNodeOnWindows(t *testing.T) {
 		{map[string]string{"TEMP": `C:\`}, `C:\`},
 		{map[string]string{"SystemRoot": `C:\Windows`}, `C:\Windows\temp`},
 		{map[string]string{"windir": `C:\WINNT`}, `C:\WINNT\temp`},
+		{map[string]string{}, `undefined\temp`},
 	}
 	for _, c := range cases {
 		if got := TempFrom(envOf(c.env), "windows"); got != c.want {

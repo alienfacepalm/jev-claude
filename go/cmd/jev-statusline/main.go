@@ -12,5 +12,10 @@ import (
 
 func main() {
 	stdin, _ := io.ReadAll(os.Stdin)
-	os.Stdout.WriteString(jsstr.ToUTF8(statusline.Render(stdin, config.ProcessEnv)))
+	line, err := statusline.Render(stdin, config.ProcessEnv)
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+	os.Stdout.WriteString(jsstr.ToUTF8(line))
 }

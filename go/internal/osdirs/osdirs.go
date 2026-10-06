@@ -48,11 +48,14 @@ func TempFrom(env Lookup, goos string) string {
 			}
 		}
 		if path == "" {
-			if root := get(env, "SystemRoot"); root != "" {
-				path = root + `\temp`
-			} else if root := get(env, "windir"); root != "" {
-				path = root + `\temp`
+			root := get(env, "SystemRoot")
+			if root == "" {
+				root = get(env, "windir")
 			}
+			if root == "" {
+				root = "undefined" // Node concatenates the undefined value (SPEC 3.8)
+			}
+			path = root + `\temp`
 		}
 		if len(path) > 1 && strings.HasSuffix(path, `\`) && !strings.HasSuffix(path, `:\`) {
 			path = path[:len(path)-1]

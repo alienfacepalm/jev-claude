@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/alienfacepalm/jev-claude/go/internal/config"
@@ -233,13 +234,9 @@ var runners = map[string]run{
 		return jsjson.Obj("results", results, "mains", pairs)
 	},
 	"write-decision.json": func(t *testing.T, c Case) any {
+		// The once-per-process prune (SPEC 8.1) must already have run, so it never runs mid-sequence.
+		warmUp(t)
 		status.Dir = t.TempDir()
-		// The generator pins Date.now to 1_800_000_000_000 while a sequence runs. Its first write
-		// also runs the once-per-process pruneStale under that clock, which deletes the file just
-		// written (see the first case's null first step); pinning the same clock reproduces it.
-		savedNow := status.NowMs
-		status.NowMs = func() float64 { return 1_800_000_000_000 }
-		defer func() { status.NowMs = savedNow }()
 		files := []any{}
 		for _, s := range in(c, "steps").([]any) {
 			var agent *status.Agent
@@ -540,4 +537,14 @@ func TestGoldenFilesAreAllCovered(t *testing.T) {
 		t.Fatalf("case files without a runner: %v", missing)
 	}
 	_ = math.NaN
+}
+
+var warmOnce sync.Once
+
+// warmUp makes the status store's first write, which runs its once-per-process prune.
+func warmUp(t *testing.T) {
+	warmOnce.Do(func() {
+		status.Dir = t.TempDir()
+		status.WriteStatus("warm-up", jsjson.Obj("tier", "opus"))
+	})
 }
