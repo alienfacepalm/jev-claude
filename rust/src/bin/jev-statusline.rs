@@ -1,0 +1,12 @@
+//! Status line for Claude Code (SPEC 12).
+use std::io::{Read, Write};
+
+fn main() {
+    jev_router::init();
+    let mut input = Vec::new();
+    let _ = std::io::stdin().read_to_end(&mut input);
+    let line = jev_router::statusline::render(&input, &jev_router::icons::icons());
+    let mut out = std::io::stdout();
+    let _ = out.write_all(line.as_bytes());
+    let _ = out.flush();
+}
