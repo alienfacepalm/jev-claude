@@ -2,3 +2,6 @@ node_modules/
 
 .env
 
+
+# Git worktrees made for parallel work (EnterWorktree, agents).
+.claude/worktrees/
