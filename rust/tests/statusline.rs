@@ -212,3 +212,21 @@ fn a_space_separates_the_sub_agents_symbol_from_the_first_model_name() {
     let line = render(&id, "{}", "{}", "symbols");
     assert!(line.contains("\u{2726} Haiku 4.5"), "{line}");
 }
+
+/// Not a Node test: Node throws reading `session_id` of a JSON `null` on stdin, so the status
+/// line writes an error to stderr, nothing to stdout, and exits 1.
+#[test]
+fn a_json_null_on_stdin_fails_as_node_does() {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
+        .env("JEV_STATUS_DIR", isolate_status())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.take().unwrap().write_all(b"null").unwrap();
+    let out = child.wait_with_output().unwrap();
+    assert_eq!(out.status.code(), Some(1));
+    assert!(out.stdout.is_empty(), "nothing on stdout");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("session_id"), "an error on stderr");
+}

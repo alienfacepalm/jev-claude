@@ -86,14 +86,15 @@ fn clip(v: &Value) -> String {
     }
 }
 
-/// Renders the status line for Claude Code's stdin JSON, with a branch lookup.
-pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Option<JsStr>) -> String {
+/// Renders the status line for Claude Code's stdin JSON, with a branch lookup. Fails where Node
+/// throws: stdin holding the JSON literal `null`, whose `session_id` Node cannot read.
+pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Option<JsStr>) -> Result<String, String> {
     let text = String::from_utf8_lossy(stdin);
     let text = if text.is_empty() { "{}".into() } else { text };
     let input = jsjson::parse(&text).unwrap_or_else(|_| Value::Object(Default::default()));
-    // Reading `input.session_id` off `null` throws in Node, which would end the program; a
-    // JSON `null` on stdin is treated as `{}`.
-    let input = if input.is_nullish() { Value::Object(Default::default()) } else { input };
+    if input.is_nullish() {
+        return Err("TypeError: Cannot read properties of null (reading 'session_id')".to_string());
+    }
 
     let status = read_status(input.get("session_id"));
     let empty = Value::from("");
@@ -171,14 +172,14 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
         String::new()
     };
 
-    format!(
+    Ok(format!(
         "{routed}{agents}{dir_part}{where_} {DIM}\u{00B7}{RESET} {} {}%{notice}\n",
         icon(icons.context),
         number_to_string(pct)
-    )
+    ))
 }
 
 /// Renders with the real git lookup.
-pub fn render(stdin: &[u8], icons: &Icons) -> String {
+pub fn render(stdin: &[u8], icons: &Icons) -> Result<String, String> {
     render_with(stdin, icons, &git_branch)
 }
