@@ -1,0 +1,74 @@
+[
+  {
+    "name": "docs only",
+    "input": {
+      "changedFiles": [
+        "README.md",
+        "src/proxy.mjs"
+      ]
+    },
+    "expected": false
+  },
+  {
+    "name": "version bump",
+    "input": {
+      "changedFiles": [
+        "package.json"
+      ]
+    },
+    "expected": false
+  },
+  {
+    "name": "lockfile",
+    "input": {
+      "changedFiles": [
+        "README.md",
+        "pnpm-lock.yaml"
+      ]
+    },
+    "expected": true
+  },
+  {
+    "name": "empty",
+    "input": {
+      "changedFiles": []
+    },
+    "expected": false
+  },
+  {
+    "name": "empty diff line",
+    "input": {
+      "changedFiles": [
+        ""
+      ]
+    },
+    "expected": false
+  },
+  {
+    "name": "nested lockfile",
+    "input": {
+      "changedFiles": [
+        "node/pnpm-lock.yaml"
+      ]
+    },
+    "expected": false
+  },
+  {
+    "name": "padded name",
+    "input": {
+      "changedFiles": [
+        "pnpm-lock.yaml "
+      ]
+    },
+    "expected": false
+  },
+  {
+    "name": "npm lockfile",
+    "input": {
+      "changedFiles": [
+        "package-lock.json"
+      ]
+    },
+    "expected": false
+  }
+]
