@@ -1105,3 +1105,37 @@ Found while generating the golden cases; each is Node's behaviour, pinned by a c
     need no real git repository (see `conformance/cases/README.md`).
 11. `jev-request` cases use the default base URL and `jev-latest`; ports testing through a loopback
     fake compare method, the `/v1/systemone` path, and the body.
+
+---
+
+## 20. Clarifications from the ports
+
+Raised by the Go, Rust, and Python agents; each is Node's behaviour and normative.
+
+1. **Values fixed at start (3.9)** also include every path Node binds when its modules load:
+   `USER_SETTINGS`, `SAVED_MODEL_MEMO`, `FIRST_RUN_FILE`, `UPDATE_FILE`, and `SETTINGS_FILE`
+   (home and status directory as they were at start).
+2. **Temporary file names (3.10):** Node writes `<file>.<pid>.tmp`; the ports' `<file>.<pid>.<seq>.tmp`
+   is a deliberate, permitted divergence.
+3. **Jev settings (5.1)** — the key, base URL, and default model — are read once per process, when
+   the client is first built, and do not change afterwards.
+4. **Upstream connection (7.7):** `host` omits the port when the URL's port is the scheme's default
+   (Node's `URL` drops `:80` for `http` and `:443` for `https`). Ports never use an outbound proxy
+   from `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` (Node does not); Go sets `Transport.Proxy = nil`, and
+   may call `Transport.RoundTrip` directly instead of using a `CheckRedirect`.
+5. **A throw after the rewrite (7.2):** if processing throws after `applyTier` (for example
+   `writeDecision` on a status file whose `history` is not iterable), `body.model` is no longer the
+   sentinel, so the original bytes, sentinel included, are forwarded.
+6. **`applyTier` with a truthy non-object `output_config` (7.5):** for a tier without effort,
+   whether it is deleted follows `Object.keys(output_config).length` (a string's characters count;
+   numbers and booleans have none, so they are deleted).
+7. **Status line on `null` (12):** stdin holding the JSON literal `null` makes Node throw reading
+   `null.session_id`: nothing is written to stdout and the exit code is 1. (Malformed or empty input
+   is still `{}`.)
+8. **`created_at` (19.1):** an array `created_at` does not throw at `.slice`; Node throws only if a
+   version tie reaches `localeCompare`. Strings and arrays slice; numbers and other values throw.
+9. **TLS in Rust (2.2):** `rustls` is built with the `ring` provider, because the default
+   `aws-lc-rs` needs CMake and NASM on Windows.
+10. **Untested path (7.2 step 3):** a client that disconnects while Jev is being asked, before the
+    upstream request starts, is covered by neither the Node tests nor the harness; each port
+    implements it and documents how.
