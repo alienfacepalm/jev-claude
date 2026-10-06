@@ -13,7 +13,8 @@ import { SETTINGS_FILE, writePrivate } from "../src/status.mjs";
 import { shouldOffer, shadowsSkill, wasOffered, markOffered, askYesNo } from "../src/first-run.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = dirname(HERE);
+// The repository root (the parent of node/), which holds the .claude/skills Claude Code is given.
+const ROOT = dirname(dirname(HERE));
 
 /**
  * Registers "Jev Router" as an extra row in Claude Code's /model picker and starts the session

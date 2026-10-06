@@ -419,7 +419,7 @@ test("never names an effort for a tier that cannot take one", () => {
 
 // A request captured from the real Claude Code CLI: it sends effort `high` and adaptive thinking.
 const CAPTURED_BODY = JSON.parse(
-  readFileSync(new URL("./fixtures/claude-code-print-request.json", import.meta.url), "utf8"),
+  readFileSync(new URL("../../conformance/fixtures/claude-code-print-request.json", import.meta.url), "utf8"),
 ).body;
 
 test("JEV_FORCE_EFFORT replaces the effort Claude Code sent, and a per-tier one wins over it", () => {

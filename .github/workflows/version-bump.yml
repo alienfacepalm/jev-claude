@@ -1,6 +1,6 @@
 # Bumps the version on every push to master, from the commits pushed: minor for a "feat:" commit,
-# major for a breaking change, patch otherwise (see scripts/bump-version.mjs). It commits the new
-# version to package.json and tags it, e.g. v0.5.0. Pull after pushing to pick up that commit.
+# major for a breaking change, patch otherwise (see node/scripts/bump-version.mjs). It commits the new
+# version to the root package.json and tags it, e.g. v0.5.0. Pull after pushing to pick up that commit.
 name: Version bump
 
 on:
@@ -41,7 +41,7 @@ jobs:
       - run: pnpm test
 
       - id: bump
-        run: echo "version=$(node scripts/bump-version.mjs '${{ github.event.before }}' '${{ github.sha }}')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node node/scripts/bump-version.mjs '${{ github.event.before }}' '${{ github.sha }}')" >> "$GITHUB_OUTPUT"
 
       - name: Commit and tag
         run: |

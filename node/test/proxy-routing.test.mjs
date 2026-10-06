@@ -14,7 +14,7 @@ import { readStatus } from "../src/status.mjs";
 // Assertions are on what the upstream received, checked after the response: an assertion
 // thrown inside `route` would be swallowed by the proxy's own error handling.
 
-const CAPTURED = JSON.parse(readFileSync(new URL("./fixtures/claude-code-print-request.json", import.meta.url), "utf8"));
+const CAPTURED = JSON.parse(readFileSync(new URL("../../conformance/fixtures/claude-code-print-request.json", import.meta.url), "utf8"));
 const realRequest = () => structuredClone(CAPTURED.body);
 const SESSION = JSON.parse(CAPTURED.body.metadata.user_id).session_id;
 

@@ -1,6 +1,7 @@
 {
   "name": "jev-router",
   "version": "0.9.2",
+  "private": true,
   "description": "Fork of jev-router for Claude Code: routes each turn to the model that gets the best result for the least cost, using TypeSafe Jev",
   "type": "module",
   "repository": {
@@ -10,21 +11,13 @@
   "homepage": "https://github.com/alienfacepalm/jev-claude#readme",
   "bugs": "https://github.com/alienfacepalm/jev-claude/issues",
   "bin": {
-    "jev-claude": "bin/jev-claude.mjs",
-    "jev-explain": "bin/jev-explain.mjs",
-    "jev-legend": "bin/jev-legend.mjs"
+    "jev-claude": "node/bin/jev-claude.mjs",
+    "jev-explain": "node/bin/jev-explain.mjs",
+    "jev-legend": "node/bin/jev-legend.mjs"
   },
   "scripts": {
-    "test": "node --test \"test/**/*.test.mjs\"",
-    "prepublishOnly": "pnpm test"
+    "test": "pnpm --dir node test"
   },
-  "files": [
-    ".claude/skills",
-    "bin",
-    "src",
-    "README.md",
-    ".env.example"
-  ],
   "keywords": [
     "claude",
     "claude-code",
@@ -35,13 +28,6 @@
   "engines": {
     "node": ">=22"
   },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org"
-  },
   "license": "MIT",
-  "dependencies": {
-    "@typesafe-ai/sdk": "^0.6.0"
-  },
   "packageManager": "pnpm@12.4.2"
 }

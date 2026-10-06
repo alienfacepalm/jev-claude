@@ -164,7 +164,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  node:
     dependencies:
       '@typesafe-ai/sdk':
         specifier: ^0.6.0

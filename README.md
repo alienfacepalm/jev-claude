@@ -157,12 +157,12 @@ For each new prompt, Jev scores the work and picks a tier:
 
 The costs are per completed task, not per token: a model that costs twice as much per token can
 use fewer tokens. They come from Anthropic's and Artificial Analysis's published measurements
-(September 2026), noted with their sources in [`src/config.mjs`](src/config.mjs).
+(September 2026), noted with their sources in [`node/src/config.mjs`](node/src/config.mjs).
 
 Each tier always uses the newest version your account offers, read from Claude Code's model list,
 so a new release such as Opus 6 is used as soon as your account has it.
 
-Then these rules apply ([`src/policy.mjs`](src/policy.mjs)):
+Then these rules apply ([`node/src/policy.mjs`](node/src/policy.mjs)):
 
 - **You can ask.** A prompt such as `use opus` or `switch to the strong model` wins. A tier word in
   ordinary prose ("replace this with long polling") is not a request.
@@ -343,29 +343,33 @@ pnpm install
 cp .env.example .env    # then paste your key
 
 pnpm test
-node scripts/live-routing.mjs
-node bin/jev-claude.mjs -p "what is 2+2?"
+node node/scripts/live-routing.mjs
+node node/bin/jev-claude.mjs -p "what is 2+2?"
 ```
 
-`pnpm test` runs offline. `scripts/live-routing.mjs` asks the real Jev about a few sample
+`pnpm test` runs offline. `node/scripts/live-routing.mjs` asks the real Jev about a few sample
 prompts.
+
+The Node.js implementation lives in `node/`; ports to Go, Rust, and Python live beside it in
+`go/`, `rust/`, and `python/`, and all of them follow [`SPEC.md`](SPEC.md). See
+[doc/LAYOUT.md](doc/LAYOUT.md) for what lives where and why the root keeps a `package.json`.
 
 ### Calibrating for new models
 
-`node scripts/calibrate.mjs --runs 2` asks the real Jev about the labelled prompts in
-[`scripts/calibration-cases.mjs`](scripts/calibration-cases.mjs). It reports how often Jev picked
+`node node/scripts/calibrate.mjs --runs 2` asks the real Jev about the labelled prompts in
+[`node/scripts/calibration-cases.mjs`](node/scripts/calibration-cases.mjs). It reports how often Jev picked
 the intended tier, and where each turn finally ran (an unsure pick running one tier lower shows as
 `step`). Run it before and after any change to the guidance, costs, effort, or thresholds in
-`src/config.mjs`, and keep a change only when the pick score holds.
+`node/src/config.mjs`, and keep a change only when the pick score holds.
 
 When a new Claude model ships, run `/jev-calibrate` in a `jev-claude` session started in this
 repository. It checks Anthropic's model notes and published per-task measurements, updates
-`src/config.mjs`, and measures each change with the script above, on a branch.
+`node/src/config.mjs`, and measures each change with the script above, on a branch.
 
 ### Versions and commit messages
 
 Every push to `master` runs [a GitHub Action](.github/workflows/version-bump.yml) that runs the
-tests, bumps the version in `package.json`, commits it as `chore(release): vX.Y.Z`, and tags it.
+tests, bumps the version in the root `package.json`, commits it as `chore(release): vX.Y.Z`, and tags it.
 Pull after pushing to pick up that commit. The size of the bump comes from the
 [Conventional Commits](https://www.conventionalcommits.org) prefixes of the commits pushed:
 
