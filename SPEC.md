@@ -1,6 +1,7 @@
 # jev-claude port specification
 
-Status: revision 3, verified by Fable (second review: PASS; its minor and major notes applied here). Reference implementation: `node/` at commit
+Status: revision 3. Sections 1-18 passed Fable's second review (its notes applied); sections 19-20
+were added afterwards from building the conformance suite and the ports, and have not been reviewed. Reference implementation: `node/` at commit
 `2f9967f`, run on Node.js 24.21.0.
 
 This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
