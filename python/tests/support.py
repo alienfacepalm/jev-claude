@@ -36,6 +36,8 @@ class Upstream:
 
         self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.server.daemon_threads = True
+        # Tests that abandon connections on purpose (timeouts, aborts) are not server errors.
+        self.server.handle_error = lambda request, address: None
         self.port = self.server.server_address[1]
         self.url = f"http://127.0.0.1:{self.port}"
         threading.Thread(target=self.server.serve_forever, kwargs={"poll_interval": 0.1}, daemon=True).start()

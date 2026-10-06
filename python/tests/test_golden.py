@@ -221,12 +221,9 @@ class Golden(unittest.TestCase):
         self.check_file("agent-of.json", call)
 
     def test_write_decision(self):
-        # Run as conformance/generator/status.mjs ran them: a fresh process (prune not yet run),
-        # an empty status directory, and the clock pinned to 1_800_000_000_000 while each step
-        # runs. That pinned clock is months ahead of the real file times, so the first write's
-        # once-per-process prune deletes the file it just wrote, so step 0 of the first case
-        # expects null. That is a generator artifact (reported to the lead); the same conditions
-        # here reproduce it.
+        # Per conformance/cases/README.md: an empty status directory, with the once-per-process
+        # prune (SPEC 8.1) already done before the first step, so it never runs during a sequence.
+        # The clock is pinned as the generator pinned it; `$clock` values match any number.
         directory = tempfile.mkdtemp(prefix="jev-golden-wd-")
         self.addCleanup(shutil.rmtree, directory, True)
         saved = (status.DIR, status._pruned, status.now_ms)
@@ -234,7 +231,8 @@ class Golden(unittest.TestCase):
         self.addCleanup(lambda: setattr(status, "_pruned", saved[1]))
         self.addCleanup(lambda: setattr(status, "now_ms", saved[2]))
         status.DIR = directory
-        status._pruned = False
+        status.prune_stale()
+        status._pruned = True
         status.now_ms = lambda: 1_800_000_000_000
 
         def call(i):
