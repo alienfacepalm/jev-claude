@@ -1,0 +1,235 @@
+[
+  {
+    "name": "\"claude-opus-5-5\"",
+    "input": {
+      "model": "claude-opus-5-5"
+    },
+    "expected": "Opus 5.5"
+  },
+  {
+    "name": "\"claude-sonnet-5-5\"",
+    "input": {
+      "model": "claude-sonnet-5-5"
+    },
+    "expected": "Sonnet 5.5"
+  },
+  {
+    "name": "\"claude-haiku-4-5-20251001\"",
+    "input": {
+      "model": "claude-haiku-4-5-20251001"
+    },
+    "expected": "Haiku 4.5"
+  },
+  {
+    "name": "\"claude-fable-5-1\"",
+    "input": {
+      "model": "claude-fable-5-1"
+    },
+    "expected": "Fable 5.1"
+  },
+  {
+    "name": "\"claude-fable-5-1[1m]\"",
+    "input": {
+      "model": "claude-fable-5-1[1m]"
+    },
+    "expected": "Fable 5.1"
+  },
+  {
+    "name": "\"claude-opus-6\"",
+    "input": {
+      "model": "claude-opus-6"
+    },
+    "expected": "Opus 6"
+  },
+  {
+    "name": "\"claude-opus-4-8\"",
+    "input": {
+      "model": "claude-opus-4-8"
+    },
+    "expected": "Opus 4.8"
+  },
+  {
+    "name": "\"claude-opus-4-6[1m]\"",
+    "input": {
+      "model": "claude-opus-4-6[1m]"
+    },
+    "expected": "Opus 4.6"
+  },
+  {
+    "name": "\"claude-opus-4-20250514\"",
+    "input": {
+      "model": "claude-opus-4-20250514"
+    },
+    "expected": "Opus 4"
+  },
+  {
+    "name": "\"claude-sonnet-4-20250514\"",
+    "input": {
+      "model": "claude-sonnet-4-20250514"
+    },
+    "expected": "Sonnet 4"
+  },
+  {
+    "name": "\"claude-3-7-sonnet-20250219\"",
+    "input": {
+      "model": "claude-3-7-sonnet-20250219"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"claude-3-5-haiku-20241022\"",
+    "input": {
+      "model": "claude-3-5-haiku-20241022"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"anthropic.claude-opus-6\"",
+    "input": {
+      "model": "anthropic.claude-opus-6"
+    },
+    "expected": "Opus 6"
+  },
+  {
+    "name": "\"anthropic.claude-opus-5-5\"",
+    "input": {
+      "model": "anthropic.claude-opus-5-5"
+    },
+    "expected": "Opus 5.5"
+  },
+  {
+    "name": "\"us.anthropic.claude-opus-5-5\"",
+    "input": {
+      "model": "us.anthropic.claude-opus-5-5"
+    },
+    "expected": "Opus 5.5"
+  },
+  {
+    "name": "\"claude-opus-5-100\"",
+    "input": {
+      "model": "claude-opus-5-100"
+    },
+    "expected": "Opus 5"
+  },
+  {
+    "name": "\"claude-sonnet-5-10\"",
+    "input": {
+      "model": "claude-sonnet-5-10"
+    },
+    "expected": "Sonnet 5.10"
+  },
+  {
+    "name": "\"claude-opus-5-05\"",
+    "input": {
+      "model": "claude-opus-5-05"
+    },
+    "expected": "Opus 5.05"
+  },
+  {
+    "name": "\"claude-sonnet-5\"",
+    "input": {
+      "model": "claude-sonnet-5"
+    },
+    "expected": "Sonnet 5"
+  },
+  {
+    "name": "\"claude-haiku-4-6\"",
+    "input": {
+      "model": "claude-haiku-4-6"
+    },
+    "expected": "Haiku 4.6"
+  },
+  {
+    "name": "\"Claude-Opus-5\"",
+    "input": {
+      "model": "Claude-Opus-5"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"xclaude-opus-5\"",
+    "input": {
+      "model": "xclaude-opus-5"
+    },
+    "expected": "Opus 5"
+  },
+  {
+    "name": "\"claude-opus-\"",
+    "input": {
+      "model": "claude-opus-"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"claude-opus-5-\"",
+    "input": {
+      "model": "claude-opus-5-"
+    },
+    "expected": "Opus 5"
+  },
+  {
+    "name": "\"claude-opus-5-5-5\"",
+    "input": {
+      "model": "claude-opus-5-5-5"
+    },
+    "expected": "Opus 5.5"
+  },
+  {
+    "name": "\"mystery-9\"",
+    "input": {
+      "model": "mystery-9"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"jev-router\"",
+    "input": {
+      "model": "jev-router"
+    },
+    "expected": null
+  },
+  {
+    "name": "\"\"",
+    "input": {
+      "model": ""
+    },
+    "expected": null
+  },
+  {
+    "name": "undefined",
+    "input": {
+      "model": {
+        "$undefined": true
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "null",
+    "input": {
+      "model": null
+    },
+    "expected": null
+  },
+  {
+    "name": "42",
+    "input": {
+      "model": 42
+    },
+    "expected": null
+  },
+  {
+    "name": "\"claude-opus-5-5 and claude-haiku-4-5\"",
+    "input": {
+      "model": "claude-opus-5-5 and claude-haiku-4-5"
+    },
+    "expected": "Opus 5.5"
+  },
+  {
+    "name": "\"claude-opus-55\"",
+    "input": {
+      "model": "claude-opus-55"
+    },
+    "expected": "Opus 55"
+  }
+]

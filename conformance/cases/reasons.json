@@ -1,0 +1,246 @@
+[
+  {
+    "name": "\"jev\"",
+    "input": {
+      "reason": "jev"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"jev/no-change\"",
+    "input": {
+      "reason": "jev/no-change"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"override\"",
+    "input": {
+      "reason": "override"
+    },
+    "expected": {
+      "short": null,
+      "long": "you named this model in the prompt",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"override/no-change\"",
+    "input": {
+      "reason": "override/no-change"
+    },
+    "expected": {
+      "short": null,
+      "long": "you named this model in the prompt",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"override+unavailable\"",
+    "input": {
+      "reason": "override+unavailable"
+    },
+    "expected": {
+      "short": null,
+      "long": "you named this model in the prompt",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"override+unavailable/no-change\"",
+    "input": {
+      "reason": "override+unavailable/no-change"
+    },
+    "expected": {
+      "short": null,
+      "long": "you named this model in the prompt",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"jev-unavailable\"",
+    "input": {
+      "reason": "jev-unavailable"
+    },
+    "expected": {
+      "short": "router offline",
+      "long": "the router could not be reached, so the model was left alone",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"jev-unavailable/no-change\"",
+    "input": {
+      "reason": "jev-unavailable/no-change"
+    },
+    "expected": {
+      "short": "router offline",
+      "long": "the router could not be reached, so the model was left alone",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"jev-unavailable+unavailable\"",
+    "input": {
+      "reason": "jev-unavailable+unavailable"
+    },
+    "expected": {
+      "short": "router offline",
+      "long": "the router could not be reached, so the model was left alone",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"low-confidence-default\"",
+    "input": {
+      "reason": "low-confidence-default"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router was unsure, so this ran one tier below its pick, and no lower than the default model",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"low-confidence-default/no-change\"",
+    "input": {
+      "reason": "low-confidence-default/no-change"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router was unsure, so this ran one tier below its pick, and no lower than the default model",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"low-confidence-default+unavailable\"",
+    "input": {
+      "reason": "low-confidence-default+unavailable"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router was unsure, so this ran one tier below its pick, and no lower than the default model",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"downgrade-not-worth-cache-rebuild\"",
+    "input": {
+      "reason": "downgrade-not-worth-cache-rebuild"
+    },
+    "expected": {
+      "short": "keeping the cache",
+      "long": "a cheaper model would have to re-read the whole conversation, which costs more than it saves",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"downgrade-not-worth-cache-rebuild/no-change\"",
+    "input": {
+      "reason": "downgrade-not-worth-cache-rebuild/no-change"
+    },
+    "expected": {
+      "short": "keeping the cache",
+      "long": "a cheaper model would have to re-read the whole conversation, which costs more than it saves",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"jev+unavailable\"",
+    "input": {
+      "reason": "jev+unavailable"
+    },
+    "expected": {
+      "short": "nearest available",
+      "long": "the chosen tier is not available on this account, so the nearest one was used",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"jev+unavailable/no-change\"",
+    "input": {
+      "reason": "jev+unavailable/no-change"
+    },
+    "expected": {
+      "short": "nearest available",
+      "long": "the chosen tier is not available on this account, so the nearest one was used",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"unavailable\"",
+    "input": {
+      "reason": "unavailable"
+    },
+    "expected": {
+      "short": "nearest available",
+      "long": "the chosen tier is not available on this account, so the nearest one was used",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"no-change\"",
+    "input": {
+      "reason": "no-change"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": true
+    }
+  },
+  {
+    "name": "\"JEV-UNAVAILABLE\"",
+    "input": {
+      "reason": "JEV-UNAVAILABLE"
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": false
+    }
+  },
+  {
+    "name": "\"\"",
+    "input": {
+      "reason": ""
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": false
+    }
+  },
+  {
+    "name": "null",
+    "input": {
+      "reason": null
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": false
+    }
+  },
+  {
+    "name": "undefined",
+    "input": {
+      "reason": {
+        "$undefined": true
+      }
+    },
+    "expected": {
+      "short": null,
+      "long": "the router's recommendation",
+      "noChange": false
+    }
+  }
+]

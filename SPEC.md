@@ -1076,3 +1076,31 @@ These look odd but are deliberate or load-bearing; ports keep them.
 - A `/v1/models` error response still rewrites `calibration.json` from the catalog it has.
 - `JEV_STATUS_DIR` set only in an env file is ignored by the launcher's proxy but inherited by
   Claude Code and so by the status line.
+
+---
+
+## 19. Clarifications from building the conformance suite
+
+Found while generating the golden cases; each is Node's behaviour, pinned by a case, and normative.
+
+1. `claudeModels` breaks `releasedAt` ties with `localeCompare`; ports use code-unit order, and the
+   cases only contain ISO dates where the two agree. A non-string `created_at` makes Node throw
+   (no calibration write; later routed turns take the error path); ports throw the same way.
+2. `isCheckDue` cases use only the `toISOString` form or strings no date parser accepts.
+3. The harness runs with `node --test conformance/harness` through `conformance/harness/index.js`,
+   which imports every `*.test.mjs`; `node --test "conformance/harness/*.test.mjs"` also works.
+4. A string or array `answers.model` spreads into index keys (`{"0":"a","1":"b",...}`) in the
+   router result (6.2).
+5. `toFixed(2)` of `|x| >= 1e21` is `String(x)` (e.g. `1e+21`); of `±Infinity` is `Infinity` /
+   `-Infinity`.
+6. Node's SDK also sends `X-TypeSafe-SDK`, `X-TypeSafe-Runtime`, and `User-Agent:
+   typesafe-sdk/0.6.0`; ports send only the headers in 5.1, so the harness checks `User-Agent` by
+   pattern.
+7. The status line prints a `-0` percentage (from a small negative `used_percentage`) as `0%`.
+8. In `agentView`, an agent entry's own `key` field overrides the map key (`{key, ...a}`).
+9. `compareVersions` uses `parseInt` semantics on each dotted part: trim `JSWS`, optional sign,
+   leading decimal digits only (`"0x10"` -> 0, `"7abc"` -> 7), NaN -> 0.
+10. `status-line` cases fix freshness with `at = 4102444800000` (fresh) or `0`/absent (stale), and
+    need no real git repository (see `conformance/cases/README.md`).
+11. `jev-request` cases use the default base URL and `jev-latest`; ports testing through a loopback
+    fake compare method, the `/v1/systemone` path, and the body.

@@ -1,0 +1,177 @@
+[
+  {
+    "name": "null",
+    "input": {
+      "status": null
+    },
+    "expected": null
+  },
+  {
+    "name": "pre-agent status",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "reason": "jev",
+        "at": 1
+      }
+    },
+    "expected": {
+      "tier": "opus",
+      "reason": "jev",
+      "at": 1
+    }
+  },
+  {
+    "name": "history without agents",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "history": [
+          {
+            "tier": "haiku"
+          },
+          {
+            "tier": "sonnet"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tier": "opus",
+      "history": [
+        {
+          "tier": "haiku"
+        },
+        {
+          "tier": "sonnet"
+        }
+      ]
+    }
+  },
+  {
+    "name": "newest main entry",
+    "input": {
+      "status": {
+        "tier": "haiku",
+        "history": [
+          {
+            "tier": "opus",
+            "agent": {
+              "main": true
+            }
+          },
+          {
+            "tier": "sonnet",
+            "agent": {
+              "main": true
+            }
+          },
+          {
+            "tier": "haiku",
+            "agent": {
+              "main": false
+            }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tier": "sonnet",
+      "agent": {
+        "main": true
+      }
+    }
+  },
+  {
+    "name": "truthy main values",
+    "input": {
+      "status": {
+        "tier": "x",
+        "history": [
+          {
+            "tier": "a",
+            "agent": {
+              "main": 1
+            }
+          },
+          {
+            "tier": "b",
+            "agent": {
+              "main": ""
+            }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tier": "a",
+      "agent": {
+        "main": 1
+      }
+    }
+  },
+  {
+    "name": "entry without agent",
+    "input": {
+      "status": {
+        "tier": "x",
+        "history": [
+          {
+            "tier": "a",
+            "agent": {
+              "main": true
+            }
+          },
+          {
+            "tier": "b"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tier": "a",
+      "agent": {
+        "main": true
+      }
+    }
+  },
+  {
+    "name": "empty history",
+    "input": {
+      "status": {
+        "tier": "x",
+        "history": []
+      }
+    },
+    "expected": {
+      "tier": "x",
+      "history": []
+    }
+  },
+  {
+    "name": "history string iterates characters",
+    "input": {
+      "status": {
+        "tier": "x",
+        "history": "abc"
+      }
+    },
+    "expected": {
+      "tier": "x",
+      "history": "abc"
+    }
+  },
+  {
+    "name": "history null",
+    "input": {
+      "status": {
+        "tier": "x",
+        "history": null
+      }
+    },
+    "expected": {
+      "tier": "x",
+      "history": null
+    }
+  }
+]
