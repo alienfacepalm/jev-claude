@@ -78,7 +78,7 @@ if (subagents.length) {
     return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
-  agents = ` ${DIM}·${RESET} ${I.agents}${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
+  agents = ` ${DIM}·${RESET} ${I.agents} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
 }
 
 // A model newer than the router's tuning: routing already uses it, but the guidance, costs and

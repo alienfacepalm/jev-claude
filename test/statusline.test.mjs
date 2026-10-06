@@ -95,3 +95,10 @@ test("the main working tree shows its branch and no worktree", () => {
 test("a directory that is not a git checkout shows neither a branch nor a worktree", () => {
   assert.doesNotMatch(render(`statusline-nogit-${process.pid}`), /branch|worktree/);
 });
+
+test("a space separates the sub-agents symbol from the first model name", () => {
+  const id = `statusline-agents-${process.pid}`;
+  writeDecision(id, { tier: "sonnet", model: "claude-sonnet-5-5", confidence: 0.94, effort: "high", reason: "jev", at: Date.now() }, MAIN);
+  writeDecision(id, { tier: "haiku", model: "claude-haiku-4-5-20251001", confidence: 0.9, reason: "jev", at: Date.now() }, { key: "a1", label: "a1" });
+  assert.match(render(id, {}, {}, "symbols"), /✦ Haiku 4\.5/);
+});
