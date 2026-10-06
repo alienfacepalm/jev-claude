@@ -347,12 +347,22 @@ func units16(s string) []uint16 {
 
 // NewestPerTier keeps the first model of each tier, in first-seen order.
 func NewestPerTier(models []CatalogModel) []CatalogModel {
+	return FirstPerTier(models, func(m CatalogModel) any { return m.Tier })
+}
+
+// FirstPerTier keeps the first item for each distinct tier value (a JavaScript Map keyed by
+// tier), in first-seen order.
+func FirstPerTier[T any](items []T, tier func(T) any) []T {
 	seen := map[string]bool{}
-	var out []CatalogModel
-	for _, m := range models {
-		if !seen[m.Tier] {
-			seen[m.Tier] = true
-			out = append(out, m)
+	var out []T
+	for _, it := range items {
+		k := jsjson.Stringify(tier(it))
+		if t := tier(it); t == jsjson.Undefined {
+			k = "undefined"
+		}
+		if !seen[k] {
+			seen[k] = true
+			out = append(out, it)
 		}
 	}
 	return out
