@@ -25,5 +25,3 @@ regex = "1"
 [profile.release]
 opt-level = 3
 
-[dev-dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
