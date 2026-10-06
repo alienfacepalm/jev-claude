@@ -446,11 +446,14 @@ fn status_line_program() {
     });
 }
 
+/// Requests a fake server saw: method, path, body.
+type Seen = std::sync::Arc<std::sync::Mutex<Vec<(String, String, Vec<u8>)>>>;
+
 /// A loopback Jev that answers each request with the body it is given and records the request.
 struct FakeJev {
     port: u16,
     reply: std::sync::Arc<std::sync::Mutex<String>>,
-    seen: std::sync::Arc<std::sync::Mutex<Vec<(String, String, Vec<u8>)>>>,
+    seen: Seen,
 }
 
 async fn fake_jev() -> FakeJev {
