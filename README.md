@@ -190,13 +190,13 @@ that name none.
 `jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
 reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
 effort, so none is shown for it. Sub-agents follow `✦`, with their model and version. Every item is
-a bold symbol in the terminal's own text colour, so it contrasts with any background, and its value (`◆` model, `` effort, `✦` sub-agents, `` directory, `⌂` worktree,
+a bold symbol in the terminal's own text colour, so it contrasts with any background, and its value (`◆` model, `◔` effort, `✦` sub-agents, `❐` directory, `⌂` worktree,
 `≡` context):
 
 ```text
-◆ Sonnet 5.5 (94%) ·  high ·  my-project · ≡ 8%
-◆ Opus 5.5 (91%) ·  medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 ·  my-project · ≡ 34%
-⏸ manual Opus 4.6 ·  my-project · ≡ 21%
+◆ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8%
+◆ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34%
+⏸ manual Opus 4.6 · ❐ my-project · ≡ 21%
 ```
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
@@ -204,12 +204,12 @@ Code `--worktree` session, or any directory in a linked worktree from `git workt
 worktree's name too. `(detached)` stands in for the branch when none is checked out, and a
 directory that is not a git checkout shows neither. To keep the line short, a branch longer than 28
 characters is cut with `…`, and the directory is left out when the worktree has the same name. The
-branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k draw,
-the directory the classic folder (U+F07B) and effort a gauge (U+F0E4), so those three need a
-Powerline or Nerd Font in your terminal:
+effort and directory symbols are plain Unicode that stock macOS, Windows Terminal and Linux fonts
+draw. The branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k
+draw, so it needs a Powerline or Nerd Font in your terminal:
 
 ```text
-◆ Sonnet 5.5 (94%) ·  high ·  my-project ·  fix/login · ⌂ login-fix · ≡ 8%
+◆ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8%
 ```
 
 Run `/jev-legend` for a key to what each symbol means. It is drawn from the same symbols the line
