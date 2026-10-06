@@ -5,6 +5,8 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkForUpdate, writeState } from "../src/update.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+// The repository root (the parent of node/): the clone being updated, and where the release
+// version lives in package.json.
+const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 writeState(await checkForUpdate(ROOT));

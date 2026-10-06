@@ -9,10 +9,12 @@ import { fileURLToPath } from "node:url";
 import { TIERS, AUTO_MODEL, fableAllowed, tierOf } from "../src/config.mjs";
 import { readCalibration } from "../src/status.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+// node/ is this implementation; its parent is the repository, which holds .git.
+const PACKAGE = dirname(dirname(fileURLToPath(import.meta.url)));
+const REPOSITORY = dirname(PACKAGE);
 // A checkout with the calibration tooling and its git history is where tuning happens; an
 // installed copy only reports, and gets new tuning through updates.
-const repository = existsSync(join(ROOT, ".git")) && existsSync(join(ROOT, "scripts", "calibrate.mjs"));
+const repository = existsSync(join(REPOSITORY, ".git")) && existsSync(join(PACKAGE, "scripts", "calibrate.mjs"));
 const routing = process.env.ANTHROPIC_CUSTOM_MODEL_OPTION === AUTO_MODEL;
 const { newer, models, at } = readCalibration();
 

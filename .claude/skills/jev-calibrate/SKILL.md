@@ -5,7 +5,7 @@ disable-model-invocation: true
 allowed-tools: Bash(node *)
 ---
 
-!`node "${CLAUDE_SKILL_DIR}/../../../bin/jev-check.mjs"`
+!`node "${CLAUDE_SKILL_DIR}/../../../node/bin/jev-check.mjs"`
 
 ## Report only
 
@@ -29,7 +29,7 @@ cheaper one would, prefer the stronger, because a failed turn is paid for twice.
 ## 1. Find out what changed
 
 - Read the `claude-api` skill's current models table and the migration notes for any model newer
-  than those in `TIERS` in `src/config.mjs`: model ids, prices, default effort, what each is
+  than those in `TIERS` in `node/src/config.mjs`: model ids, prices, default effort, what each is
   positioned for, and request-shape changes (thinking, effort levels) the proxy must handle.
 - Search for independent per-task measurements of the new models (Artificial Analysis and similar),
   at the effort levels the router uses. Per-task cost and score matter; per-token price alone
@@ -45,7 +45,7 @@ cheaper one would, prefer the stronger, because a failed turn is paid for twice.
 
 Report what changed before editing anything. If nothing did, say so and stop.
 
-## 2. Update `src/config.mjs`
+## 2. Update `node/src/config.mjs`
 
 - `TIERS`: the newest id per tier (the fallback for when the account catalog has not loaded),
   the capability flags, and `floor` (the tier's effort) - the vendor default unless a measurement
@@ -58,7 +58,7 @@ Report what changed before editing anything. If nothing did, say so and stop.
 
 ## 3. Measure, one change at a time
 
-Run `node scripts/calibrate.mjs --runs 2` before the first edit and after each one. It reports
+Run `node node/scripts/calibrate.mjs --runs 2` before the first edit and after each one. It reports
 two scores: how often Jev picked the intended tier (what the guidance controls) and where the turn
 finally ran (which also depends on policy: an unsure pick runs one tier lower by design, shown as
 `step`). Keep a guidance change only if the pick score does not drop and the tiers it targets
@@ -77,7 +77,7 @@ Lessons already learned here:
 
 ## 4. Update the cases and finish
 
-- Update `scripts/calibration-cases.mjs` when a model changes what a tier is good at, and give the
+- Update `node/scripts/calibration-cases.mjs` when a model changes what a tier is good at, and give the
   reason in the commit.
 - Run `pnpm test`, update the README if a setting or default changed, and commit on the branch.
   Do not merge or push without the user's go-ahead.

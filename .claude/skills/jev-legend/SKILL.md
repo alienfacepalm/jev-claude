@@ -8,5 +8,5 @@ allowed-tools: Bash(node *)
 <jev-legend>
 Return the key below verbatim in a plain text code block. Do not add analysis or use tools.
 
-!`node "${CLAUDE_SKILL_DIR}/../../../bin/jev-legend.mjs"`
+!`node "${CLAUDE_SKILL_DIR}/../../../node/bin/jev-legend.mjs"`
 </jev-legend>

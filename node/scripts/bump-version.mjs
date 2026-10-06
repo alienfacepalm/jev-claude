@@ -1,6 +1,6 @@
-// Bumps the version in package.json from the commits being released. Run by
+// Bumps the version in the root package.json from the commits being released. Run by
 // .github/workflows/version-bump.yml on every push to master:
-//   node scripts/bump-version.mjs <before-sha> <after-sha>
+//   node node/scripts/bump-version.mjs <before-sha> <after-sha>
 // prints the new version, after writing it to package.json.
 //
 // Commit subjects follow Conventional Commits (https://www.conventionalcommits.org):
@@ -50,7 +50,7 @@ export function messagesBetween(before, after, { cwd } = {}) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [before, after = "HEAD"] = process.argv.slice(2);
-  const file = new URL("../package.json", import.meta.url);
+  const file = new URL("../../package.json", import.meta.url);
   const pkg = JSON.parse(readFileSync(file, "utf8"));
   pkg.version = nextVersion(pkg.version, bumpLevel(messagesBetween(before, after)));
   writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`);

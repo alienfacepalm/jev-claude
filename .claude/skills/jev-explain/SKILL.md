@@ -8,4 +8,4 @@ allowed-tools: Bash(node *)
 <jev-explain>
 Return the report below verbatim in a plain text code block. Do not add analysis or use tools.
 
-!`node "${CLAUDE_SKILL_DIR}/../../../bin/jev-explain.mjs" "${CLAUDE_SESSION_ID}"`
+!`node "${CLAUDE_SKILL_DIR}/../../../node/bin/jev-explain.mjs" "${CLAUDE_SESSION_ID}"`

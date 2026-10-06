@@ -57,7 +57,7 @@
   }
 
   # 4. The code: this clone when run from one, otherwise a clone kept in JEV_CLAUDE_DIR.
-  $here = if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'bin\jev-claude.mjs'))) { $PSScriptRoot }
+  $here = if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'node\bin\jev-claude.mjs'))) { $PSScriptRoot }
   $dir = if ($here) { $here } elseif ($env:JEV_CLAUDE_DIR) { $env:JEV_CLAUDE_DIR } else { Join-Path $HOME 'jev-claude' }
   if (-not $here) {
     if (-not (Have git)) { throw '[jev] git is required: https://git-scm.com/downloads' }

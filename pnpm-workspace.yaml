@@ -1,0 +1,4 @@
+# The root package.json is what the installer links onto the PATH and where the release version
+# lives; the Node.js implementation itself is the workspace package in node/.
+packages:
+  - node

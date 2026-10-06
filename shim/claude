@@ -28,7 +28,7 @@ esac
 # Run the entry point through node rather than exec'ing the `jev-claude` link: the repository
 # is checked out with CRLF line endings, which makes the kernel read the shebang as `node\r`
 # and refuse to start it. A missing entry point must not take Lattis's Claude row down with it.
-JEV_ENTRY="${JEV_ENTRY:-$HOME/.claude/jev-router/bin/jev-claude.mjs}"
+JEV_ENTRY="${JEV_ENTRY:-$HOME/.claude/jev-router/node/bin/jev-claude.mjs}"
 if [ ! -f "$JEV_ENTRY" ] || ! command -v node >/dev/null 2>&1; then
   exec "$REAL" "$@"
 fi

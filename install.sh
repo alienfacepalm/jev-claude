@@ -55,7 +55,7 @@ command -v claude >/dev/null 2>&1 ||
 
 # 4. The code: this clone when run from one, otherwise a clone kept in JEV_CLAUDE_DIR.
 here=""
-if [ -f "$(dirname "${BASH_SOURCE[0]:-.}")/bin/jev-claude.mjs" ]; then
+if [ -f "$(dirname "${BASH_SOURCE[0]:-.}")/node/bin/jev-claude.mjs" ]; then
   here="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" && pwd)"
 fi
 DIR="${here:-${JEV_CLAUDE_DIR:-$HOME/jev-claude}}"

@@ -222,7 +222,7 @@ test("a Claude API key in the user's own file reaches Claude Code, but never fro
 test("a blank key in a copied .env.example does not hide the real one", () => {
   const cwd = mkdtempSync(join(tmpdir(), "jev-env-cwd-"));
   const home = mkdtempSync(join(tmpdir(), "jev-env-home-"));
-  copyFileSync(new URL("../.env.example", import.meta.url), join(cwd, ".env"));
+  copyFileSync(new URL("../../.env.example", import.meta.url), join(cwd, ".env"));
   writeFileSync(join(home, ".jev-router.env"), "JEV_API_KEY=from-home\n");
 
   const env = loadEnv({ cwd, home, env: {} });
