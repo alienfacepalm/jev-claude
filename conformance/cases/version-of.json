@@ -1,0 +1,360 @@
+[
+  {
+    "name": "claude-opus-5-5 as opus",
+    "input": {
+      "id": "claude-opus-5-5",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
+    "name": "claude-sonnet-5-5 as sonnet",
+    "input": {
+      "id": "claude-sonnet-5-5",
+      "tier": "sonnet"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
+    "name": "claude-haiku-4-5-20251001 as haiku",
+    "input": {
+      "id": "claude-haiku-4-5-20251001",
+      "tier": "haiku"
+    },
+    "expected": [
+      4,
+      5
+    ]
+  },
+  {
+    "name": "claude-fable-5-1 as fable",
+    "input": {
+      "id": "claude-fable-5-1",
+      "tier": "fable"
+    },
+    "expected": [
+      5,
+      1
+    ]
+  },
+  {
+    "name": "claude-fable-5-1[1m] as fable",
+    "input": {
+      "id": "claude-fable-5-1[1m]",
+      "tier": "fable"
+    },
+    "expected": [
+      5,
+      1
+    ]
+  },
+  {
+    "name": "claude-opus-6 as opus",
+    "input": {
+      "id": "claude-opus-6",
+      "tier": "opus"
+    },
+    "expected": [
+      6,
+      0
+    ]
+  },
+  {
+    "name": "claude-opus-4-8 as opus",
+    "input": {
+      "id": "claude-opus-4-8",
+      "tier": "opus"
+    },
+    "expected": [
+      4,
+      8
+    ]
+  },
+  {
+    "name": "claude-opus-4-6[1m] as opus",
+    "input": {
+      "id": "claude-opus-4-6[1m]",
+      "tier": "opus"
+    },
+    "expected": [
+      4,
+      6
+    ]
+  },
+  {
+    "name": "claude-opus-4-20250514 as opus",
+    "input": {
+      "id": "claude-opus-4-20250514",
+      "tier": "opus"
+    },
+    "expected": [
+      4,
+      0
+    ]
+  },
+  {
+    "name": "claude-sonnet-4-20250514 as sonnet",
+    "input": {
+      "id": "claude-sonnet-4-20250514",
+      "tier": "sonnet"
+    },
+    "expected": [
+      4,
+      0
+    ]
+  },
+  {
+    "name": "claude-3-7-sonnet-20250219 as sonnet",
+    "input": {
+      "id": "claude-3-7-sonnet-20250219",
+      "tier": "sonnet"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "claude-3-5-haiku-20241022 as haiku",
+    "input": {
+      "id": "claude-3-5-haiku-20241022",
+      "tier": "haiku"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "anthropic.claude-opus-6 as opus",
+    "input": {
+      "id": "anthropic.claude-opus-6",
+      "tier": "opus"
+    },
+    "expected": [
+      6,
+      0
+    ]
+  },
+  {
+    "name": "anthropic.claude-opus-5-5 as opus",
+    "input": {
+      "id": "anthropic.claude-opus-5-5",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
+    "name": "us.anthropic.claude-opus-5-5 as opus",
+    "input": {
+      "id": "us.anthropic.claude-opus-5-5",
+      "tier": "opus"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "claude-opus-5-100 as opus",
+    "input": {
+      "id": "claude-opus-5-100",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      0
+    ]
+  },
+  {
+    "name": "claude-sonnet-5-10 as sonnet",
+    "input": {
+      "id": "claude-sonnet-5-10",
+      "tier": "sonnet"
+    },
+    "expected": [
+      5,
+      10
+    ]
+  },
+  {
+    "name": "claude-opus-5-05 as opus",
+    "input": {
+      "id": "claude-opus-5-05",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
+    "name": "claude-sonnet-5 as sonnet",
+    "input": {
+      "id": "claude-sonnet-5",
+      "tier": "sonnet"
+    },
+    "expected": [
+      5,
+      0
+    ]
+  },
+  {
+    "name": "claude-haiku-4-6 as haiku",
+    "input": {
+      "id": "claude-haiku-4-6",
+      "tier": "haiku"
+    },
+    "expected": [
+      4,
+      6
+    ]
+  },
+  {
+    "name": "Claude-Opus-5 as null",
+    "input": {
+      "id": "Claude-Opus-5",
+      "tier": null
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "xclaude-opus-5 as opus",
+    "input": {
+      "id": "xclaude-opus-5",
+      "tier": "opus"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "claude-opus- as opus",
+    "input": {
+      "id": "claude-opus-",
+      "tier": "opus"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "claude-opus-5- as opus",
+    "input": {
+      "id": "claude-opus-5-",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      0
+    ]
+  },
+  {
+    "name": "claude-opus-5-5-5 as opus",
+    "input": {
+      "id": "claude-opus-5-5-5",
+      "tier": "opus"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
+    "name": "mystery-9 as null",
+    "input": {
+      "id": "mystery-9",
+      "tier": null
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "jev-router as null",
+    "input": {
+      "id": "jev-router",
+      "tier": null
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "(empty) as null",
+    "input": {
+      "id": "",
+      "tier": null
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "id missing",
+    "input": {
+      "tier": "opus"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "tier missing",
+    "input": {
+      "id": "claude-opus-5-5"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "tier without family",
+    "input": {
+      "id": "claude-opus-5-5",
+      "tier": "nonsense"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "mismatched tier",
+    "input": {
+      "id": "claude-opus-6",
+      "tier": "sonnet"
+    },
+    "expected": [
+      0,
+      0
+    ]
+  },
+  {
+    "name": "empty object",
+    "input": {},
+    "expected": [
+      0,
+      0
+    ]
+  }
+]

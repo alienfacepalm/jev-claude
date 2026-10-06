@@ -1,0 +1,512 @@
+[
+  {
+    "name": "haiku none",
+    "input": {
+      "name": "haiku",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku global",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "low"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku global padded",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": " Max "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku per tier beats global",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_HAIKU_FORCE_EFFORT": "xhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku invalid per tier falls to global",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_HAIKU_FORCE_EFFORT": "turbo"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku invalid both",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "turbo",
+        "JEV_HAIKU_FORCE_EFFORT": "warp"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku empty per tier falls to global",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "high",
+        "JEV_HAIKU_FORCE_EFFORT": ""
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku nbsp global",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": " medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku next-line global is invalid",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_FORCE_EFFORT": "medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "haiku upper per tier",
+    "input": {
+      "name": "haiku",
+      "env": {
+        "JEV_HAIKU_FORCE_EFFORT": "HIGH"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "sonnet none",
+    "input": {
+      "name": "sonnet",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "sonnet global",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "sonnet global padded",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": " Max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "sonnet per tier beats global",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_SONNET_FORCE_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "sonnet invalid per tier falls to global",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_SONNET_FORCE_EFFORT": "turbo"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "sonnet invalid both",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "turbo",
+        "JEV_SONNET_FORCE_EFFORT": "warp"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "sonnet empty per tier falls to global",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "high",
+        "JEV_SONNET_FORCE_EFFORT": ""
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "sonnet nbsp global",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": " medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "sonnet next-line global is invalid",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_FORCE_EFFORT": "medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "sonnet upper per tier",
+    "input": {
+      "name": "sonnet",
+      "env": {
+        "JEV_SONNET_FORCE_EFFORT": "HIGH"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "opus none",
+    "input": {
+      "name": "opus",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "opus global",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "opus global padded",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": " Max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "opus per tier beats global",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_OPUS_FORCE_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "opus invalid per tier falls to global",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_OPUS_FORCE_EFFORT": "turbo"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "opus invalid both",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "turbo",
+        "JEV_OPUS_FORCE_EFFORT": "warp"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "opus empty per tier falls to global",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "high",
+        "JEV_OPUS_FORCE_EFFORT": ""
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "opus nbsp global",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": " medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "opus next-line global is invalid",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_FORCE_EFFORT": "medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "opus upper per tier",
+    "input": {
+      "name": "opus",
+      "env": {
+        "JEV_OPUS_FORCE_EFFORT": "HIGH"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable none",
+    "input": {
+      "name": "fable",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "fable global",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "low"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "fable global padded",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": " Max "
+      }
+    },
+    "expected": "max"
+  },
+  {
+    "name": "fable per tier beats global",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_FABLE_FORCE_EFFORT": "xhigh"
+      }
+    },
+    "expected": "xhigh"
+  },
+  {
+    "name": "fable invalid per tier falls to global",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_FABLE_FORCE_EFFORT": "turbo"
+      }
+    },
+    "expected": "low"
+  },
+  {
+    "name": "fable invalid both",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "turbo",
+        "JEV_FABLE_FORCE_EFFORT": "warp"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "fable empty per tier falls to global",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "high",
+        "JEV_FABLE_FORCE_EFFORT": ""
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "fable nbsp global",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": " medium"
+      }
+    },
+    "expected": "medium"
+  },
+  {
+    "name": "fable next-line global is invalid",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FORCE_EFFORT": "medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "fable upper per tier",
+    "input": {
+      "name": "fable",
+      "env": {
+        "JEV_FABLE_FORCE_EFFORT": "HIGH"
+      }
+    },
+    "expected": "high"
+  },
+  {
+    "name": "nonsense none",
+    "input": {
+      "name": "nonsense",
+      "env": {}
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense global",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "low"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense global padded",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": " Max "
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense per tier beats global",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_NONSENSE_FORCE_EFFORT": "xhigh"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense invalid per tier falls to global",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "low",
+        "JEV_NONSENSE_FORCE_EFFORT": "turbo"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense invalid both",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "turbo",
+        "JEV_NONSENSE_FORCE_EFFORT": "warp"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense empty per tier falls to global",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "high",
+        "JEV_NONSENSE_FORCE_EFFORT": ""
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense nbsp global",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": " medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense next-line global is invalid",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_FORCE_EFFORT": "medium"
+      }
+    },
+    "expected": null
+  },
+  {
+    "name": "nonsense upper per tier",
+    "input": {
+      "name": "nonsense",
+      "env": {
+        "JEV_NONSENSE_FORCE_EFFORT": "HIGH"
+      }
+    },
+    "expected": null
+  }
+]

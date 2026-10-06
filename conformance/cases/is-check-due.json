@@ -1,0 +1,150 @@
+[
+  {
+    "name": "null state",
+    "input": {
+      "state": null,
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "empty state",
+    "input": {
+      "state": {},
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "garbage",
+    "input": {
+      "state": {
+        "checkedAt": "yesterday-ish"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "empty string",
+    "input": {
+      "state": {
+        "checkedAt": ""
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "null checkedAt",
+    "input": {
+      "state": {
+        "checkedAt": null
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "just inside the window",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T06:01:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": false
+  },
+  {
+    "name": "one ms inside",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T06:00:00.001Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": false
+  },
+  {
+    "name": "exactly at the window",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T06:00:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "well past",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-02T00:00:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "future",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T12:01:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "one ms in the future",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T12:00:00.001Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  },
+  {
+    "name": "same instant",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T12:00:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": false
+  },
+  {
+    "name": "custom interval inside",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T11:59:59.500Z"
+      },
+      "now": 1791115200000,
+      "everyMs": 1000
+    },
+    "expected": false
+  },
+  {
+    "name": "custom interval at",
+    "input": {
+      "state": {
+        "checkedAt": "2026-10-04T11:59:59.000Z"
+      },
+      "now": 1791115200000,
+      "everyMs": 1000
+    },
+    "expected": true
+  },
+  {
+    "name": "epoch",
+    "input": {
+      "state": {
+        "checkedAt": "1970-01-01T00:00:00.000Z"
+      },
+      "now": 1791115200000
+    },
+    "expected": true
+  }
+]

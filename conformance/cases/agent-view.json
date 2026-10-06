@@ -1,0 +1,506 @@
+[
+  {
+    "name": "mixed agents",
+    "input": {
+      "status": {
+        "agents": {
+          "m": {
+            "label": "main",
+            "main": true,
+            "tier": "opus",
+            "at": 500000
+          },
+          "fresh": {
+            "label": "fresh",
+            "main": false,
+            "tier": "haiku",
+            "at": 999000
+          },
+          "edge": {
+            "label": "at the boundary",
+            "main": false,
+            "tier": "sonnet",
+            "at": 910000
+          },
+          "past": {
+            "label": "one ms past",
+            "main": false,
+            "tier": "sonnet",
+            "at": 909999
+          },
+          "future": {
+            "label": "future",
+            "main": false,
+            "at": 1005000
+          },
+          "tie": {
+            "label": "tie with fresh",
+            "main": false,
+            "at": 999000
+          },
+          "noAt": {
+            "label": "no at",
+            "main": false
+          }
+        }
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": {
+        "key": "m",
+        "label": "main",
+        "main": true,
+        "tier": "opus",
+        "at": 500000
+      },
+      "subagents": [
+        {
+          "key": "future",
+          "label": "future",
+          "main": false,
+          "at": 1005000
+        },
+        {
+          "key": "fresh",
+          "label": "fresh",
+          "main": false,
+          "tier": "haiku",
+          "at": 999000
+        },
+        {
+          "key": "tie",
+          "label": "tie with fresh",
+          "main": false,
+          "at": 999000
+        },
+        {
+          "key": "edge",
+          "label": "at the boundary",
+          "main": false,
+          "tier": "sonnet",
+          "at": 910000
+        }
+      ]
+    }
+  },
+  {
+    "name": "boundary only",
+    "input": {
+      "status": {
+        "agents": {
+          "e": {
+            "main": false,
+            "at": 0
+          }
+        }
+      },
+      "now": 90000
+    },
+    "expected": {
+      "main": null,
+      "subagents": [
+        {
+          "key": "e",
+          "main": false,
+          "at": 0
+        }
+      ]
+    }
+  },
+  {
+    "name": "boundary plus one",
+    "input": {
+      "status": {
+        "agents": {
+          "e": {
+            "main": false,
+            "at": 0
+          }
+        }
+      },
+      "now": 90001
+    },
+    "expected": {
+      "main": null,
+      "subagents": []
+    }
+  },
+  {
+    "name": "missing at is fresh near epoch",
+    "input": {
+      "status": {
+        "agents": {
+          "a": {
+            "main": false
+          }
+        }
+      },
+      "now": 50000
+    },
+    "expected": {
+      "main": null,
+      "subagents": [
+        {
+          "key": "a",
+          "main": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing at is stale later",
+    "input": {
+      "status": {
+        "agents": {
+          "a": {
+            "main": false
+          }
+        }
+      },
+      "now": 90001
+    },
+    "expected": {
+      "main": null,
+      "subagents": []
+    }
+  },
+  {
+    "name": "custom freshMs",
+    "input": {
+      "status": {
+        "agents": {
+          "m": {
+            "label": "main",
+            "main": true,
+            "tier": "opus",
+            "at": 500000
+          },
+          "fresh": {
+            "label": "fresh",
+            "main": false,
+            "tier": "haiku",
+            "at": 999000
+          },
+          "edge": {
+            "label": "at the boundary",
+            "main": false,
+            "tier": "sonnet",
+            "at": 910000
+          },
+          "past": {
+            "label": "one ms past",
+            "main": false,
+            "tier": "sonnet",
+            "at": 909999
+          },
+          "future": {
+            "label": "future",
+            "main": false,
+            "at": 1005000
+          },
+          "tie": {
+            "label": "tie with fresh",
+            "main": false,
+            "at": 999000
+          },
+          "noAt": {
+            "label": "no at",
+            "main": false
+          }
+        }
+      },
+      "now": 1000000,
+      "freshMs": 1000
+    },
+    "expected": {
+      "main": {
+        "key": "m",
+        "label": "main",
+        "main": true,
+        "tier": "opus",
+        "at": 500000
+      },
+      "subagents": [
+        {
+          "key": "future",
+          "label": "future",
+          "main": false,
+          "at": 1005000
+        },
+        {
+          "key": "fresh",
+          "label": "fresh",
+          "main": false,
+          "tier": "haiku",
+          "at": 999000
+        },
+        {
+          "key": "tie",
+          "label": "tie with fresh",
+          "main": false,
+          "at": 999000
+        }
+      ]
+    }
+  },
+  {
+    "name": "infinite freshMs",
+    "input": {
+      "status": {
+        "agents": {
+          "m": {
+            "label": "main",
+            "main": true,
+            "tier": "opus",
+            "at": 500000
+          },
+          "fresh": {
+            "label": "fresh",
+            "main": false,
+            "tier": "haiku",
+            "at": 999000
+          },
+          "edge": {
+            "label": "at the boundary",
+            "main": false,
+            "tier": "sonnet",
+            "at": 910000
+          },
+          "past": {
+            "label": "one ms past",
+            "main": false,
+            "tier": "sonnet",
+            "at": 909999
+          },
+          "future": {
+            "label": "future",
+            "main": false,
+            "at": 1005000
+          },
+          "tie": {
+            "label": "tie with fresh",
+            "main": false,
+            "at": 999000
+          },
+          "noAt": {
+            "label": "no at",
+            "main": false
+          }
+        }
+      },
+      "now": 1000000,
+      "freshMs": {
+        "$number": "Infinity"
+      }
+    },
+    "expected": {
+      "main": {
+        "key": "m",
+        "label": "main",
+        "main": true,
+        "tier": "opus",
+        "at": 500000
+      },
+      "subagents": [
+        {
+          "key": "future",
+          "label": "future",
+          "main": false,
+          "at": 1005000
+        },
+        {
+          "key": "fresh",
+          "label": "fresh",
+          "main": false,
+          "tier": "haiku",
+          "at": 999000
+        },
+        {
+          "key": "tie",
+          "label": "tie with fresh",
+          "main": false,
+          "at": 999000
+        },
+        {
+          "key": "edge",
+          "label": "at the boundary",
+          "main": false,
+          "tier": "sonnet",
+          "at": 910000
+        },
+        {
+          "key": "past",
+          "label": "one ms past",
+          "main": false,
+          "tier": "sonnet",
+          "at": 909999
+        },
+        {
+          "key": "noAt",
+          "label": "no at",
+          "main": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "first truthy main wins",
+    "input": {
+      "status": {
+        "agents": {
+          "x": {
+            "main": 0,
+            "at": 1000000
+          },
+          "y": {
+            "main": "yes",
+            "tier": "a"
+          },
+          "z": {
+            "main": true,
+            "tier": "b"
+          }
+        }
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": {
+        "key": "y",
+        "main": "yes",
+        "tier": "a"
+      },
+      "subagents": [
+        {
+          "key": "x",
+          "main": 0,
+          "at": 1000000
+        }
+      ]
+    }
+  },
+  {
+    "name": "no main",
+    "input": {
+      "status": {
+        "agents": {
+          "s": {
+            "main": false,
+            "at": 1000000
+          }
+        }
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": null,
+      "subagents": [
+        {
+          "key": "s",
+          "main": false,
+          "at": 1000000
+        }
+      ]
+    }
+  },
+  {
+    "name": "entry key field overrides map key",
+    "input": {
+      "status": {
+        "agents": {
+          "real": {
+            "key": "inner",
+            "main": true
+          }
+        }
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": {
+        "key": "inner",
+        "main": true
+      },
+      "subagents": []
+    }
+  },
+  {
+    "name": "integer-like agent keys",
+    "input": {
+      "status": {
+        "agents": {
+          "1": {
+            "main": true
+          },
+          "3": {
+            "main": false,
+            "at": 1000000
+          },
+          "b": {
+            "main": false,
+            "at": 1000000
+          }
+        }
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": {
+        "key": "1",
+        "main": true
+      },
+      "subagents": [
+        {
+          "key": "3",
+          "main": false,
+          "at": 1000000
+        },
+        {
+          "key": "b",
+          "main": false,
+          "at": 1000000
+        }
+      ]
+    }
+  },
+  {
+    "name": "pre-agent status",
+    "input": {
+      "status": {
+        "tier": "opus",
+        "model": "claude-opus-5-5",
+        "at": 1000000
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": null,
+      "subagents": []
+    }
+  },
+  {
+    "name": "null status",
+    "input": {
+      "status": null,
+      "now": 1000000
+    },
+    "expected": {
+      "main": null,
+      "subagents": []
+    }
+  },
+  {
+    "name": "agents null",
+    "input": {
+      "status": {
+        "agents": null
+      },
+      "now": 1000000
+    },
+    "expected": {
+      "main": null,
+      "subagents": []
+    }
+  }
+]

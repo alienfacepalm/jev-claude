@@ -1,0 +1,758 @@
+[
+  {
+    "name": "darwin no env",
+    "input": {
+      "env": {},
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": "1"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin empty WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": ""
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin TERM_PROGRAM vscode",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "vscode"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin TERM_PROGRAM mintty",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "mintty"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin ConEmuPID",
+    "input": {
+      "env": {
+        "ConEmuPID": "42"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS text",
+    "input": {
+      "env": {
+        "JEV_ICONS": "text"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS ASCII",
+    "input": {
+      "env": {
+        "JEV_ICONS": "ASCII"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS Symbols",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Symbols"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS symbols with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "symbols",
+        "WT_SESSION": "1"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS text with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Text",
+        "WT_SESSION": "1"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS padded is not a choice",
+    "input": {
+      "env": {
+        "JEV_ICONS": " text "
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS unknown",
+    "input": {
+      "env": {
+        "JEV_ICONS": "emoji"
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "darwin JEV_ICONS empty",
+    "input": {
+      "env": {
+        "JEV_ICONS": ""
+      },
+      "platform": "darwin"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux no env",
+    "input": {
+      "env": {},
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": "1"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux empty WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": ""
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux TERM_PROGRAM vscode",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "vscode"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux TERM_PROGRAM mintty",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "mintty"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux ConEmuPID",
+    "input": {
+      "env": {
+        "ConEmuPID": "42"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS text",
+    "input": {
+      "env": {
+        "JEV_ICONS": "text"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS ASCII",
+    "input": {
+      "env": {
+        "JEV_ICONS": "ASCII"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS Symbols",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Symbols"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS symbols with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "symbols",
+        "WT_SESSION": "1"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS text with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Text",
+        "WT_SESSION": "1"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS padded is not a choice",
+    "input": {
+      "env": {
+        "JEV_ICONS": " text "
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS unknown",
+    "input": {
+      "env": {
+        "JEV_ICONS": "emoji"
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "linux JEV_ICONS empty",
+    "input": {
+      "env": {
+        "JEV_ICONS": ""
+      },
+      "platform": "linux"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 no env",
+    "input": {
+      "env": {},
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": "1"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 empty WT_SESSION",
+    "input": {
+      "env": {
+        "WT_SESSION": ""
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 TERM_PROGRAM vscode",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "vscode"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 TERM_PROGRAM mintty",
+    "input": {
+      "env": {
+        "TERM_PROGRAM": "mintty"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 ConEmuPID",
+    "input": {
+      "env": {
+        "ConEmuPID": "42"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS text",
+    "input": {
+      "env": {
+        "JEV_ICONS": "text"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS ASCII",
+    "input": {
+      "env": {
+        "JEV_ICONS": "ASCII"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS Symbols",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Symbols"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS symbols with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "symbols",
+        "WT_SESSION": "1"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "◆",
+      "effort": "◔",
+      "agents": "✦",
+      "dir": "❐",
+      "branch": "",
+      "worktree": "⌂",
+      "context": "≡"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS text with WT",
+    "input": {
+      "env": {
+        "JEV_ICONS": "Text",
+        "WT_SESSION": "1"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS padded is not a choice",
+    "input": {
+      "env": {
+        "JEV_ICONS": " text "
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS unknown",
+    "input": {
+      "env": {
+        "JEV_ICONS": "emoji"
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  },
+  {
+    "name": "win32 JEV_ICONS empty",
+    "input": {
+      "env": {
+        "JEV_ICONS": ""
+      },
+      "platform": "win32"
+    },
+    "expected": {
+      "model": "model",
+      "effort": "effort",
+      "agents": "agents",
+      "dir": "dir",
+      "branch": "branch",
+      "worktree": "worktree",
+      "context": "ctx"
+    }
+  }
+]
