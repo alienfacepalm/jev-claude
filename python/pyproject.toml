@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jev-router"
+# Fixed: the release version lives only in the root package.json (SPEC 2.3).
+version = "0.0.0"
+description = "Python implementation of jev-claude: routes each Claude Code turn to the model that fits, using TypeSafe Jev"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+jev-claude = "jev_router.cli.claude:main"
+jev-statusline = "jev_router.cli.statusline:main"
+jev-explain = "jev_router.cli.explain:main"
+jev-legend = "jev_router.cli.legend:main"
+jev-check = "jev_router.cli.check:main"
+jev-update-check = "jev_router.cli.update_check:main"
+jev-proxy-host = "jev_router.cli.proxy_host:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
