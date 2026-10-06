@@ -9,6 +9,7 @@ import {
   availableTiers,
   tierSpec,
   effortFloor,
+  forcedEffort,
   THRESHOLDS,
   isAuto,
   shouldUseExactModel,
@@ -108,7 +109,7 @@ export function newTurnPrompt(body) {
  * composes the body for whatever model it thinks it is talking to, so downgrading to Haiku
  * while leaving `thinking: {type:"adaptive"}` in place is a hard 400.
  */
-export function applyTier(body, tierName, model = idOf(tierName)) {
+export function applyTier(body, tierName, model = idOf(tierName), env = process.env) {
   const tier = tierSpec(tierName);
   if (!tier) return body;
   body.model = model;
@@ -125,10 +126,10 @@ export function applyTier(body, tierName, model = idOf(tierName)) {
   if (!tier.effort && body.output_config) {
     delete body.output_config.effort;
     if (Object.keys(body.output_config).length === 0) delete body.output_config;
-  } else if (tier.effort && !body.output_config?.effort) {
-    // Nothing asked for an effort, so name the tier's configured one rather than leaving the
-    // model's own default to apply.
-    const effort = effortFloor(tierName);
+  } else if (tier.effort) {
+    // A forced effort replaces the request's own. Otherwise, when nothing asked for one, name the
+    // tier's configured effort rather than leaving the model's own default to apply.
+    const effort = forcedEffort(tierName, env) ?? (body.output_config?.effort ? null : effortFloor(tierName, env));
     if (effort) body.output_config = { ...body.output_config, effort };
   }
   return body;

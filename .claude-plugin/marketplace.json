@@ -1,0 +1,15 @@
+{
+  "name": "jev-claude",
+  "description": "Installer for jev-claude, which routes each Claude Code turn to the model that gets the best result for the least cost",
+  "owner": {
+    "name": "alienfacepalm",
+    "url": "https://github.com/alienfacepalm"
+  },
+  "plugins": [
+    {
+      "name": "jev-installer",
+      "source": "./plugin",
+      "description": "Adds /jev-installer:install, which sets up the jev-claude launcher on this machine"
+    }
+  ]
+}

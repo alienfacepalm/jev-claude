@@ -183,7 +183,8 @@ routed separately.
 
 **Effort.** Claude Code sends its own reasoning effort (`high` by default) with every request, and
 the router keeps it. The per-tier efforts in [Configuration](#configuration) apply only to requests
-that name none.
+that name none. To run a tier at one effort whatever Claude Code asks for (including `/effort`), set
+`JEV_FORCE_EFFORT`, or `JEV_<TIER>_FORCE_EFFORT` for a single tier.
 
 ## Status line
 
@@ -304,6 +305,7 @@ in your shell's environment.
 | `ANTHROPIC_API_KEY` | Optional: run Claude Code on this Anthropic API key instead of your sign-in (see [Using an Anthropic API key](#using-an-anthropic-api-key)). Not read from a project's `.env`. |
 | `JEV_ALLOW_FABLE` | Fable is offered by default; `0`, `false`, `no` or `off` turns it off. |
 | `JEV_SONNET_EFFORT`, `JEV_OPUS_EFFORT`, `JEV_FABLE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) for requests that name none. Defaults: Sonnet `high`, Opus `medium`, Fable `high`. Claude Code normally sends its own. |
+| `JEV_FORCE_EFFORT`, `JEV_SONNET_FORCE_EFFORT`, `JEV_OPUS_FORCE_EFFORT`, `JEV_FABLE_FORCE_EFFORT` | Effort (`low`, `medium`, `high`, `xhigh`, `max`) that replaces the one Claude Code sends. `JEV_FORCE_EFFORT` applies to every tier that takes an effort; a tier's own setting wins over it. Unset by default. Haiku takes no effort, so it is never forced. |
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
 | `JEV_ICONS` | `symbols` or `text`: the status line's labels. Symbols by default; on Windows, words in the legacy console, which cannot draw them. |
 | `JEV_DEBUG` | Logs routing decisions to `~/.jev-claude.log`. |

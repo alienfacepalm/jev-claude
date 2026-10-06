@@ -33,6 +33,24 @@ export const effortFloor = (name, env = process.env) => {
   return EFFORTS.includes(chosen) ? chosen : tier.floor;
 };
 
+/**
+ * An effort that replaces whatever the request carries, or null when none is forced.
+ *
+ * `JEV_<TIER>_FORCE_EFFORT` sets it for one tier and `JEV_FORCE_EFFORT` for every tier that takes
+ * an effort, the tier's own setting winning. Unlike `effortFloor` this outranks Claude Code's own
+ * effort, which is what makes it a default Claude Code cannot undo: use it when `/effort` or
+ * the sent `high` is not the depth you want paid for. An unrecognised value is ignored, and Haiku,
+ * which takes no effort, never gets one.
+ */
+export const forcedEffort = (name, env = process.env) => {
+  if (!tierSpec(name)?.effort) return null;
+  for (const key of [`JEV_${name.toUpperCase()}_FORCE_EFFORT`, "JEV_FORCE_EFFORT"]) {
+    const chosen = env[key]?.trim().toLowerCase();
+    if (EFFORTS.includes(chosen)) return chosen;
+  }
+  return null;
+};
+
 export const TIER_NAMES = TIERS.map((t) => t.name);
 
 export const rankOf = (name) => TIER_NAMES.indexOf(name);

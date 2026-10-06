@@ -1,0 +1,11 @@
+{
+  "name": "jev-installer",
+  "description": "Installs jev-claude, a launcher that routes each Claude Code turn to the model that gets the best result for the least cost. Your Claude sign-in or API key is forwarded to Anthropic untouched; jev-claude never reads or stores it.",
+  "author": {
+    "name": "alienfacepalm",
+    "url": "https://github.com/alienfacepalm"
+  },
+  "homepage": "https://github.com/alienfacepalm/jev-claude#readme",
+  "repository": "https://github.com/alienfacepalm/jev-claude",
+  "license": "MIT"
+}
