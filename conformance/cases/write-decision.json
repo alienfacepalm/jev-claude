@@ -790,25 +790,187 @@
     },
     "expected": [
       {
-        "file": null
-      },
-      {
         "file": {
+          "tier": "opus",
+          "prompt": "prompt at 1000",
+          "model": "claude-opus-5-5",
+          "confidence": 0.94,
+          "metrics": {
+            "taskComplexity": 0.5555555555555556,
+            "reasoningRequired": 0.4444444444444444,
+            "toolComplexity": 0.2222222222222222,
+            "contextSize": 0.01
+          },
+          "reason": "jev",
+          "jev": {
+            "request": {
+              "state": {
+                "request": "prompt at 1000"
+              }
+            },
+            "response": {
+              "answers": {
+                "model": {
+                  "choice": "claude-opus-5-5",
+                  "confidence": 0.94,
+                  "probabilities": {
+                    "claude-opus-5-5": 0.94,
+                    "claude-sonnet-5-5": 0.06
+                  }
+                }
+              }
+            }
+          },
+          "effort": "medium",
+          "at": 1000,
           "agents": {
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5",
-              "manual": true,
-              "at": {
-                "$clock": true
+              "tier": "opus",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "effort": "medium",
+              "reason": "jev",
+              "at": 1000
+            }
+          },
+          "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            }
+          ]
+        }
+      },
+      {
+        "file": {
+          "tier": "opus",
+          "prompt": "prompt at 1000",
+          "model": "claude-opus-5-5",
+          "confidence": 0.94,
+          "metrics": {
+            "taskComplexity": 0.5555555555555556,
+            "reasoningRequired": 0.4444444444444444,
+            "toolComplexity": 0.2222222222222222,
+            "contextSize": 0.01
+          },
+          "reason": "jev",
+          "jev": {
+            "request": {
+              "state": {
+                "request": "prompt at 1000"
+              }
+            },
+            "response": {
+              "answers": {
+                "model": {
+                  "choice": "claude-opus-5-5",
+                  "confidence": 0.94,
+                  "probabilities": {
+                    "claude-opus-5-5": 0.94,
+                    "claude-sonnet-5-5": 0.06
+                  }
+                }
               }
             }
           },
-          "manual": true,
+          "effort": "medium",
           "at": {
             "$clock": true
-          }
+          },
+          "agents": {
+            "k-main": {
+              "label": "fix the race",
+              "main": true,
+              "tier": "opus",
+              "model": "claude-sonnet-5",
+              "confidence": 0.94,
+              "effort": "medium",
+              "reason": "jev",
+              "at": {
+                "$clock": true
+              },
+              "manual": true
+            }
+          },
+          "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            }
+          ],
+          "manual": true
         }
       },
       {
@@ -849,16 +1011,55 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -939,13 +1140,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -959,6 +1160,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -1078,13 +1318,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -1108,6 +1348,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -1266,13 +1545,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -1306,6 +1585,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -1503,13 +1821,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -1553,6 +1871,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -1789,13 +2146,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -1849,6 +2206,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -2124,13 +2520,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -2194,6 +2590,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -2508,13 +2943,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -2588,6 +3023,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -2941,13 +3415,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -3031,6 +3505,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -3423,13 +3936,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -3523,6 +4036,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -3954,13 +4506,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -4064,6 +4616,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -4534,13 +5125,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -4654,6 +5245,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -5163,13 +5793,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -5283,6 +5913,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -5831,13 +6500,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -5951,6 +6620,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -6540,13 +7248,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -6663,6 +7371,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -7253,13 +8000,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -7375,6 +8122,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -7962,13 +8748,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -8081,6 +8867,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -8683,13 +9508,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -8802,6 +9627,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -9417,13 +10281,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-sonnet-5-5",
-              "manual": true,
-              "at": 3000,
               "tier": "sonnet",
+              "model": "claude-sonnet-5-5",
               "confidence": 0.94,
               "effort": "high",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 3000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -9536,6 +10400,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
@@ -10173,13 +11076,13 @@
             "k-main": {
               "label": "fix the race",
               "main": true,
-              "model": "claude-opus-5-5",
-              "manual": true,
-              "at": 7000,
               "tier": "opus",
+              "model": "claude-opus-5-5",
               "confidence": 0.94,
               "effort": "medium",
-              "reason": "jev"
+              "reason": "jev",
+              "at": 7000,
+              "manual": true
             },
             "k-sub-0": {
               "label": "sub-agent 0",
@@ -10292,6 +11195,45 @@
             }
           },
           "history": [
+            {
+              "tier": "opus",
+              "prompt": "prompt at 1000",
+              "model": "claude-opus-5-5",
+              "confidence": 0.94,
+              "metrics": {
+                "taskComplexity": 0.5555555555555556,
+                "reasoningRequired": 0.4444444444444444,
+                "toolComplexity": 0.2222222222222222,
+                "contextSize": 0.01
+              },
+              "reason": "jev",
+              "jev": {
+                "request": {
+                  "state": {
+                    "request": "prompt at 1000"
+                  }
+                },
+                "response": {
+                  "answers": {
+                    "model": {
+                      "choice": "claude-opus-5-5",
+                      "confidence": 0.94,
+                      "probabilities": {
+                        "claude-opus-5-5": 0.94,
+                        "claude-sonnet-5-5": 0.06
+                      }
+                    }
+                  }
+                }
+              },
+              "effort": "medium",
+              "at": 1000,
+              "agent": {
+                "key": "k-main",
+                "label": "fix the race",
+                "main": true
+              }
+            },
             {
               "tier": "sonnet",
               "prompt": "prompt at 3000",
