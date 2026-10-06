@@ -564,9 +564,9 @@ class Proxy:
                 if truthy(_get(_get(body, "tools"), "length")):
                     with self.state.lock:
                         agent = agent_of(body, self.state.mains)
-                    debug(f"{agent['key']} passthrough {'main' if agent['main'] else 'sub'} {to_string(body['model'])}")
+                    debug(f"{agent['key']} passthrough {'main' if agent['main'] else 'sub'} {to_string(_get(body, 'model'))}")
                     if truthy(new_turn_prompt(body)):
-                        mark_manual(session_of(body), body["model"], agent)
+                        mark_manual(session_of(body), _get(body, "model"), agent)
             else:
                 with self.state.lock:
                     agent = agent_of(body, self.state.mains)

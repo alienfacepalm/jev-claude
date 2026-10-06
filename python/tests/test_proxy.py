@@ -285,6 +285,21 @@ class ProxyServer(unittest.TestCase):
         self.assertEqual(menus, [["claude-opus-5-5", "claude-sonnet-5-5"]], "only the newest of each tier is on the menu")
         self.assertEqual(upstream.bodies()[1]["model"], "claude-opus-5-5")
 
+    def test_a_turn_with_tools_but_no_model_is_recorded_as_manual_and_forwarded_re_serialised(self):
+        """(Python port) a turn with tools but no model is marked manual and forwarded re-serialised, as Node does"""
+        upstream = self.upstream()
+        running = self.proxy(upstream_url=upstream.url, route=lambda args: None)
+        sid = f"no-model-{PID}"
+        raw = (b'{"tools":[{"name":"Bash"}],"metadata":{"user_id":"{\\"session_id\\":\\"' + sid.encode()
+               + b'\\"}"},"messages":[{"role":"user","content":"hi"}],  "n": 1.0}')
+        post(running.port, raw)
+        self.assertEqual(upstream.requests[0]["body"], raw.replace(b",  \"n\": 1.0", b",\"n\":1"))
+        status = read_status(sid)
+        [entry] = status["agents"].values()
+        self.assertTrue(entry["manual"])
+        self.assertNotIn("model", entry, "an undefined model is omitted, as JSON.stringify omits it")
+        self.assertTrue(status["manual"])
+
     def test_a_routed_request_without_metadata_is_recorded_under_the_conversation_key(self):
         """a routed request without metadata is recorded under the conversation key"""
         upstream = self.upstream(lambda r, h: Upstream.reply(h, 200, b'{"id":"msg_1","type":"message","model":"claude-sonnet-5-5"}'))

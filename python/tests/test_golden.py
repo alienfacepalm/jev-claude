@@ -224,8 +224,9 @@ class Golden(unittest.TestCase):
         # Run as conformance/generator/status.mjs ran them: a fresh process (prune not yet run),
         # an empty status directory, and the clock pinned to 1_800_000_000_000 while each step
         # runs. That pinned clock is months ahead of the real file times, so the first write's
-        # once-per-process prune deletes the file it just wrote; the cases record that (see the
-        # README), and the same conditions here reproduce it.
+        # once-per-process prune deletes the file it just wrote, so step 0 of the first case
+        # expects null. That is a generator artifact (reported to the lead); the same conditions
+        # here reproduce it.
         directory = tempfile.mkdtemp(prefix="jev-golden-wd-")
         self.addCleanup(shutil.rmtree, directory, True)
         saved = (status.DIR, status._pruned, status.now_ms)
