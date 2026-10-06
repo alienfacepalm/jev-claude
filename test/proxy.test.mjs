@@ -26,7 +26,7 @@ test("only the sentinel model is routed", () => {
 test("the sentinel is not mistaken for a real tier", () => {
   assert.equal(tierOf("jev-router"), null);
 });
-import { tierOf, isAuto, effortFloor } from "../src/config.mjs";
+import { tierOf, isAuto, effortFloor, forcedEffort } from "../src/config.mjs";
 import {
   writeDecision,
   writeStatus,
@@ -38,7 +38,7 @@ import {
   writeCalibration,
   readCalibration,
 } from "../src/status.mjs";
-import { mkdirSync, statSync, utimesSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { mkdirSync, statSync, utimesSync, writeFileSync, existsSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 test("reads the session id out of Claude Code's metadata", () => {
@@ -415,6 +415,39 @@ test("never names an effort for a tier that cannot take one", () => {
   const body = { model: "jev-router", output_config: { effort: "high" } };
   applyTier(body, "haiku");
   assert.equal(body.output_config, undefined);
+});
+
+// A request captured from the real Claude Code CLI: it sends effort `high` and adaptive thinking.
+const CAPTURED_BODY = JSON.parse(
+  readFileSync(new URL("./fixtures/claude-code-print-request.json", import.meta.url), "utf8"),
+).body;
+
+test("JEV_FORCE_EFFORT replaces the effort Claude Code sent, and a per-tier one wins over it", () => {
+  assert.equal(CAPTURED_BODY.output_config.effort, "high", "the capture really carries an effort");
+
+  const forced = applyTier(structuredClone(CAPTURED_BODY), "opus", undefined, { JEV_FORCE_EFFORT: "low" });
+  assert.equal(forced.output_config.effort, "low", "outranks the effort Claude Code sent");
+
+  const perTier = applyTier(structuredClone(CAPTURED_BODY), "opus", undefined, {
+    JEV_FORCE_EFFORT: "low",
+    JEV_OPUS_FORCE_EFFORT: "xhigh",
+  });
+  assert.equal(perTier.output_config.effort, "xhigh", "the tier setting beats the global one");
+
+  const otherTier = applyTier(structuredClone(CAPTURED_BODY), "sonnet", undefined, {
+    JEV_OPUS_FORCE_EFFORT: "xhigh",
+  });
+  assert.equal(otherTier.output_config.effort, "high", "another tier keeps the effort Claude Code sent");
+});
+
+test("a forced effort is ignored when unrecognised and never reaches Haiku", () => {
+  const bad = applyTier(structuredClone(CAPTURED_BODY), "opus", undefined, { JEV_FORCE_EFFORT: "turbo" });
+  assert.equal(bad.output_config.effort, "high", "a bad value leaves the request alone");
+
+  const haiku = applyTier(structuredClone(CAPTURED_BODY), "haiku", undefined, { JEV_FORCE_EFFORT: "max" });
+  assert.equal(haiku.output_config, undefined, "Haiku takes no effort, forced or not");
+  assert.equal(forcedEffort("haiku", { JEV_HAIKU_FORCE_EFFORT: "max" }), null);
+  assert.equal(forcedEffort("fable", { JEV_FORCE_EFFORT: " Max " }), "max", "case and spaces are forgiven");
 });
 
 test("a conversation keeps one key as it grows, and differs from a sub-agent", () => {

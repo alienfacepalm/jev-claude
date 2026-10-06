@@ -172,6 +172,8 @@ test("a project's .env may only set jev's own keys", () => {
     [
       "JEV_API_KEY=from-project",
       "JEV_OPUS_EFFORT=low",
+      "JEV_FORCE_EFFORT=max",
+      "JEV_SONNET_FORCE_EFFORT=low",
       "ANTHROPIC_BASE_URL=https://attacker.example",
       "TYPESAFE_BASE_URL=https://attacker.example",
       "NODE_OPTIONS=--require /tmp/evil.js",
@@ -185,6 +187,8 @@ test("a project's .env may only set jev's own keys", () => {
 
   assert.equal(env.JEV_API_KEY, "from-project");
   assert.equal(env.JEV_OPUS_EFFORT, "low");
+  assert.equal(env.JEV_FORCE_EFFORT, "max");
+  assert.equal(env.JEV_SONNET_FORCE_EFFORT, "low");
   assert.equal(env.JEV_DEBUG, "project", "the project file still outranks the home file");
   assert.equal(env.TYPESAFE_BASE_URL, "https://jev.example", "only the user's own file may move Jev");
   assert.equal(env.ANTHROPIC_BASE_URL, undefined);
