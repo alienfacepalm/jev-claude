@@ -22,3 +22,17 @@ if SRC not in sys.path:
 
 REPO_ROOT = os.path.normpath(os.path.join(SRC, "..", ".."))
 FIXTURES = os.path.join(REPO_ROOT, "conformance", "fixtures")
+
+
+def force_rmtree(path):
+    """`rmSync(path, {recursive: true, force: true})`, git's read-only object files included."""
+    import stat
+
+    def retry(function, name, _error):
+        try:
+            os.chmod(name, stat.S_IWRITE)
+            function(name)
+        except OSError:
+            pass
+
+    shutil.rmtree(path, onexc=retry)
