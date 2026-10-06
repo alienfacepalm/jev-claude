@@ -1,0 +1,288 @@
+[
+  {
+    "name": "outside a checkout",
+    "input": {
+      "input": {
+        "workspace": {
+          "current_dir": "/nowhere"
+        }
+      },
+      "branch": null
+    },
+    "expected": {
+      "result": null,
+      "asked": [
+        "/nowhere"
+      ]
+    }
+  },
+  {
+    "name": "empty input",
+    "input": {
+      "input": {},
+      "branch": null
+    },
+    "expected": {
+      "result": null,
+      "asked": [
+        {
+          "$undefined": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "undefined input",
+    "input": {
+      "input": {
+        "$undefined": true
+      },
+      "branch": null
+    },
+    "expected": {
+      "result": null,
+      "asked": [
+        {
+          "$undefined": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "main working tree",
+    "input": {
+      "input": {
+        "workspace": {
+          "current_dir": "/repo"
+        }
+      },
+      "branch": "master"
+    },
+    "expected": {
+      "result": {
+        "branch": "master",
+        "worktree": null
+      },
+      "asked": [
+        "/repo"
+      ]
+    }
+  },
+  {
+    "name": "worktree session carries its branch",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": "my-feature",
+          "branch": "worktree-my-feature",
+          "path": "/r/.claude/worktrees/my-feature"
+        }
+      },
+      "branch": "never-used"
+    },
+    "expected": {
+      "result": {
+        "branch": "worktree-my-feature",
+        "worktree": "my-feature"
+      },
+      "asked": []
+    }
+  },
+  {
+    "name": "linked worktree reads git",
+    "input": {
+      "input": {
+        "workspace": {
+          "current_dir": "/wt/feature-xyz",
+          "git_worktree": "feature-xyz"
+        }
+      },
+      "branch": "feature/xyz"
+    },
+    "expected": {
+      "result": {
+        "branch": "feature/xyz",
+        "worktree": "feature-xyz"
+      },
+      "asked": [
+        "/wt/feature-xyz"
+      ]
+    }
+  },
+  {
+    "name": "worktree without branch falls back to git",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": "scratch",
+          "path": "/wt/scratch"
+        }
+      },
+      "branch": "main-2"
+    },
+    "expected": {
+      "result": {
+        "branch": "main-2",
+        "worktree": "scratch"
+      },
+      "asked": [
+        "/wt/scratch"
+      ]
+    }
+  },
+  {
+    "name": "detached head in a worktree",
+    "input": {
+      "input": {
+        "workspace": {
+          "current_dir": "/wt/x",
+          "git_worktree": "x"
+        }
+      },
+      "branch": ""
+    },
+    "expected": {
+      "result": {
+        "branch": "",
+        "worktree": "x"
+      },
+      "asked": [
+        "/wt/x"
+      ]
+    }
+  },
+  {
+    "name": "cwd when no current_dir",
+    "input": {
+      "input": {
+        "cwd": "/from/cwd"
+      },
+      "branch": "dev"
+    },
+    "expected": {
+      "result": {
+        "branch": "dev",
+        "worktree": null
+      },
+      "asked": [
+        "/from/cwd"
+      ]
+    }
+  },
+  {
+    "name": "current_dir beats cwd and path",
+    "input": {
+      "input": {
+        "workspace": {
+          "current_dir": "/a"
+        },
+        "cwd": "/b",
+        "worktree": {
+          "name": "n",
+          "path": "/c"
+        }
+      },
+      "branch": "b1"
+    },
+    "expected": {
+      "result": {
+        "branch": "b1",
+        "worktree": "n"
+      },
+      "asked": [
+        "/a"
+      ]
+    }
+  },
+  {
+    "name": "worktree name beats git_worktree",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": "first"
+        },
+        "workspace": {
+          "git_worktree": "second"
+        }
+      },
+      "branch": null
+    },
+    "expected": {
+      "result": {
+        "branch": null,
+        "worktree": "first"
+      },
+      "asked": [
+        {
+          "$undefined": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "null worktree branch falls back",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": "n",
+          "branch": null,
+          "path": "/p"
+        }
+      },
+      "branch": "from-git"
+    },
+    "expected": {
+      "result": {
+        "branch": "from-git",
+        "worktree": "n"
+      },
+      "asked": [
+        "/p"
+      ]
+    }
+  },
+  {
+    "name": "empty worktree name kept",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": ""
+        }
+      },
+      "branch": null
+    },
+    "expected": {
+      "result": {
+        "branch": null,
+        "worktree": ""
+      },
+      "asked": [
+        {
+          "$undefined": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "null names",
+    "input": {
+      "input": {
+        "worktree": {
+          "name": null
+        },
+        "workspace": {
+          "git_worktree": null
+        }
+      },
+      "branch": null
+    },
+    "expected": {
+      "result": null,
+      "asked": [
+        {
+          "$undefined": true
+        }
+      ]
+    }
+  }
+]
