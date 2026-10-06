@@ -14,9 +14,13 @@ const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 const MAX_BRANCH = 28;
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
-const I = icons();
 const DIM = "\x1b[2m";
+const BOLD = "\x1b[1m";
 const RESET = "\x1b[0m";
+// A status line cannot read the terminal's background, so the icons use the default foreground
+// (which contrasts with it in any theme) in bold, the one emphasis that stays legible on both
+// light and dark backgrounds, instead of a fixed colour that would vanish on one of them.
+const I = Object.fromEntries(Object.entries(icons()).map(([name, mark]) => [name, `${BOLD}${mark}${RESET}`]));
 const COLOR = { haiku: "\x1b[32m", sonnet: "\x1b[36m", opus: "\x1b[35m", fable: "\x1b[33m" };
 
 // A status line replaces Claude Code's footer hints, so echo the basics it stops showing.
@@ -43,12 +47,12 @@ const { main, subagents } = agentView(status);
 function mainLine(entry) {
   const color = COLOR[entry.tier] ?? "";
   const p = entry.confidence != null ? ` ${DIM}(${Math.round(entry.confidence * 100)}%)${RESET}` : "";
-  const level = entry.effort ? ` ${DIM}· ${I.effort}${RESET} ${entry.effort}` : "";
+  const level = entry.effort ? ` ${DIM}·${RESET} ${I.effort} ${entry.effort}` : "";
   // Said in words rather than in the reason code, which is an internal name; a plain
   // recommendation has nothing to add, so it says nothing.
   const said = shortReason(entry.reason);
   const why = said ? ` ${DIM}(${said})${RESET}` : "";
-  return `${DIM}${I.model}${RESET} ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
+  return `${I.model} ${color}${shortName(entry.model) ?? entry.model ?? entry.tier}${RESET}${p}${level}${why}`;
 }
 
 let routed = `${DIM}jev: waiting for first prompt${RESET}`;
@@ -74,7 +78,7 @@ if (subagents.length) {
     return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
-  agents = ` ${DIM}·${RESET} ${DIM}${I.agents}${RESET} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
+  agents = ` ${DIM}·${RESET} ${I.agents}${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;
 }
 
 // A model newer than the router's tuning: routing already uses it, but the guidance, costs and
@@ -88,10 +92,10 @@ const notice = newer.length
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
 // Every item on the line is a dimmed label (a glyph, or its word) and its value.
 const loc = locationInfo(input);
-const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${DIM}${I.branch}${RESET} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
-const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${DIM}${I.worktree}${RESET} \x1b[32m${loc.worktree}${RESET}` : "";
+const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${I.branch} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
+const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${I.worktree} \x1b[32m${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
 // A worktree is usually a directory of the same name, and saying it twice costs a whole item.
-const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${DIM}${I.dir}${RESET} ${dir}` : "";
+const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${I.dir} ${dir}` : "";
 
-process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}· ${I.context}${RESET} ${pct}%${notice}\n`);
+process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${notice}\n`);

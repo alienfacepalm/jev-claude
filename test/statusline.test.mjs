@@ -23,7 +23,7 @@ test("symbols replace the words, and the branch uses the Powerline glyph", () =>
   const id = `statusline-symbols-${process.pid}`;
   writeDecision(id, { tier: "sonnet", model: "claude-sonnet-5-5", confidence: 0.94, effort: "high", reason: "jev", at: Date.now() }, MAIN);
   const line = render(id, {}, { worktree: { name: "login-fix", branch: "fix/login" } }, "symbols");
-  assert.equal(line, "◆ Sonnet 5.5 (94%) · ▲ high · ▸ proj · \ue0a0 fix/login · ⌂ login-fix · ≡ 8%");
+  assert.equal(line, "◆ Sonnet 5.5 (94%) ·  high ·  proj · \ue0a0 fix/login · ⌂ login-fix · ≡ 8%");
 });
 
 test("shows the effort the turn ran at next to the model and confidence", () => {

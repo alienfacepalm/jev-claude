@@ -1,9 +1,10 @@
 // Single-colour glyphs, so the line takes the terminal's own colours rather than emoji's. The branch
-// is the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k use, which
-// needs a Powerline or Nerd Font; the rest are plain Unicode that any font draws.
-const SYMBOLS = { model: "◆", effort: "▲", agents: "∥", dir: "▸", branch: "", worktree: "⌂", context: "≡" };
+// is the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k use, the
+// directory is the classic folder (U+F07B) and effort is a gauge (U+F0E4); those three need a
+// Powerline or Nerd Font. The rest are plain Unicode that any font draws.
+const SYMBOLS = { model: "◆", effort: "", agents: "✦", dir: "", branch: "", worktree: "⌂", context: "≡" };
 
-// For a console that cannot draw them: the dimmed word instead of the glyph.
+// For a console that cannot draw them: the word instead of the glyph.
 const TEXT = { model: "model", effort: "effort", agents: "agents", dir: "dir", branch: "branch", worktree: "worktree", context: "ctx" };
 
 /**
