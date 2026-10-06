@@ -123,3 +123,37 @@ fn os_profile_dir() -> Option<PathBuf> {
 fn os_profile_dir() -> Option<PathBuf> {
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::envx::map;
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_temp_follows_node() {
+        assert_eq!(temp_dir_in(&map(&[("TEMP", r"C:\t\"), ("TMP", r"D:\x")])), PathBuf::from(r"C:\t"));
+        assert_eq!(temp_dir_in(&map(&[("TEMP", ""), ("TMP", r"D:\x")])), PathBuf::from(r"D:\x"), "empty is unset");
+        assert_eq!(temp_dir_in(&map(&[("TEMP", r"C:\")])), PathBuf::from(r"C:\"), "a drive root keeps its slash");
+        assert_eq!(temp_dir_in(&map(&[("SystemRoot", r"C:\Windows")])), PathBuf::from(r"C:\Windows\temp"));
+        assert_eq!(temp_dir_in(&map(&[("windir", r"C:\W")])), PathBuf::from(r"C:\W\temp"));
+        assert_eq!(home_dir_in(&map(&[("USERPROFILE", r"C:\Users\u")])), PathBuf::from(r"C:\Users\u"));
+        assert!(!home_dir_in(&map(&[("USERPROFILE", "")])).as_os_str().is_empty(), "the profile directory");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn unix_temp_follows_node() {
+        assert_eq!(temp_dir_in(&map(&[("TMPDIR", "/x/"), ("TMP", "/y")])), PathBuf::from("/x"));
+        assert_eq!(temp_dir_in(&map(&[("TMPDIR", ""), ("TMP", "/y")])), PathBuf::from("/y"));
+        assert_eq!(temp_dir_in(&map(&[("TEMP", "/")])), PathBuf::from("/"));
+        assert_eq!(temp_dir_in(&map(&[])), PathBuf::from("/tmp"));
+        assert_eq!(home_dir_in(&map(&[("HOME", "/h")])), PathBuf::from("/h"));
+    }
+
+    #[test]
+    fn verbatim_prefix_is_removed() {
+        assert_eq!(simplify(PathBuf::from(r"\\?\C:\a\b")), PathBuf::from(r"C:\a\b"));
+        assert_eq!(simplify(PathBuf::from(r"\\?\UNC\srv\share")), PathBuf::from(r"\\srv\share"));
+    }
+}

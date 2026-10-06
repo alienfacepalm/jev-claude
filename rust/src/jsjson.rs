@@ -690,3 +690,33 @@ macro_rules! obj {
         o
     }};
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn round_trip(text: &str) -> String {
+        stringify(&parse(text).unwrap()).unwrap().to_string_lossy()
+    }
+
+    #[test]
+    fn spec_examples() {
+        assert_eq!(round_trip(r#"{"b":1,"2":2,"a":3,"1":4,"01":5}"#), r#"{"1":4,"2":2,"b":1,"a":3,"01":5}"#);
+        assert_eq!(round_trip("12345678901234567890"), "12345678901234567000");
+        assert_eq!(round_trip("1.0"), "1");
+        assert_eq!(round_trip("-0"), "0");
+        assert!(parse("-0").unwrap().as_number().unwrap().is_sign_negative());
+        assert_eq!(round_trip(r#"{"a":1,"a":2,"b":3}"#), r#"{"a":2,"b":3}"#, "first position, last value");
+        assert_eq!(round_trip(r#""\uD800x""#), r#""\ud800x""#, "a lone surrogate round-trips");
+        assert_eq!(round_trip(r#""\uD83D\uDE00""#), "\"\u{1F600}\"", "a pair is one character");
+        for bad in ["NaN", "Infinity", "-Infinity", "{a:1}", "[1,]", "01"] {
+            assert!(parse(bad).is_err(), "{bad}");
+        }
+        for (n, s) in [(1e-7, "1e-7"), (1e21, "1e+21"), (5e-324, "5e-324"), (1e-6, "0.000001")] {
+            assert_eq!(stringify(&Value::Number(n)).unwrap(), s);
+        }
+        assert_eq!(stringify(&Value::Number(f64::NAN)).unwrap(), "null");
+        let pretty = stringify_pretty(&parse(r#"{"a":[],"b":{},"c":[1]}"#).unwrap()).unwrap();
+        assert_eq!(pretty, "{\n  \"a\": [],\n  \"b\": {},\n  \"c\": [\n    1\n  ]\n}");
+    }
+}
