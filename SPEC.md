@@ -277,7 +277,8 @@ Python `tempfile.gettempdir`, Rust `env::home_dir`/`temp_dir` differ and must no
 - **Home** (`os.homedir()`): Windows: `USERPROFILE` when non-empty, else the profile directory
   from the OS. Elsewhere: `HOME` when non-empty, else the passwd entry of the current user.
 - **Temp** (`os.tmpdir()`): Windows: `TEMP`, else `TMP`, else `%SystemRoot%\temp`, else
-  `%windir%\temp`; then remove one trailing `\` unless the path is a drive root such as `C:\`.
+  `%windir%\temp`, else the literal `undefined\temp` (Node concatenates the undefined value); then
+  remove one trailing `\` unless the path is a drive root such as `C:\`.
   Elsewhere: `TMPDIR`, else `TMP`, else `TEMP`, else `/tmp`; then remove one trailing `/` when the
   path is longer than one character. Empty variables count as unset.
 
@@ -725,8 +726,8 @@ number (else `[]` and null); `newer` is `[]` unless it is an array.
 ### 8.4 Dump
 
 `dumpBody(body, setting = JEV_DUMP)`: unset or empty does nothing. `1`, `true`, `yes`
-(case-insensitive) mean prefix `<dir>/dump` (and `ensureDir`); any other value is the prefix
-itself. File `<prefix>.<ms>-<counter>.json`, counter per process from 0, mode 0600, indented
+(case-insensitive) mean prefix `<dir>/dump`; any other value is the prefix itself. `ensureDir`
+runs whenever the prefix starts with the status directory's path (a string prefix test). File `<prefix>.<ms>-<counter>.json`, counter per process from 0, mode 0600, indented
 `stringify` (3.3). Errors are swallowed.
 
 ---
