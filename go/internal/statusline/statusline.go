@@ -3,6 +3,7 @@
 package statusline
 
 import (
+	"errors"
 	"regexp"
 	"runtime"
 	"strings"
@@ -87,7 +88,11 @@ func shortOr(model any, fallbacks ...any) string {
 
 // Render builds the line (with its newline) for the given stdin bytes, reading the status
 // directory, the real clock and git.
-func Render(stdin []byte, env config.Getenv) string {
+// ErrNullInput is what Node throws for stdin that is the JSON literal null: its first read,
+// `input.session_id`, fails and the process exits 1.
+var ErrNullInput = errors.New("TypeError: Cannot read properties of null (reading 'session_id')")
+
+func Render(stdin []byte, env config.Getenv) (string, error) {
 	set := icons.Icons(env, runtime.GOOS)
 	ic := func(mark string) string { return bold + mark + reset }
 
@@ -98,6 +103,9 @@ func Render(stdin []byte, env config.Getenv) string {
 	}
 	if v, err := jsjson.Parse(text); err == nil {
 		input = v
+	}
+	if input == nil {
+		return "", ErrNullInput
 	}
 
 	st := status.ReadStatus(jsjson.Prop(input, "session_id"))
@@ -194,5 +202,5 @@ func Render(stdin []byte, env config.Getenv) string {
 	if dir != "" && dir != locWorktree {
 		dirPart = " " + dim + dot + reset + " " + ic(set.Dir) + " " + dir
 	}
-	return routed + agents + dirPart + where + " " + dim + dot + reset + " " + ic(set.Context) + " " + jsjson.NumberToString(pct) + "%" + notice + "\n"
+	return routed + agents + dirPart + where + " " + dim + dot + reset + " " + ic(set.Context) + " " + jsjson.NumberToString(pct) + "%" + notice + "\n", nil
 }
