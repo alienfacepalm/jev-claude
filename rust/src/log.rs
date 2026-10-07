@@ -19,7 +19,7 @@ static WRITE: Mutex<()> = Mutex::new(());
 /// `log(line)`: stderr when stdout is not a terminal, else the log file.
 pub fn log(line: &str) {
     let text = format!("[jev] {line}\n");
-    let _guard = WRITE.lock().unwrap_or_else(|e| e.into_inner());
+    let _guard = WRITE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if !*INTERACTIVE {
         let _ = std::io::stderr().write_all(text.as_bytes());
         return;

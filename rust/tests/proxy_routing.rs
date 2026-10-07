@@ -2,6 +2,10 @@
 //! Code CLI: print mode posts to `/v1/messages?beta=true`, carries adaptive thinking and a
 //! thinking-clearing context edit, and ends in a `role: "system"` message.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;

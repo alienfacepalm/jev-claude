@@ -8,6 +8,7 @@ use crate::reasons::short_reason;
 use crate::status::{agent_view_now, calibration_file, read_calibration, read_status};
 use crate::worktree::{git_branch, location_info};
 use regex::bytes::Regex;
+use std::fmt::Write as _;
 use std::sync::LazyLock;
 
 const DIM: &str = "\x1b[2m";
@@ -91,7 +92,7 @@ fn clip(v: &Value) -> String {
 pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Option<JsStr>) -> Result<String, String> {
     let text = String::from_utf8_lossy(stdin);
     let text = if text.is_empty() { "{}".into() } else { text };
-    let input = jsjson::parse(&text).unwrap_or_else(|_| Value::Object(Default::default()));
+    let input = jsjson::parse(&text).unwrap_or_else(|_| Value::Object(jsjson::Object::default()));
     if input.is_nullish() {
         return Err("TypeError: Cannot read properties of null (reading 'session_id')".to_string());
     }
@@ -156,14 +157,11 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
     if let Some(loc) = &loc {
         if !loc.branch.is_nullish() {
             let b = if loc.branch.truthy() { loc.branch.clone() } else { Value::from("(detached)") };
-            where_.push_str(&format!(" {DIM}\u{00B7}{RESET} {} \x1b[34m{}{RESET}", icon(icons.branch), clip(&b)));
+            let _ = write!(where_, " {DIM}\u{00B7}{RESET} {} \x1b[34m{}{RESET}", icon(icons.branch), clip(&b));
         }
         if loc.worktree.truthy() {
-            where_.push_str(&format!(
-                " {DIM}\u{00B7}{RESET} {} \x1b[32m{}{RESET}",
-                icon(icons.worktree),
-                s(&loc.worktree)
-            ));
+            let _ =
+                write!(where_, " {DIM}\u{00B7}{RESET} {} \x1b[32m{}{RESET}", icon(icons.worktree), s(&loc.worktree));
         }
         worktree = loc.worktree.clone();
     }
@@ -173,8 +171,15 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
         String::new()
     };
 
+    // The whole path last, dimmed (SPEC 12).
+    let full_path = if dir_text.is_empty() {
+        String::new()
+    } else {
+        format!(" {DIM}\u{00B7} {}{RESET}", dir_text.to_string_lossy())
+    };
+
     Ok(format!(
-        "{routed}{agents}{dir_part}{where_} {DIM}\u{00B7}{RESET} {} {}%{notice}\n",
+        "{routed}{agents}{dir_part}{where_} {DIM}\u{00B7}{RESET} {} {}%{notice}{full_path}\n",
         icon(icons.context),
         number_to_string(pct)
     ))

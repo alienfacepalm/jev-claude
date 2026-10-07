@@ -59,14 +59,14 @@ impl PartialEq<&str> for JsStr {
 fn decode_at(b: &[u8], i: usize) -> (u32, usize) {
     let c = b[i];
     if c < 0x80 {
-        return (c as u32, 1);
+        return (u32::from(c), 1);
     }
     let (len, init) = if c >= 0xF0 {
-        (4, (c & 0x07) as u32)
+        (4, u32::from(c & 0x07))
     } else if c >= 0xE0 {
-        (3, (c & 0x0F) as u32)
+        (3, u32::from(c & 0x0F))
     } else if c >= 0xC0 {
-        (2, (c & 0x1F) as u32)
+        (2, u32::from(c & 0x1F))
     } else {
         return (0xFFFD, 1);
     };
@@ -79,7 +79,7 @@ fn decode_at(b: &[u8], i: usize) -> (u32, usize) {
         if cc & 0xC0 != 0x80 {
             return (0xFFFD, 1);
         }
-        cp = (cp << 6) | (cc & 0x3F) as u32;
+        cp = (cp << 6) | u32::from(cc & 0x3F);
     }
     (cp, len)
 }
@@ -103,6 +103,7 @@ fn encode_cp(cp: u32, out: &mut Vec<u8>) {
 }
 
 impl JsStr {
+    /// An empty string.
     pub fn new() -> Self {
         JsStr(Vec::new())
     }
@@ -117,9 +118,9 @@ impl JsStr {
         let mut out = Vec::with_capacity(units.len());
         let mut i = 0;
         while i < units.len() {
-            let u = units[i] as u32;
+            let u = u32::from(units[i]);
             if (0xD800..0xDC00).contains(&u) && i + 1 < units.len() {
-                let v = units[i + 1] as u32;
+                let v = u32::from(units[i + 1]);
                 if (0xDC00..0xE000).contains(&v) {
                     encode_cp(0x10000 + ((u - 0xD800) << 10) + (v - 0xDC00), &mut out);
                     i += 2;
@@ -148,6 +149,8 @@ impl JsStr {
         encode_cp(cp, &mut self.0);
     }
 
+    /// Appends `other` (JavaScript `+`): a lone high surrogate at the end of this string and a
+    /// lone low surrogate at the start of `other` join into one code point, as WTF-8 requires.
     pub fn push_js(&mut self, other: &JsStr) {
         let mut cps = other.code_points();
         if let Some(first) = cps.next() {
@@ -163,18 +166,22 @@ impl JsStr {
         }
     }
 
+    /// Appends a Rust string.
     pub fn push_str(&mut self, s: &str) {
         self.push_js(&JsStr::from(s));
     }
 
+    /// The WTF-8 bytes.
     pub fn as_bytes(&self) -> &[u8] {
         &self.0
     }
 
+    /// The WTF-8 bytes, by value.
     pub fn into_bytes(self) -> Vec<u8> {
         self.0
     }
 
+    /// Whether the string is empty.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -186,18 +193,18 @@ impl JsStr {
 
     /// UTF-8 with every lone surrogate replaced by U+FFFD (for hashing and terminals, 3.3).
     pub fn to_string_lossy(&self) -> String {
-        match std::str::from_utf8(&self.0) {
-            Ok(s) => s.to_string(),
-            Err(_) => {
-                let mut out = String::with_capacity(self.0.len());
-                for cp in self.code_points() {
-                    out.push(char::from_u32(cp).unwrap_or('\u{FFFD}'));
-                }
-                out
+        if let Ok(s) = std::str::from_utf8(&self.0) {
+            s.to_string()
+        } else {
+            let mut out = String::with_capacity(self.0.len());
+            for cp in self.code_points() {
+                out.push(char::from_u32(cp).unwrap_or('\u{FFFD}'));
             }
+            out
         }
     }
 
+    /// The code points, lone surrogates included.
     pub fn code_points(&self) -> impl Iterator<Item = u32> + '_ {
         let b = &self.0;
         let mut i = 0;
@@ -211,6 +218,7 @@ impl JsStr {
         })
     }
 
+    /// The UTF-16 code units, as JavaScript sees the string.
     pub fn utf16(&self) -> Vec<u16> {
         let mut out = Vec::with_capacity(self.0.len());
         for cp in self.code_points() {
@@ -277,6 +285,7 @@ impl JsStr {
         JsStr(b[..end].to_vec())
     }
 
+    /// `String.prototype.includes` for a Rust string needle.
     pub fn contains(&self, needle: &str) -> bool {
         find_bytes(&self.0, needle.as_bytes()).is_some()
     }
@@ -447,13 +456,13 @@ pub fn to_fixed2(x: f64) -> String {
     let (mant, exp) = if exp_bits == 0 { (frac, -1074i64) } else { (frac | (1u64 << 52), exp_bits - 1075) };
     // n = round(x * 100), ties to the larger n. x*100 = mant * 100 * 2^exp.
     let n: u128 = if exp >= 0 {
-        (mant as u128) * 100 * (1u128 << exp.min(70))
+        u128::from(mant) * 100 * (1u128 << exp.min(70))
     } else {
         let shift = (-exp) as u32;
         if shift >= 120 {
             0
         } else {
-            let num = (mant as u128) * 100;
+            let num = u128::from(mant) * 100;
             let q = num >> shift;
             let rem = num - (q << shift);
             let half = 1u128 << (shift - 1);
@@ -516,7 +525,7 @@ pub fn string_to_number(s: &JsStr) -> f64 {
             }
             let mut v = 0f64;
             for c in rest.chars() {
-                v = v * radix as f64 + c.to_digit(radix).unwrap() as f64;
+                v = v * f64::from(radix) + f64::from(c.to_digit(radix).unwrap());
             }
             return v;
         }
@@ -524,7 +533,7 @@ pub fn string_to_number(s: &JsStr) -> f64 {
     if is_decimal_literal(t) { t.parse::<f64>().unwrap_or(f64::NAN) } else { f64::NAN }
 }
 
-/// StrDecimalLiteral: optional sign, digits with optional fraction, optional exponent.
+/// `StrDecimalLiteral`: optional sign, digits with optional fraction, optional exponent.
 fn is_decimal_literal(t: &str) -> bool {
     let b = t.as_bytes();
     let mut i = 0;

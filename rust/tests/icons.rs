@@ -1,5 +1,9 @@
 //! Port of node/test/icons.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 use jev_router::envx::{EnvMap, map};
 use jev_router::icons::{Icons, icons_for};
 

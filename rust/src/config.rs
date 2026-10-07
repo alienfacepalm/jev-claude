@@ -9,11 +9,17 @@ use std::sync::LazyLock;
 /// One model tier.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tier {
+    /// Tier name used throughout routing: `haiku`, `sonnet`, `opus` or `fable`.
     pub name: &'static str,
+    /// Default model id sent upstream for this tier.
     pub id: &'static str,
+    /// Substring that identifies the tier's family inside a model id.
     pub family: &'static str,
+    /// Whether the tier accepts `thinking` and thinking-related context edits.
     pub thinking: bool,
+    /// Whether the tier accepts `output_config.effort`.
     pub effort: bool,
+    /// Effort applied when a request names none (overridable by `JEV_<TIER>_EFFORT`).
     pub floor: Option<&'static str>,
 }
 
@@ -39,26 +45,37 @@ pub const TIERS: [Tier; 4] = [
     Tier { name: "fable", id: "claude-fable-5-1", family: "fable", thinking: true, effort: true, floor: Some("high") },
 ];
 
+/// Effort levels, lowest first.
 pub const EFFORTS: [&str; 5] = ["low", "medium", "high", "xhigh", "max"];
 
+/// Tier names, cheapest first.
 pub const TIER_NAMES: [&str; 4] = ["haiku", "sonnet", "opus", "fable"];
 
 /// Sentinel model id offered as an extra row in Claude Code's /model picker.
 pub const AUTO_MODEL: &str = "jev-router";
 
+/// Below this Jev confidence the router does not trust Jev's choice.
 pub const MIN_CONFIDENCE: f64 = 0.6;
+/// The tier used when Jev is unsure or unreachable.
 pub const UNCERTAIN_DEFAULT: &str = "sonnet";
+/// Context size (estimated tokens) above which a routed turn never moves to a cheaper tier.
 pub const DOWNGRADE_MAX_CONTEXT_TOKENS: f64 = 20000.0;
+/// Per-attempt timeout for a Jev request.
 pub const JEV_TIMEOUT_MS: u64 = 1500;
+/// Overall deadline for a Jev answer, retries included.
 pub const JEV_DEADLINE_MS: u64 = 3000;
+/// How many times a failed Jev request is retried.
 pub const JEV_MAX_RETRIES: u32 = 1;
-pub const CONTEXT_WINDOW_TOKENS: f64 = 200000.0;
+/// The context window the status line measures usage against.
+pub const CONTEXT_WINDOW_TOKENS: f64 = 200_000.0;
 
 const COMPLEXITY_SCALE: [&str; 10] =
     ["None", "Very low", "Low", "Some", "Moderate", "Moderate to high", "High", "Very high", "Severe", "Extreme"];
 
+/// The highest complexity score Jev reports (the last index of its complexity scale).
 pub const COMPLEXITY_MAX_SCORE: f64 = (COMPLEXITY_SCALE.len() - 1) as f64;
 
+/// The tier called `name`, if there is one.
 pub fn tier_spec(name: &str) -> Option<&'static Tier> {
     TIERS.iter().find(|t| t.name == name)
 }
@@ -68,6 +85,7 @@ pub fn rank_of(name: &str) -> i32 {
     TIER_NAMES.iter().position(|n| *n == name).map_or(-1, |i| i as i32)
 }
 
+/// The default model id for the tier called `name`.
 pub fn id_of(name: &str) -> Option<&'static str> {
     tier_spec(name).map(|t| t.id)
 }
@@ -83,6 +101,7 @@ pub fn tier_of(model: &Value) -> Option<&'static str> {
     tier_of_str(s.as_bytes())
 }
 
+/// Tier name for a model id given as bytes: the first tier whose family appears in it.
 pub fn tier_of_str(model: &[u8]) -> Option<&'static str> {
     TIERS.iter().find(|t| model.windows(t.family.len()).any(|w| w == t.family.as_bytes())).map(|t| t.name)
 }
@@ -115,6 +134,7 @@ pub fn fable_allowed(env: &dyn Env) -> bool {
     !matches!(t.as_str(), "0" | "false" | "no" | "off")
 }
 
+/// Tier names this account may route to (`fable` only when `JEV_ALLOW_FABLE` allows it).
 pub fn available_tiers(env: &dyn Env) -> Vec<&'static str> {
     let fable = fable_allowed(env);
     TIER_NAMES.iter().copied().filter(|n| *n != "fable" || fable).collect()
@@ -128,8 +148,11 @@ pub fn should_use_exact_model(reason: &str, chosen_tier: Option<&str>, final_tie
 // ---------------------------------------------------------------------------------------------
 // Override patterns (4.5)
 
+/// A phrase in the user's prompt that pins a tier (SPEC 4.5).
 pub struct OverridePattern {
+    /// The tier the phrase asks for.
     pub tier: &'static str,
+    /// The pattern, matched over the user's own words.
     pub re: Regex,
 }
 
@@ -233,9 +256,13 @@ fn cost(tier: &str) -> Option<&'static str> {
 /// One model on the menu: `{id, tier, releasedAt, description}`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
+    /// Full model id, as the catalog lists it.
     pub id: JsStr,
+    /// The tier the model belongs to.
     pub tier: String,
+    /// The catalog's `released_at` value, kept as JSON for ordering.
     pub released_at: Value,
+    /// The catalog description, when it has one.
     pub description: Option<JsStr>,
 }
 

@@ -1,5 +1,9 @@
 //! Port of node/test/first-run.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
@@ -7,7 +11,7 @@ use jev_router::firstrun::{Answer, ask_yes_no, mark_offered, shadows_skill, shou
 use std::io::{BufRead, Read};
 
 fn args(a: &[&str]) -> Vec<String> {
-    a.iter().map(|s| s.to_string()).collect()
+    a.iter().map(|s| (*s).to_string()).collect()
 }
 
 /// "the setup check is offered only on a plain interactive first launch"
@@ -34,7 +38,6 @@ fn the_offer_is_not_made_where_a_repository_defines_its_own_skill() {
     assert!(!shadows_skill(&router, Some(&router)), "the router's own skill, in its own repository");
     assert!(!shadows_skill(&repo, Some(&router)), "no such skill here");
     assert!(!should_offer(&[], true, false, true));
-    let _ = std::fs::remove_dir_all(&repo);
 }
 
 /// "an offer is remembered whatever the answer"
@@ -47,7 +50,6 @@ fn an_offer_is_remembered_whatever_the_answer() {
     assert!(was_offered(&file), "a no is remembered too, so it is never asked again");
     let text = std::fs::read_to_string(&file).unwrap();
     assert!(text.contains(r#""accepted":false"#) && text.contains(r#""offeredAt":""#));
-    let _ = std::fs::remove_dir_all(&dir);
 }
 
 fn answer(text: &str) -> Answer {

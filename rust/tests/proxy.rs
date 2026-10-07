@@ -1,5 +1,9 @@
 //! Port of node/test/proxy.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
@@ -104,7 +108,10 @@ fn stale_status_files_are_pruned_and_fresh_ones_kept() {
     std::fs::write(&fresh, "{}").unwrap();
     let old = std::time::SystemTime::now() - std::time::Duration::from_secs(8 * 24 * 60 * 60);
     std::fs::File::options().write(true).open(&stale).unwrap().set_modified(old).unwrap();
-    assert!(prune_stale(STALE_AFTER_MS, now_ms()) >= 1);
+    // The count is not asserted: the first `write_status` in this process also prunes this shared
+    // directory (once, from whichever test writes first), and when that runs before this call it
+    // has already removed the stale file, so this call may legitimately remove none.
+    prune_stale(STALE_AFTER_MS, now_ms());
     assert!(!stale.exists());
     assert!(fresh.exists());
 }

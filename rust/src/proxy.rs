@@ -1,7 +1,7 @@
 //! The local routing proxy (SPEC 7; `node/src/proxy.mjs`).
 
 use crate::config::{
-    self, Model, TIERS, UNCERTAIN_DEFAULT, available_tiers, effort_floor, forced_effort, id_of, is_auto,
+    Model, TIERS, UNCERTAIN_DEFAULT, available_tiers, effort_floor, forced_effort, id_of, is_auto,
     should_use_exact_model, tier_of, tier_of_str, tier_spec,
 };
 use crate::envx::{self, Env, ProcessEnv};
@@ -21,13 +21,17 @@ use hyper_util::rt::TokioIo;
 use regex::bytes::Regex;
 use sha1::{Digest, Sha1};
 use std::convert::Infallible;
+use std::fmt::Write as _;
 use std::future::Future;
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
+use std::time::Duration;
 use tokio::net::TcpListener;
 
+/// Where requests go when `ANTHROPIC_BASE_URL` does not say otherwise.
 pub const ANTHROPIC_BASE_URL: &str = "https://api.anthropic.com";
 const MAX_CONVERSATIONS: usize = 50;
 const HOP_BY_HOP: [&str; 4] = ["content-length", "transfer-encoding", "connection", "keep-alive"];
@@ -119,12 +123,11 @@ pub fn apply_tier(body: &mut Value, tier_name: &str, model: Option<&JsStr>, env:
         o.remove("thinking");
         let edits = o.get("context_management").map(|c| c.get("edits").clone());
         if let Some(Value::Array(edits)) = edits {
-            let thinking = Regex::new("(?i-u)thinking").unwrap();
             let kept: Vec<Value> = edits
                 .into_iter()
                 .filter(|e| {
                     let t = e.get("type").or(&Value::from("")).to_js_string();
-                    !thinking.is_match(t.as_bytes())
+                    !THINKING_EDIT.is_match(t.as_bytes())
                 })
                 .collect();
             let empty = kept.is_empty();
@@ -156,6 +159,9 @@ pub fn apply_tier(body: &mut Value, tier_name: &str, model: Option<&JsStr>, env:
         }
     }
 }
+
+/// Context-management edits that only a thinking tier accepts (`/thinking/i` in Node).
+static THINKING_EDIT: LazyLock<Regex> = LazyLock::new(|| Regex::new("(?i-u)thinking").unwrap());
 
 static VERSION_RES: LazyLock<Vec<(&'static str, Regex)>> = LazyLock::new(|| {
     TIERS
@@ -335,8 +341,11 @@ fn key_for(session: &Value, text: &JsStr) -> JsStr {
     input.push_str("|");
     input.push_js(text);
     let digest = Sha1::digest(input.to_string_lossy().as_bytes());
-    let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
-    hex[..12].into()
+    let mut hex = String::with_capacity(12);
+    for b in &digest[..6] {
+        let _ = write!(hex, "{b:02x}");
+    }
+    hex.into()
 }
 
 /// The first 12 hex digits of SHA-1 over `<session>|<first message text>` (`conversationKey`).
@@ -357,7 +366,7 @@ pub fn agent_label(body: &Value, max: usize) -> Result<JsStr, String> {
     }
 }
 
-/// A `Map` key with SameValueZero equality.
+/// A `Map` key with `SameValueZero` equality.
 #[derive(Debug, Clone, PartialEq)]
 enum MapKey {
     Str(JsStr),
@@ -394,6 +403,7 @@ pub struct Mains {
 }
 
 impl Mains {
+    /// An empty map.
     pub fn new() -> Self {
         Self::default()
     }
@@ -411,10 +421,12 @@ impl Mains {
         self.entries.iter().map(|(_, s, k)| (s, k))
     }
 
+    /// How many sessions are recorded.
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
+    /// Whether no session is recorded.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
@@ -454,14 +466,17 @@ pub fn agent_of(body: &Value, mains: &mut Mains) -> Result<Agent, String> {
 
 /// The router a proxy asks; tests inject their own.
 pub type RouteFuture = Pin<Box<dyn Future<Output = Result<Option<Value>, String>> + Send>>;
+/// A router: given a turn, returns Jev's answer or None.
 pub type RouteFn = Arc<dyn Fn(RouteArgs) -> RouteFuture + Send + Sync>;
 
 /// Options for [`start_proxy`].
 #[derive(Clone, Default)]
 pub struct ProxyOptions {
+    /// Upstream base URL; None for [`ANTHROPIC_BASE_URL`].
     pub upstream_url: Option<String>,
     /// None means the real router (and the prewarm).
     pub route: Option<RouteFn>,
+    /// Where to write the calibration file; None for the status directory's.
     pub calibration_file: Option<PathBuf>,
 }
 
@@ -513,6 +528,7 @@ struct Ctx {
 
 /// A running proxy.
 pub struct ProxyHandle {
+    /// The loopback port the proxy listens on.
     pub port: u16,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
 }
@@ -552,11 +568,36 @@ pub async fn start_proxy(opts: ProxyOptions) -> std::io::Result<ProxyHandle> {
     let port = listener.local_addr()?.port();
     let (stop_tx, mut stop_rx) = tokio::sync::oneshot::channel::<()>();
     tokio::spawn(async move {
+        let mut backoff = Duration::ZERO;
         loop {
             tokio::select! {
                 _ = &mut stop_rx => break,
                 accepted = listener.accept() => {
-                    let Ok((stream, _)) = accepted else { continue };
+                    let stream = match accepted {
+                        Ok((stream, _)) => stream,
+                        // The peer went away while queued; the next client is unaffected.
+                        Err(e) if matches!(
+                            e.kind(),
+                            ErrorKind::ConnectionAborted | ErrorKind::ConnectionReset | ErrorKind::ConnectionRefused
+                        ) => continue,
+                        Err(e) => {
+                            // EMFILE, ENFILE and the like: the listener stays readable and accept
+                            // would fail again at once, so back off (5 ms doubling to 1 s) as Go's
+                            // net/http and hyper-util do, instead of spinning a core.
+                            backoff = if backoff.is_zero() {
+                                Duration::from_millis(5)
+                            } else {
+                                (backoff * 2).min(Duration::from_secs(1))
+                            };
+                            debug(|| format!("proxy: accept error {e}; retrying in {backoff:?}"));
+                            tokio::select! {
+                                _ = &mut stop_rx => break,
+                                () = tokio::time::sleep(backoff) => {}
+                            }
+                            continue;
+                        }
+                    };
+                    backoff = Duration::ZERO;
                     let _ = stream.set_nodelay(true);
                     let ctx = ctx.clone();
                     tokio::spawn(async move {
@@ -670,6 +711,13 @@ async fn handle(req: Request<Incoming>, ctx: Arc<Ctx>) -> Result<Response<ProxyB
     Ok(forward(&ctx, &parts, &target, out).await)
 }
 
+/// Runs file I/O for the status directory on Tokio's blocking pool, so a slow disk or the status
+/// lock never holds up a runtime worker (and with it other connections and streams). Awaiting it
+/// keeps the write ordered before the request is forwarded, as Node's synchronous writes are.
+async fn blocking<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
+    tokio::task::spawn_blocking(work).await.map_err(|e| e.to_string())
+}
+
 /// Body processing (7.3) with the error path of 7.2 step 2. None means: forward the original.
 async fn process(ctx: &Ctx, raw: &[u8]) -> Option<Vec<u8>> {
     let mut body: Option<Value> = None;
@@ -706,7 +754,10 @@ async fn process_inner(
     let parsed = jsjson::parse_bytes(raw)?;
     *body_slot = Some(parsed);
     let body = body_slot.as_mut().unwrap();
-    dump_body(body, envx::get("JEV_DUMP").as_deref());
+    if let Some(setting) = envx::get("JEV_DUMP").filter(|s| !s.is_empty()) {
+        let copy = body.clone();
+        blocking(move || dump_body(&copy, Some(&setting))).await?;
+    }
     if matches!(body, Value::Null) {
         return Err("Cannot read properties of null (reading 'tools')".into());
     }
@@ -738,7 +789,9 @@ async fn process_inner(
             let role = if agent.main { "main" } else { "sub" };
             debug(|| format!("{} passthrough {role} {model}", agent.key));
             if new_turn_prompt(body)?.is_some() {
-                mark_manual(&session_of(body), body.get("model"), Some(&agent));
+                let session = session_of(body);
+                let model = body.get("model").clone();
+                blocking(move || mark_manual(&session, &model, Some(&agent))).await?;
             }
         }
         return Ok(jsjson::to_bytes(body));
@@ -865,7 +918,7 @@ async fn process_inner(
         decision.insert("at", Value::Number(now_ms()));
         let session = session_of(body);
         let id = if session.truthy() { session } else { Value::String(key.clone()) };
-        write_decision(&id, &decision, Some(&agent))?;
+        blocking(move || write_decision(&id, &decision, Some(&agent))).await??;
     }
     Ok(jsjson::to_bytes(body))
 }
@@ -932,7 +985,7 @@ async fn forward(ctx: &Ctx, parts: &hyper::http::request::Parts, target: &str, o
                 return Response::builder().status(status).body(ProxyBody::Stream(body)).unwrap();
             }
         };
-        read_catalog(ctx, &data);
+        read_catalog(ctx, &data).await;
         let mut res = Response::builder().status(status);
         for (name, values) in node_headers(&up_parts.headers) {
             if name.as_str() == "content-length" {
@@ -959,7 +1012,7 @@ async fn forward(ctx: &Ctx, parts: &hyper::http::request::Parts, target: &str, o
         let mut seen = !debugging;
         loop {
             tokio::select! {
-                _ = tx.closed() => break,
+                () = tx.closed() => break,
                 frame = up_body.frame() => match frame {
                     None => break,
                     Some(Ok(frame)) => {
@@ -989,8 +1042,8 @@ async fn forward(ctx: &Ctx, parts: &hyper::http::request::Parts, target: &str, o
 }
 
 /// `/v1/models`: fills the catalog and writes the calibration file (7.2 step 5).
-fn read_catalog(ctx: &Ctx, data: &[u8]) {
-    let result = (|| -> Result<(), String> {
+async fn read_catalog(ctx: &Ctx, data: &[u8]) {
+    let result = (|| -> Result<(Vec<JsStr>, Vec<JsStr>), String> {
         let parsed = jsjson::parse_bytes(data)?;
         if parsed.is_nullish() {
             return Err("Cannot read properties of null (reading 'data')".into());
@@ -1012,15 +1065,15 @@ fn read_catalog(ctx: &Ctx, data: &[u8]) {
         };
         let newer = newer_than_calibrated(&catalog)?;
         let models: Vec<JsStr> = newest_per_tier(&claude_models(&catalog)?).into_iter().map(|m| m.id).collect();
-        write_calibration(&newer, &models, &ctx.calibration_file);
-        Ok(())
+        Ok((newer, models))
     })();
-    if let Err(e) = result {
-        debug(|| format!("could not read Claude model catalog: {e}"));
+    match result {
+        Ok((newer, models)) => {
+            let file = ctx.calibration_file.clone();
+            if let Err(e) = blocking(move || write_calibration(&newer, &models, &file)).await {
+                debug(|| format!("could not write the calibration file: {e}"));
+            }
+        }
+        Err(e) => debug(|| format!("could not read Claude model catalog: {e}")),
     }
-}
-
-/// For callers that need the list of tier names.
-pub fn tier_names() -> [&'static str; 4] {
-    config::TIER_NAMES
 }

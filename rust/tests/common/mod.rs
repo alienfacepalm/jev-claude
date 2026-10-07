@@ -16,8 +16,72 @@ pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf()
 }
 
-/// A fresh, empty directory under the system temp directory.
-pub fn temp_dir(prefix: &str) -> PathBuf {
+/// A fresh, empty directory under the system temp directory, removed with everything in it when
+/// the guard drops. Bind it (`let dir = temp_dir(..);`) for as long as the directory is used.
+pub struct TempDir(PathBuf);
+
+impl TempDir {
+    /// The directory's path.
+    pub fn path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl std::ops::Deref for TempDir {
+    type Target = Path;
+    fn deref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl AsRef<Path> for TempDir {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl AsRef<std::ffi::OsStr> for TempDir {
+    fn as_ref(&self) -> &std::ffi::OsStr {
+        self.0.as_os_str()
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// A path inside a [`TempDir`] that keeps the directory alive while the path is in use.
+pub struct TempFile {
+    _dir: TempDir,
+    path: PathBuf,
+}
+
+impl TempFile {
+    /// `name` inside a fresh temporary directory named after `prefix`.
+    pub fn new(prefix: &str, name: &str) -> TempFile {
+        let dir = temp_dir(prefix);
+        let path = dir.join(name);
+        TempFile { _dir: dir, path }
+    }
+}
+
+impl std::ops::Deref for TempFile {
+    type Target = Path;
+    fn deref(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl AsRef<Path> for TempFile {
+    fn as_ref(&self) -> &Path {
+        &self.path
+    }
+}
+
+/// Creates a [`TempDir`] named `<prefix><pid>-<nanos>-<seq>`.
+pub fn temp_dir(prefix: &str) -> TempDir {
     let n = SEQ.fetch_add(1, Ordering::SeqCst);
     let dir = std::env::temp_dir().join(format!(
         "{prefix}{}-{}-{n}",
@@ -25,12 +89,19 @@ pub fn temp_dir(prefix: &str) -> PathBuf {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     ));
     std::fs::create_dir_all(&dir).unwrap();
-    dir
+    TempDir(dir)
 }
 
-/// Points this test binary's status directory at a throwaway one, once.
+/// Points this test binary's status directory at a throwaway one, once. The directory has a fixed
+/// name per test binary (the guard of a `static` never drops), emptied when the binary starts, so
+/// repeated runs reuse it instead of leaving a new one behind each time.
 pub fn isolate_status() -> &'static Path {
-    let dir = STATUS.get_or_init(|| temp_dir("jev-status-test-"));
+    let dir = STATUS.get_or_init(|| {
+        let dir = std::env::temp_dir().join(format!("jev-status-test-rust-{}", env!("CARGO_CRATE_NAME")));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    });
     jev_router::status::set_status_dir(dir.clone())
 }
 
@@ -136,6 +207,8 @@ pub fn diff(expected: &Value, actual: &Value, path: &str) -> Option<String> {
     let mismatch = || Some(format!("{path}: expected {expected:?}, got {actual:?}"));
     match (expected, actual) {
         (Value::Number(a), Value::Number(b)) => {
+            // Golden values are exact: the same bits, NaN equal to NaN, and -0 apart from 0.
+            #[allow(clippy::float_cmp)]
             let same = (a.is_nan() && b.is_nan()) || (a == b && a.is_sign_negative() == b.is_sign_negative());
             if same { None } else { mismatch() }
         }
