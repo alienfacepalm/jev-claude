@@ -1,10 +1,25 @@
 import { TIER_NAMES, THRESHOLDS, OVERRIDE_PATTERNS, rankOf } from "./config.mjs";
 
 /**
+ * An instruction verb a negation sits directly in front of: "do not use", "don't switch to",
+ * "never use", "avoid use". Removing the verb leaves the tier name with nothing to follow, so the
+ * override patterns cannot match it: "do not use fable" no longer pins Fable, and "don't use
+ * haiku, use opus" is left as "use opus".
+ */
+const NEGATED_VERB =
+  /(?:\bnot|\bcannot|n['’]t|\bnever|\bno|\bavoid|\bwithout|\bdont)\s+(?:(?:ever|really|actually|just|simply)\s+)?(?:use|switch to|switch over to|route to)/gi;
+
+/**
+ * A sentence that ends in a question mark: from the previous . ! ? or line break up to the mark.
+ * "why does the planner use opus?" is asking about a model, not asking for one.
+ */
+const QUESTION = /[^.!?\n]*\?/g;
+
+/**
  * The part of a prompt the user wrote themselves. Text carried into it - a sub-agent's report
  * delivered as a message, injected reminders, code, quotations - routinely names a tier without
  * asking for one: a review report quoting `"use strong" -> opus` forced Opus on the turn that
- * delivered it.
+ * delivered it. Negated instructions and questions are dropped too, for the same reason.
  */
 const ownWords = (prompt) =>
   String(prompt ?? "")
@@ -12,7 +27,9 @@ const ownWords = (prompt) =>
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, " ")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`[^`\n]*`/g, " ")
-    .replace(/"[^"\n]*"/g, " ");
+    .replace(/"[^"\n]*"/g, " ")
+    .replace(NEGATED_VERB, " ")
+    .replace(QUESTION, " ");
 
 /** The tier the user named explicitly in the prompt, or null. */
 export function detectOverride(prompt) {

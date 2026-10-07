@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from typing import Final, TypedDict
 
 from .config import OVERRIDE_PATTERNS, THRESHOLDS, TIER_NAMES, rank_of
-from .jsstr import UNDEFINED, JsValue, coalesce, coalesce_js, to_number, to_string
+from .jsstr import JSWS, UNDEFINED, JsValue, coalesce, coalesce_js, to_number, to_string
 
 
 class Decision(TypedDict):
@@ -18,12 +18,23 @@ class Decision(TypedDict):
     changed: bool
 
 
+_RIGHT_QUOTE: Final = chr(0x2019)  # U+2019, the typographic apostrophe
+
 _OWN_WORDS: Final = [
     re.compile(r"<agent-message.*?</agent-message>", re.DOTALL),
     re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL),
     re.compile(r"```.*?```", re.DOTALL),
     re.compile(r"`[^`\n]*`"),
     re.compile(r'"[^"\n]*"'),
+    # SPEC 7.6: the negated verb ("do not use fable" leaves a tier with no verb), then the question
+    # (a sentence ending in `?` asks about a model rather than for one). `\s` is JSWS (SPEC 3.1),
+    # `\b` and case folding are ASCII-only, as in the override patterns.
+    re.compile(
+        rf"(?:\bnot|\bcannot|n['{_RIGHT_QUOTE}]t|\bnever|\bno|\bavoid|\bwithout|\bdont){JSWS}+"
+        rf"(?:(?:ever|really|actually|just|simply){JSWS}+)?(?:use|switch to|switch over to|route to)",
+        re.ASCII | re.IGNORECASE,
+    ),
+    re.compile(r"[^.!?\n]*\?"),
 ]
 
 

@@ -85,6 +85,38 @@ class Policy(unittest.TestCase):
             with self.subTest(prompt=prompt):
                 self.assertIsNone(detect_override(prompt))
 
+    def test_a_tier_named_in_a_negated_instruction_is_not_a_request_for_it(self) -> None:
+        """a tier named in a negated instruction is not a request for it"""
+        for prompt in [
+            "do not use fable",
+            "never use fable for this",
+            "please don't switch to fable",
+            "we cannot use opus on this account",
+            "Don't ever use Opus here",
+            "do NOT route to sonnet",
+        ]:
+            with self.subTest(prompt=prompt):
+                self.assertIsNone(detect_override(prompt))
+
+    def test_a_negated_tier_does_not_hide_a_real_instruction_beside_it(self) -> None:
+        """a negated tier does not hide a real instruction beside it"""
+        self.assertEqual(detect_override("don't use haiku, use opus"), "opus")
+        self.assertEqual(detect_override("do not use fable. use sonnet for the tests"), "sonnet")
+        self.assertEqual(detect_override("never use haiku for this but use opus"), "opus")
+
+    def test_a_tier_named_in_a_question_is_asking_about_it_not_asking_for_it(self) -> None:
+        """a tier named in a question is asking about it, not asking for it"""
+        self.assertIsNone(detect_override("why does the planner use opus?"))
+        self.assertIsNone(detect_override("should we switch to haiku for the lint step?"))
+        self.assertEqual(detect_override("Use opus for the migration. Is that too slow?"), "opus")
+        self.assertEqual(detect_override("what does the router do when I say\nuse opus"), "opus")
+
+    def test_a_negated_or_questioned_tier_lets_jev_decide(self) -> None:
+        """a negated or questioned tier lets Jev decide"""
+        out = run(prompt="do not use fable", current="sonnet", jev=sure("opus"))
+        self.assertEqual(out["tier"], "opus")
+        self.assertEqual(out["reason"], "jev")
+
     def test_keeps_the_current_model_when_jev_is_unreachable(self) -> None:
         """keeps the current model when Jev is unreachable"""
         out = run(jev=None)

@@ -434,6 +434,160 @@
     "expected": "sonnet"
   },
   {
+    "name": "negated: do not use",
+    "input": {
+      "prompt": "do not use fable"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: never use",
+    "input": {
+      "prompt": "never use fable for this"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: don't switch to",
+    "input": {
+      "prompt": "please don't switch to fable"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: curly apostrophe",
+    "input": {
+      "prompt": "please don’t switch to fable"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: dont",
+    "input": {
+      "prompt": "dont use haiku"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: cannot use",
+    "input": {
+      "prompt": "we cannot use opus on this account"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: upper case",
+    "input": {
+      "prompt": "do NOT route to sonnet"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: adverb between",
+    "input": {
+      "prompt": "Don't ever use Opus here"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated: generic name",
+    "input": {
+      "prompt": "do not use the strong model"
+    },
+    "expected": null
+  },
+  {
+    "name": "negated tier beside a real one",
+    "input": {
+      "prompt": "don't use haiku, use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "negated, then a sentence that asks",
+    "input": {
+      "prompt": "do not use fable. use sonnet for the tests"
+    },
+    "expected": "sonnet"
+  },
+  {
+    "name": "negated twice, last one real",
+    "input": {
+      "prompt": "never use haiku for this but use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "not a negation: nobody",
+    "input": {
+      "prompt": "nobody use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "not a negation: know",
+    "input": {
+      "prompt": "know use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "not a negation: another word between",
+    "input": {
+      "prompt": "do not just now use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "question",
+    "input": {
+      "prompt": "why does the planner use opus?"
+    },
+    "expected": null
+  },
+  {
+    "name": "question: switch",
+    "input": {
+      "prompt": "should we switch to haiku for the lint step?"
+    },
+    "expected": null
+  },
+  {
+    "name": "question after an instruction",
+    "input": {
+      "prompt": "Use opus for the migration. Is that too slow?"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "question on an earlier line",
+    "input": {
+      "prompt": "what does the router do when I say\nuse opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "question mark inside a url",
+    "input": {
+      "prompt": "see https://example.com/a?b=1 then use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "question mark in a quote",
+    "input": {
+      "prompt": "he asked \"why?\" so use opus"
+    },
+    "expected": "opus"
+  },
+  {
+    "name": "question dot in a version",
+    "input": {
+      "prompt": "use opus for the v1.2 migration?"
+    },
+    "expected": "opus"
+  },
+  {
     "name": "empty",
     "input": {
       "prompt": ""
