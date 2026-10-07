@@ -32,8 +32,8 @@ func Resolve() string {
 	if err != nil {
 		return ""
 	}
-	if real, err := filepath.EvalSymlinks(exe); err == nil {
-		exe = real
+	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
+		exe = resolved
 	}
 	return Find(filepath.Dir(exe))
 }

@@ -48,13 +48,13 @@ func statusTierOf(model any) any {
 	return m[1]
 }
 
-func clip(v any, max int) string {
+func clip(v any, limit int) string {
 	s, ok := v.(string)
 	if !ok {
 		return jsjson.JSString(v)
 	}
-	if jsstr.Len16(s) > max {
-		return jsstr.Slice16(s, 0, max-1) + ellipsis
+	if jsstr.Len16(s) > limit {
+		return jsstr.Slice16(s, 0, limit-1) + ellipsis
 	}
 	return s
 }
@@ -86,12 +86,12 @@ func shortOr(model any, fallbacks ...any) string {
 	return jsjson.JSString(v)
 }
 
-// Render builds the line (with its newline) for the given stdin bytes, reading the status
-// directory, the real clock and git.
 // ErrNullInput is what Node throws for stdin that is the JSON literal null: its first read,
 // `input.session_id`, fails and the process exits 1.
 var ErrNullInput = errors.New("TypeError: Cannot read properties of null (reading 'session_id')")
 
+// Render builds the line (with its newline) for the given stdin bytes, reading the status
+// directory, the real clock and git.
 func Render(stdin []byte, env config.Getenv) (string, error) {
 	set := icons.Icons(env, runtime.GOOS)
 	ic := func(mark string) string { return bold + mark + reset }
@@ -135,7 +135,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 		return ic(set.Model) + " " + colorOf(jsjson.Prop(entry, "tier")) + name + reset + p + level + why
 	}
 
-	var mainEntry any = jsjson.Undefined
+	mainEntry := jsjson.Undefined
 	if view.Main != nil {
 		mainEntry = view.Main
 	}
@@ -184,7 +184,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 
 	loc := worktree.LocationInfo(input, worktree.GitBranch)
 	where := ""
-	var locWorktree any = jsjson.Undefined
+	locWorktree := jsjson.Undefined
 	if loc != nil {
 		locWorktree = loc.Worktree
 		if !jsjson.IsNullish(loc.Branch) {
@@ -202,5 +202,10 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 	if dir != "" && dir != locWorktree {
 		dirPart = " " + dim + dot + reset + " " + ic(set.Dir) + " " + dir
 	}
-	return routed + agents + dirPart + where + " " + dim + dot + reset + " " + ic(set.Context) + " " + jsjson.NumberToString(pct) + "%" + notice + "\n", nil
+	// The whole path last, dimmed (SPEC 12).
+	fullPath := ""
+	if dirPath != "" {
+		fullPath = " " + dim + dot + " " + dirPath + reset
+	}
+	return routed + agents + dirPart + where + " " + dim + dot + reset + " " + ic(set.Context) + " " + jsjson.NumberToString(pct) + "%" + notice + fullPath + "\n", nil
 }

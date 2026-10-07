@@ -15,7 +15,7 @@ import (
 type Getenv = func(string) (string, bool)
 
 // ProcessEnv is the live process environment.
-var ProcessEnv Getenv = os.LookupEnv
+var ProcessEnv = os.LookupEnv
 
 // MapEnv is an environment held in a map, for tests and callers that pass one.
 func MapEnv(m map[string]string) Getenv {
@@ -32,7 +32,7 @@ type Tier struct {
 	Floor            string // "" when the tier has no effort floor
 }
 
-// Tiers, cheapest first.
+// Tiers lists every model tier, cheapest first.
 var Tiers = []Tier{
 	{Name: "haiku", ID: "claude-haiku-4-5-20251001", Family: "haiku"},
 	{Name: "sonnet", ID: "claude-sonnet-5-5", Family: "sonnet", Thinking: true, Effort: true, Floor: "high"},
@@ -315,7 +315,7 @@ var overrideNames = map[string][2]string{
 	"fable":  {"fable", "long"},
 }
 
-// OverridePatterns, in tier order.
+// OverridePatterns holds one explicit-request pattern per tier, in tier order.
 var OverridePatterns = func() []OverridePattern {
 	ws := jsstr.JSWSClass
 	var out []OverridePattern
@@ -344,7 +344,7 @@ func (p OverridePattern) Test(text string) bool {
 		}
 		start, end := pos+loc[0], pos+loc[1]
 		boundary := start == 0 || !isWordByte(lower[start-1])
-		ahead := end == len(lower) || !(lower[end] == '-' || isWordByte(lower[end]))
+		ahead := end == len(lower) || (lower[end] != '-' && !isWordByte(lower[end]))
 		if boundary && ahead {
 			return true
 		}

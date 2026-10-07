@@ -11,16 +11,16 @@ import (
 )
 
 func main() {
-	var id any = jsjson.Undefined
+	id := jsjson.Undefined
 	if len(os.Args) > 1 {
 		id = os.Args[1]
 	}
 	st := status.ReadStatus(id)
-	main := status.MainDecision(st)
-	shown := main
-	if jsjson.Truthy(main) && jsjson.Truthy(jsjson.Prop(st, "manual")) {
+	decision := status.MainDecision(st)
+	shown := decision
+	if jsjson.Truthy(decision) && jsjson.Truthy(jsjson.Prop(st, "manual")) {
 		o := jsjson.NewObject()
-		jsjson.Spread(o, main)
+		jsjson.Spread(o, decision)
 		o.Set("manual", true)
 		shown = o
 	}

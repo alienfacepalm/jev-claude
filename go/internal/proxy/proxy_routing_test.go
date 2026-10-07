@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 
 // continuation is the same conversation one step later: Claude ran a tool and sends its result.
 func continuation(t *testing.T, body *jsjson.Object) *jsjson.Object {
+	t.Helper()
 	messages := body.Value("messages").([]any)
 	next := []any{messages[0],
 		parse(t, `{"role":"assistant","content":[{"type":"tool_use","id":"toolu_1","name":"Bash","input":{"command":"ls"}}]}`),
@@ -39,15 +39,16 @@ type routingHarness struct {
 
 // newRoutingHarness puts a proxy in front of an upstream that, like the API, rejects the sentinel.
 func newRoutingHarness(t *testing.T, route Route) *routingHarness {
+	t.Helper()
 	h := &routingHarness{}
 	h.rec, h.url = recordingUpstream(t, func(w http.ResponseWriter, r *http.Request, body any) {
 		w.Header().Set("content-type", "application/json")
 		if jsjson.Prop(body, "model") == "jev-router" {
-			w.WriteHeader(400)
-			io.WriteString(w, `{"type":"error","error":{"type":"invalid_request_error","message":"model: jev-router"}}`)
+			w.WriteHeader(http.StatusBadRequest)
+			writeBody(w, `{"type":"error","error":{"type":"invalid_request_error","message":"model: jev-router"}}`)
 			return
 		}
-		io.WriteString(w, `{"id":"msg_1","type":"message"}`)
+		writeBody(w, `{"id":"msg_1","type":"message"}`)
 	})
 	h.base = startProxy(t, Options{UpstreamURL: h.url, Route: func(a router.Args) (*jsjson.Object, error) {
 		h.mu.Lock()
@@ -64,12 +65,15 @@ func (h *routingHarness) post(t *testing.T, body any) int {
 }
 
 func TestProxyRouting(t *testing.T) {
-	realRequest := func() *jsjson.Object { return clone(t, fixture(t).Value("body")).(*jsjson.Object) }
+	realRequest := func(t *testing.T) *jsjson.Object {
+		t.Helper()
+		return clone(t, fixture(t).Value("body")).(*jsjson.Object)
+	}
 	session := SessionOf(fixture(t).Value("body"))
 
 	t.Run("a real print-mode request is routed on the user's prompt", func(t *testing.T) {
 		h := newRoutingHarness(t, answer("claude-haiku-4-5-20251001", 0.92))
-		if code := h.post(t, realRequest()); code != 200 {
+		if code := h.post(t, realRequest(t)); code != 200 {
 			t.Fatalf("status %d", code)
 		}
 		if strings.Join(h.prompts, "|") != "rename the variable x to count in utils.js" {
@@ -93,7 +97,7 @@ func TestProxyRouting(t *testing.T) {
 		// A real misconfiguration: the dump directory does not exist, so the dump cannot be written.
 		t.Setenv("JEV_DUMP", filepath.Join(os.TempDir(), "jev-no-such-dir", "nested", "dump"))
 		h := newRoutingHarness(t, answer("claude-haiku-4-5-20251001", 0.92))
-		if code := h.post(t, realRequest()); code != 200 {
+		if code := h.post(t, realRequest(t)); code != 200 {
 			t.Fatalf("the API would reject the sentinel with a 400, got %d", code)
 		}
 		if modelOf(h.rec.all()[0]) != "claude-haiku-4-5-20251001" {
@@ -103,7 +107,7 @@ func TestProxyRouting(t *testing.T) {
 
 	t.Run("tool-call continuations keep the tier the turn was routed to", func(t *testing.T) {
 		h := newRoutingHarness(t, answer("claude-sonnet-5-5", 0.92))
-		opening := realRequest()
+		opening := realRequest(t)
 		h.post(t, opening)
 		h.post(t, continuation(t, opening))
 		h.post(t, continuation(t, opening))
@@ -125,12 +129,12 @@ func TestProxyRouting(t *testing.T) {
 			}
 			return jsjson.Obj("choice", choice, "confidence", 0.9, "ms", 1.0), nil
 		})
-		main := realRequest()
+		main := realRequest(t)
 		h.post(t, main)
 		// Sub-agents share the session id and differ by their opening task. The main thread waits
 		// on their results, so it is the oldest, least recently used conversation when it resumes.
 		for i := 0; i < 55; i++ {
-			sub := realRequest()
+			sub := realRequest(t)
 			content := jsjson.Prop(sub.Value("messages").([]any)[0], "content").([]any)
 			content[len(content)-1].(*jsjson.Object).Set("text", "Search the codebase for callers of handler "+jsjson.NumberToString(float64(i))+" and report them")
 			h.post(t, sub)

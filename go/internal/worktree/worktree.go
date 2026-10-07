@@ -22,6 +22,7 @@ func GitBranch(dir any) any {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "git", "branch", "--show-current")
 	cmd.Dir = d
+	cmd.WaitDelay = time.Second // bound Output even if a git child keeps the pipe open
 	out, err := cmd.Output()
 	if err != nil {
 		return nil

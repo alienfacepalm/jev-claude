@@ -233,11 +233,12 @@ func (p *parser) number() (any, error) {
 	if p.i >= len(p.s) {
 		return nil, p.fail("no number after minus sign")
 	}
-	if p.s[p.i] == '0' {
+	switch c := p.s[p.i]; {
+	case c == '0':
 		p.i++
-	} else if p.s[p.i] >= '1' && p.s[p.i] <= '9' {
+	case c >= '1' && c <= '9':
 		p.i = digits(p.s, p.i)
-	} else {
+	default:
 		return nil, p.fail("no number after minus sign")
 	}
 	if p.i < len(p.s) && p.s[p.i] == '.' {

@@ -79,8 +79,8 @@ func TestWorktree(t *testing.T) {
 	})
 	t.Run("gitBranch: a branch, a detached HEAD, and no checkout", func(t *testing.T) {
 		dir := t.TempDir()
-		if real, err := filepath.EvalSymlinks(dir); err == nil {
-			dir = real
+		if resolved, err := filepath.EvalSymlinks(dir); err == nil {
+			dir = resolved
 		}
 		git := func(args ...string) {
 			cmd := exec.Command("git", append([]string{"-c", "user.name=t", "-c", "user.email=t@t"}, args...)...)

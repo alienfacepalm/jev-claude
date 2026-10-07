@@ -108,16 +108,7 @@ func ParseContent(input string) []Pair {
 
 		if content[0] == '\'' || content[0] == '"' || content[0] == '`' {
 			closing := strings.IndexByte(content[1:], content[0])
-			if closing < 0 {
-				// No closing quote: take the rest of the line (quote included).
-				if newline := strings.IndexByte(content, '\n'); newline >= 0 {
-					store[key] = content[:newline]
-					content = content[newline+1:]
-				} else {
-					store[key] = content
-					break
-				}
-			} else {
+			if closing >= 0 {
 				closing++
 				store[key] = content[1:closing]
 				if newline := strings.IndexByte(content[closing+1:], '\n'); newline >= 0 {
@@ -127,6 +118,14 @@ func ParseContent(input string) []Pair {
 				}
 				continue
 			}
+			// No closing quote: take the rest of the line (quote included).
+			newline := strings.IndexByte(content, '\n')
+			if newline < 0 {
+				store[key] = content
+				break
+			}
+			store[key] = content[:newline]
+			content = content[newline+1:]
 		} else {
 			if newline := strings.IndexByte(content, '\n'); newline >= 0 {
 				value := content[:newline]

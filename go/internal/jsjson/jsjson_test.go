@@ -49,8 +49,16 @@ func TestParseBytesReplacesInvalidUTF8LikeBufferToString(t *testing.T) {
 	if want := "a�b�c���d"; v != want {
 		t.Fatalf("got %q want %q", v, want)
 	}
-	if Stringify(-0.0) != "0" || Stringify(math.Copysign(0, -1)) != "0" {
-		t.Fatal("negative zero is written as 0")
+}
+
+func TestNegativeZeroStringifiesAsZeroAndParsesWithSign(t *testing.T) {
+	// The Go constant -0.0 is +0; a negative zero has to be made at run time.
+	negZero := math.Copysign(0, -1)
+	if got := Stringify(negZero); got != "0" {
+		t.Fatalf("Stringify(-0) = %q, want \"0\"", got)
+	}
+	if got := Stringify(Obj("z", negZero)); got != `{"z":0}` {
+		t.Fatalf("Stringify({z: -0}) = %q", got)
 	}
 	if f := mustParse(t, "-0").(float64); !math.Signbit(f) {
 		t.Fatal("-0 parses to negative zero")

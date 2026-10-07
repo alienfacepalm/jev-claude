@@ -3,12 +3,14 @@ package update
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -79,7 +81,7 @@ func (f *fixture) release(version string, files map[string]string) {
 func (f *fixture) cloneTo(name string, shallow bool) string {
 	dir := filepath.Join(f.base, name)
 	if shallow {
-		// pathToFileURL: file:///C:/... on Windows, file:///tmp/... elsewhere.
+		// A file URL as Node's pathToFileURL makes one: file:///C:/... on Windows, file:///tmp/... elsewhere.
 		u := url.URL{Scheme: "file", Path: "/" + strings.TrimPrefix(filepath.ToSlash(f.origin), "/")}
 		sh(f.t, f.base, "clone", "--depth", "1", u.String(), dir)
 	} else {
@@ -98,7 +100,7 @@ func version(t *testing.T, dir string) any {
 }
 
 func notice(state any, current any) any {
-	s, ok := UpdateNotice(state, current)
+	s, ok := Notice(state, current)
 	if !ok {
 		return nil
 	}
@@ -333,4 +335,51 @@ func TestUpdate(t *testing.T) {
 			t.Fatal("valid JSON that is not a state object")
 		}
 	})
+}
+
+// A remote that accepts the connection and never answers is what a hung network looks like.
+// git starts git-remote-http, which inherits git's stderr; the timeout must still bound the
+// call (SPEC 14), as Node's execFile does by destroying the pipes before it kills git.
+func TestGitTimeoutBoundsAHungRemote(t *testing.T) {
+	// Made first so it is removed last: cleanups run in reverse, and the orphaned helper, whose
+	// working directory this is, exits only once the cleanup below closes its connection.
+	root := t.TempDir()
+	sh(t, root, "init", "-q")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var mu sync.Mutex
+	var held []net.Conn
+	t.Cleanup(func() {
+		ln.Close()
+		mu.Lock()
+		defer mu.Unlock()
+		for _, c := range held {
+			c.Close()
+		}
+	})
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			held = append(held, c)
+			mu.Unlock()
+		}
+	}()
+	start := time.Now()
+	_, err = git(root, 2*time.Second, "fetch", "--quiet", "http://"+ln.Addr().String()+"/x.git")
+	elapsed := time.Since(start)
+	if err == nil {
+		t.Fatal("a remote that never answers is a failure")
+	}
+	if !strings.HasPrefix(err.Error(), "Command failed: git -C ") {
+		t.Errorf("the reason keeps Node's prefix: %q", err)
+	}
+	if elapsed > 6*time.Second {
+		t.Errorf("git ran %v past a 2s timeout", elapsed)
+	}
 }

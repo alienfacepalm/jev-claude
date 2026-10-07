@@ -168,7 +168,7 @@ func main() {
 	stops := make(chan os.Signal, 1)
 	signal.Notify(stops, syscall.SIGTERM, syscall.SIGHUP)
 
-	cmd := launch.Command(launch.LaunchSpec(claude), args)
+	cmd := launch.Command(launch.SpecFor(claude), args)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	cmd.Env = childEnv
 	if err := cmd.Start(); err != nil {
@@ -179,10 +179,11 @@ func main() {
 	go func() {
 		sig := <-stops
 		// Windows cannot deliver a signal to another process; Node's child.kill terminates it too.
+		// An error means Claude Code has already exited; the wait below ends the launcher then.
 		if runtime.GOOS == "windows" {
-			cmd.Process.Kill()
+			_ = cmd.Process.Kill()
 		} else {
-			cmd.Process.Signal(sig)
+			_ = cmd.Process.Signal(sig)
 		}
 		time.Sleep(5 * time.Second)
 		exit(1)

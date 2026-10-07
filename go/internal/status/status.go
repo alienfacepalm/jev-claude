@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/alienfacepalm/jev-claude/go/internal/fsx"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsjson"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsstr"
 	"github.com/alienfacepalm/jev-claude/go/internal/osdirs"
@@ -70,7 +71,7 @@ func EnsureDir() error {
 	return os.Chmod(Dir, 0o700)
 }
 
-// WritePrivate writes text to file through a unique temporary file and a rename.
+// WritePrivate writes text to file through a unique temporary file and a rename (SPEC 3.11).
 func WritePrivate(file, text string) error {
 	if err := EnsureDir(); err != nil {
 		return err
@@ -79,8 +80,7 @@ func WritePrivate(file, text string) error {
 	if err := os.WriteFile(temp, []byte(text), 0o600); err != nil {
 		return err
 	}
-	if err := os.Rename(temp, file); err != nil {
-		os.Remove(temp)
+	if err := fsx.RenameOver(temp, file); err != nil {
 		return err
 	}
 	return os.Chmod(file, 0o600)
@@ -171,7 +171,7 @@ func WriteDecision(sessionID any, decision *jsjson.Object, agent *Agent) error {
 	if len(history) > 20 {
 		history = history[len(history)-20:]
 	}
-	var agents any = jsjson.Prop(previous, "agents")
+	agents := jsjson.Prop(previous, "agents")
 	if agent != nil {
 		agents = mergeAgent(agents, agent, jsjson.Obj(
 			"label", agent.Label,
@@ -198,7 +198,7 @@ func MarkManual(sessionID any, model any, agent *Agent) {
 	mu.Lock()
 	defer mu.Unlock()
 	previous := ReadStatus(sessionID)
-	var agents any = jsjson.Prop(previous, "agents")
+	agents := jsjson.Prop(previous, "agents")
 	if agent != nil {
 		agents = mergeAgent(agents, agent, jsjson.Obj(
 			"label", agent.Label, "main", agent.Main, "model", model, "manual", true, "at", NowMs(),

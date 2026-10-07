@@ -104,8 +104,8 @@ var (
 	cmd = regexp.MustCompile(`\.(cmd|bat)$`)
 )
 
-// LaunchSpec decides how to start file.
-func LaunchSpec(file string) Spec {
+// SpecFor decides how to start file (Node's launchSpec).
+func SpecFor(file string) Spec {
 	lower := jsstr.ASCIILower(file)
 	if ps1.MatchString(lower) {
 		return Spec{Command: "powershell.exe", Prefix: []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-File", file}}

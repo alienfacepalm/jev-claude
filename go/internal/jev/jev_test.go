@@ -44,7 +44,7 @@ func request() *jsjson.Object { return jsjson.Obj("state", "x", "questions", jsj
 
 func ok(w http.ResponseWriter) {
 	w.Header().Set("content-type", "application/json")
-	io.WriteString(w, `{"answers":{}}`)
+	_, _ = io.WriteString(w, `{"answers":{}}`) // a failed write fails the client under test
 }
 
 func TestSendsOnlyTheContractHeadersAndAppendsTheModel(t *testing.T) {
@@ -76,7 +76,7 @@ func TestRetriesOnceOnA503WithTheRetryCount(t *testing.T) {
 	calls, _ := fakeJev(t, func(n int, w http.ResponseWriter) {
 		if n == 1 {
 			w.Header().Set("retry-after-ms", "10")
-			w.WriteHeader(503)
+			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
 		ok(w)
@@ -91,7 +91,7 @@ func TestRetriesOnceOnA503WithTheRetryCount(t *testing.T) {
 }
 
 func TestDoesNotRetryAClientError(t *testing.T) {
-	calls, _ := fakeJev(t, func(n int, w http.ResponseWriter) { w.WriteHeader(400) })
+	calls, _ := fakeJev(t, func(n int, w http.ResponseWriter) { w.WriteHeader(http.StatusBadRequest) })
 	if _, err := SystemOne(context.Background(), request()); err == nil {
 		t.Fatal("a 400 is a failure")
 	}
@@ -101,7 +101,7 @@ func TestDoesNotRetryAClientError(t *testing.T) {
 }
 
 func TestGivesUpAfterOneRetry(t *testing.T) {
-	calls, _ := fakeJev(t, func(n int, w http.ResponseWriter) { w.WriteHeader(500) })
+	calls, _ := fakeJev(t, func(n int, w http.ResponseWriter) { w.WriteHeader(http.StatusInternalServerError) })
 	if _, err := SystemOne(context.Background(), request()); err == nil {
 		t.Fatal("500 twice is a failure")
 	}
