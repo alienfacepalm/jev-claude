@@ -1,5 +1,9 @@
 //! Port of node/test/worktree.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
@@ -13,8 +17,8 @@ fn never(_: &Value) -> Option<JsStr> {
     panic!("the branch should not have been looked up")
 }
 
-fn loc(branch: &str, worktree: Value) -> Option<Location> {
-    Some(Location { branch: s(branch), worktree })
+fn loc(branch: &str, worktree: Value) -> Location {
+    Location { branch: s(branch), worktree }
 }
 
 /// "outside a git checkout there is nothing to show"
@@ -30,7 +34,7 @@ fn outside_a_git_checkout_there_is_nothing_to_show() {
 fn the_main_working_tree_has_a_branch_and_no_worktree() {
     let input = json(r#"{"workspace":{"current_dir":"/repo"}}"#);
     let lookup = |dir: &Value| dir.is_str("/repo").then(|| JsStr::from("master"));
-    assert_eq!(location_info(&input, &lookup), loc("master", Value::Null));
+    assert_eq!(location_info(&input, &lookup), Some(loc("master", Value::Null)));
 }
 
 /// "a worktree session carries its own name and branch, with no git call"
@@ -39,7 +43,7 @@ fn a_worktree_session_carries_its_own_name_and_branch() {
     let input = json(
         r#"{"worktree":{"name":"my-feature","branch":"worktree-my-feature","path":"/r/.claude/worktrees/my-feature"}}"#,
     );
-    assert_eq!(location_info(&input, &never), loc("worktree-my-feature", s("my-feature")));
+    assert_eq!(location_info(&input, &never), Some(loc("worktree-my-feature", s("my-feature"))));
 }
 
 /// "a linked worktree has only a name, so the branch is read from git in the current directory"
@@ -51,7 +55,7 @@ fn a_linked_worktree_reads_its_branch_from_git() {
         asked.borrow_mut().push(dir.clone());
         Some(JsStr::from("feature/xyz"))
     };
-    assert_eq!(location_info(&input, &lookup), loc("feature/xyz", s("feature-xyz")));
+    assert_eq!(location_info(&input, &lookup), Some(loc("feature/xyz", s("feature-xyz"))));
     assert_eq!(asked.into_inner(), vec![s("/wt/feature-xyz")]);
 }
 
@@ -60,14 +64,14 @@ fn a_linked_worktree_reads_its_branch_from_git() {
 fn a_worktree_session_without_a_branch_falls_back_to_git() {
     let input = json(r#"{"worktree":{"name":"scratch","path":"/wt/scratch"}}"#);
     let lookup = |dir: &Value| dir.is_str("/wt/scratch").then(|| JsStr::from("main-2"));
-    assert_eq!(location_info(&input, &lookup), loc("main-2", s("scratch")));
+    assert_eq!(location_info(&input, &lookup), Some(loc("main-2", s("scratch"))));
 }
 
 /// "a detached HEAD in a worktree still names the worktree"
 #[test]
 fn a_detached_head_in_a_worktree_still_names_the_worktree() {
     let input = json(r#"{"workspace":{"current_dir":"/wt/x","git_worktree":"x"}}"#);
-    assert_eq!(location_info(&input, &|_| Some(JsStr::new())), loc("", s("x")));
+    assert_eq!(location_info(&input, &|_| Some(JsStr::new())), Some(loc("", s("x"))));
 }
 
 /// "gitBranch: a branch, a detached HEAD, and no checkout"
@@ -94,5 +98,4 @@ fn git_branch_a_branch_a_detached_head_and_no_checkout() {
     assert_eq!(git_branch(&dir_value), Some(JsStr::new()), "detached");
     assert_eq!(git_branch(&Value::Undefined), None);
     assert_eq!(git_branch(&s(&dir.join("missing").to_string_lossy())), None);
-    let _ = std::fs::remove_dir_all(&dir);
 }

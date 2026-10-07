@@ -47,6 +47,7 @@ pub fn settings_file() -> PathBuf {
     status_dir().join("settings.json")
 }
 
+/// `CALIBRATION_FILE`: what the last `/v1/models` answer said, for `/jev-calibrate`.
 pub fn calibration_file() -> PathBuf {
     status_dir().join("calibration.json")
 }
@@ -71,10 +72,7 @@ pub fn write_private(file: &Path, text: &[u8]) -> std::io::Result<()> {
     ensure_dir()?;
     let temp = temp_name(file);
     write_with_mode(&temp, text, FILE_MODE)?;
-    if let Err(e) = std::fs::rename(&temp, file) {
-        let _ = std::fs::remove_file(&temp);
-        return Err(e);
-    }
+    crate::fsx::rename_over(&temp, file)?;
     chmod(file, FILE_MODE)
 }
 
@@ -92,12 +90,16 @@ pub fn write_status(session_id: &Value, status: &Value) {
 /// An agent inside a session.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Agent {
+    /// The conversation key.
     pub key: JsStr,
+    /// The label the status line shows.
     pub label: JsStr,
+    /// Whether this is the session's main agent.
     pub main: bool,
 }
 
 impl Agent {
+    /// The agent as a JSON object: `{key, label, main}`.
     pub fn to_object(&self) -> Object {
         let mut o = Object::new();
         o.insert("key", Value::String(self.key.clone()));
@@ -127,7 +129,7 @@ pub fn iterate(v: &Value) -> Result<Vec<Value>, String> {
 
 /// Publishes a routed decision and keeps the recent history (`writeDecision`).
 pub fn write_decision(session_id: &Value, decision: &Object, agent: Option<&Agent>) -> Result<(), String> {
-    let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _guard = LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let previous = read_status(session_id);
     let entry = match agent {
         Some(a) => {
@@ -170,7 +172,7 @@ pub fn write_decision(session_id: &Value, decision: &Object, agent: Option<&Agen
 
 /// Records that an agent runs a model the user chose (`markManual`).
 pub fn mark_manual(session_id: &Value, model: &Value, agent: Option<&Agent>) {
-    let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _guard = LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let previous = read_status(session_id);
     let now = now_ms();
     let agents = match agent {
@@ -231,10 +233,13 @@ pub fn merge_agent(existing: &Value, agent: &Agent, entry: &Object) -> Object {
 
 /// The main agent's entry and the live sub-agents, newest first (`agentView`).
 pub struct AgentView {
+    /// The main agent's entry, or `null` when there is none.
     pub main: Value,
+    /// Sub-agents seen recently, newest first.
     pub subagents: Vec<Value>,
 }
 
+/// Splits a status's agents into the main one and fresh sub-agents (`agentView`).
 pub fn agent_view(status: &Value, fresh_ms: f64, now: f64) -> AgentView {
     let agents = status.get("agents").or(&Value::Undefined).spread_of();
     let entries: Vec<Value> = agents
@@ -271,7 +276,7 @@ pub fn main_decision(status: &Value) -> Value {
 
 /// Records the newest model per tier and which are newer than calibrated.
 pub fn write_calibration(newer: &[JsStr], models: &[JsStr], file: &Path) {
-    let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _guard = LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let list = |ids: &[JsStr]| Value::Array(ids.iter().cloned().map(Value::String).collect());
     let mut o = Object::new();
     o.insert("newer", list(newer));
@@ -283,11 +288,15 @@ pub fn write_calibration(newer: &[JsStr], models: &[JsStr], file: &Path) {
 /// What the last model list said.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Calibration {
+    /// Model ids newer than the calibrated ones.
     pub newer: Vec<Value>,
+    /// The newest model per tier.
     pub models: Vec<Value>,
+    /// When the file was written, in ms since the epoch.
     pub at: Option<f64>,
 }
 
+/// Reads the calibration file; an empty calibration when it is missing or damaged.
 pub fn read_calibration(file: &Path) -> Calibration {
     let empty = Calibration { newer: vec![], models: vec![], at: None };
     let Ok(bytes) = std::fs::read(file) else { return empty };
@@ -333,7 +342,7 @@ pub fn dump_body(body: &Value, setting: Option<&str>) -> Option<PathBuf> {
         let text = jsjson::stringify_pretty(body).map(JsStr::into_bytes).unwrap_or_default();
         write_with_mode(&file, &text, FILE_MODE)
     };
-    write().ok().map(|_| file)
+    write().ok().map(|()| file)
 }
 
 /// Deletes status files untouched for `max_age_ms`; returns how many.
@@ -342,7 +351,10 @@ pub fn prune_stale(max_age_ms: f64, now: f64) -> usize {
     let Ok(entries) = std::fs::read_dir(status_dir()) else { return 0 };
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().into_owned();
-        if !name.ends_with(".json") || name == "settings.json" {
+        // Node's `name.endsWith(".json")` is case-sensitive, and so is this.
+        #[allow(clippy::case_sensitive_file_extension_comparisons)]
+        let is_json = name.ends_with(".json");
+        if !is_json || name == "settings.json" {
             continue;
         }
         let path = entry.path();

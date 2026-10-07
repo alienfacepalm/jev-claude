@@ -1,14 +1,18 @@
 //! Port of node/test/settings.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
 use jev_router::jsjson::{self, Value};
 use jev_router::settings::{read_saved_model, restore_saved_model};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-fn file_with(settings: &str) -> PathBuf {
-    let file = temp_dir("jev-settings-").join("settings.json");
+fn file_with(settings: &str) -> TempFile {
+    let file = TempFile::new("jev-settings-", "settings.json");
     let pretty = jsjson::stringify_pretty(&json(settings)).unwrap();
     std::fs::write(&file, pretty.as_bytes()).unwrap();
     file
@@ -18,8 +22,8 @@ fn model_in(file: &Path) -> Value {
     json(&std::fs::read_to_string(file).unwrap()).get("model").clone()
 }
 
-fn memo_file() -> PathBuf {
-    temp_dir("jev-memo-").join("saved-model.json")
+fn memo_file() -> TempFile {
+    TempFile::new("jev-memo-", "saved-model.json")
 }
 
 /// "reads the saved model, ignoring a leftover sentinel"

@@ -27,7 +27,9 @@ pub fn git_branch(dir: &Value) -> Option<JsStr> {
 /// `{ branch, worktree }`; `branch` is None when unknown (Node's null).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Location {
+    /// The branch name, `null` when it could not be read.
     pub branch: Value,
+    /// The worktree name, or `null` outside a linked worktree.
     pub worktree: Value,
 }
 

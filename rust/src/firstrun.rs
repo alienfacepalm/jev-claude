@@ -11,10 +11,12 @@ use std::sync::LazyLock;
 /// `<home>/.jev-router/first-run.json`, fixed at start.
 pub static FIRST_RUN_FILE: LazyLock<PathBuf> = LazyLock::new(|| home_dir().join(".jev-router").join("first-run.json"));
 
+/// Whether the first-run offer was already made (the marker file exists).
 pub fn was_offered(file: &Path) -> bool {
     std::fs::read(file).is_ok()
 }
 
+/// Records that the offer was made, and whether it was accepted, in `file`.
 pub fn mark_offered(accepted: bool, file: &Path) {
     let _ = (|| -> std::io::Result<()> {
         if let Some(dir) = file.parent() {
@@ -59,7 +61,9 @@ pub fn shadows_skill(cwd: &Path, root: Option<&Path>) -> bool {
 /// The answer to a yes/no question.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Answer {
+    /// Yes, or an empty answer (the default).
     Yes,
+    /// No.
     No,
     /// End of input or an input error.
     None,

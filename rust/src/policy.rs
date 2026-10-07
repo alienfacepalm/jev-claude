@@ -34,6 +34,7 @@ pub fn detect_override(prompt: &Value) -> Option<&'static str> {
     OVERRIDE_PATTERNS.iter().find(|p| find_without_word_after(&p.re, text.as_bytes()).is_some()).map(|p| p.tier)
 }
 
+/// [`detect_override`] for a Rust string.
 pub fn detect_override_str(prompt: &str) -> Option<&'static str> {
     detect_override(&Value::from(prompt))
 }
@@ -60,9 +61,13 @@ pub fn clamp_to_available(tier: &str, available: &[&str]) -> Option<&'static str
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// What policy decided for a turn.
 pub struct Decision {
+    /// The tier the turn runs on.
     pub tier: String,
+    /// Why, as the status line and decision log show it (for example `jev` or `override`).
     pub reason: String,
+    /// Whether the tier differs from the previous turn's.
     pub changed: bool,
 }
 

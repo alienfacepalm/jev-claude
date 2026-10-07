@@ -3,13 +3,21 @@
 use crate::envx::Env;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// The label for each status line item: symbols or plain words.
 pub struct Icons {
+    /// The model item.
     pub model: &'static str,
+    /// The effort item.
     pub effort: &'static str,
+    /// The sub-agent count item.
     pub agents: &'static str,
+    /// The working directory item.
     pub dir: &'static str,
+    /// The git branch item.
     pub branch: &'static str,
+    /// The git worktree item.
     pub worktree: &'static str,
+    /// The context usage item.
     pub context: &'static str,
 }
 
@@ -28,6 +36,7 @@ impl Icons {
     }
 }
 
+/// Symbol labels (the default).
 pub const SYMBOLS: Icons = Icons {
     model: "\u{2727}\u{2726}",
     effort: "\u{25D4}",
@@ -38,6 +47,8 @@ pub const SYMBOLS: Icons = Icons {
     context: "\u{2261}",
 };
 
+/// Word labels: `JEV_ICONS=text`, and the default in a Windows console that is not Windows
+/// Terminal, `ConEmu`, or another terminal that sets `TERM_PROGRAM`.
 pub const TEXT: Icons = Icons {
     model: "model",
     effort: "effort",

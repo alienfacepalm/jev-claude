@@ -10,11 +10,13 @@ use std::sync::{LazyLock, RwLock};
 
 /// Read access to an environment.
 pub trait Env: Send + Sync {
+    /// The value of `key`, or None when unset.
     fn get(&self, key: &str) -> Option<String>;
 }
 
 /// Write access, for `loadEnv`.
 pub trait EnvMut: Env {
+    /// Sets `key` to `value`.
     fn set(&mut self, key: &str, value: &str);
 }
 
@@ -35,7 +37,7 @@ impl EnvMut for EnvMap {
 
 /// Builds an [`EnvMap`] from pairs.
 pub fn map(pairs: &[(&str, &str)]) -> EnvMap {
-    pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    pairs.iter().map(|(k, v)| ((*k).to_string(), (*v).to_string())).collect()
 }
 
 static OVERLAY: LazyLock<RwLock<Vec<(String, String)>>> = LazyLock::new(|| RwLock::new(Vec::new()));

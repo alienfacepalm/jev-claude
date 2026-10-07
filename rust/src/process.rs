@@ -6,19 +6,29 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 #[derive(Default)]
+/// How to run a child process.
 pub struct RunOptions {
+    /// Working directory; None for the current one.
     pub cwd: Option<PathBuf>,
+    /// Time after which the child is killed.
     pub timeout: Duration,
+    /// Variables added to the inherited environment.
     pub env: Vec<(String, String)>,
     /// Keep stderr (for error messages) rather than discarding it.
     pub capture_stderr: bool,
 }
 
+/// What a finished (or killed) child produced.
 pub struct RunOutput {
+    /// Whether the child exited with status 0.
     pub success: bool,
+    /// The exit code, when the child exited normally.
     pub code: Option<i32>,
+    /// Everything the child wrote to stdout.
     pub stdout: Vec<u8>,
+    /// Everything it wrote to stderr, when captured.
     pub stderr: Vec<u8>,
+    /// Whether the child was killed at the timeout.
     pub timed_out: bool,
 }
 

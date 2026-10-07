@@ -1,6 +1,10 @@
 //! Port of node/test/statusline.test.mjs: runs the real `jev-statusline` binary the way Claude
 //! Code does.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
@@ -48,6 +52,23 @@ fn render(session: &str, workspace: &str, extra: &str, icons: &str) -> String {
     Regex::new("\x1b\\[[0-9;]*m").unwrap().replace_all(&text, "").trim().to_string()
 }
 
+/// Runs the status line on `input` (JSON text) and returns its raw output, colours and newline included.
+fn render_raw(input: &str) -> String {
+    let dir = isolate_status();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
+        .env("JEV_STATUS_DIR", dir)
+        .env("JEV_ICONS", "text")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+    let out = child.wait_with_output().unwrap();
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    String::from_utf8(out.stdout).unwrap()
+}
+
 fn sid(name: &str) -> String {
     format!("{name}-{}", std::process::id())
 }
@@ -65,7 +86,7 @@ fn symbols_replace_the_words_and_the_branch_uses_the_powerline_glyph() {
     let line = render(&id, "{}", r#"{"worktree":{"name":"login-fix","branch":"fix/login"}}"#, "symbols");
     assert_eq!(
         line,
-        "\u{2727}\u{2726} Sonnet 5.5 (94%) \u{00B7} \u{25D4} high \u{00B7} \u{2750} proj \u{00B7} \u{E0A0} fix/login \u{00B7} \u{2302} login-fix \u{00B7} \u{2261} 8%"
+        "\u{2727}\u{2726} Sonnet 5.5 (94%) \u{00B7} \u{25D4} high \u{00B7} \u{2750} proj \u{00B7} \u{E0A0} fix/login \u{00B7} \u{2302} login-fix \u{00B7} \u{2261} 8% \u{00B7} /work/proj"
     );
 }
 
@@ -81,8 +102,51 @@ fn shows_the_effort_the_turn_ran_at() {
     .unwrap();
     assert_eq!(
         render(&id, "{}", "{}", "text"),
-        "model Sonnet 5.5 (94%) \u{00B7} effort high \u{00B7} dir proj \u{00B7} ctx 8%"
+        "model Sonnet 5.5 (94%) \u{00B7} effort high \u{00B7} dir proj \u{00B7} ctx 8% \u{00B7} /work/proj"
     );
+}
+
+/// "the whole working directory comes last, dimmed, as Claude Code sent it"
+#[test]
+fn the_whole_working_directory_comes_last_dimmed_as_claude_code_sent_it() {
+    let raw = render_raw(&format!(
+        r#"{{"session_id":"{}","workspace":{{"current_dir":"/home/me/work/proj"}},"context_window":{{"used_percentage":8}}}}"#,
+        sid("statusline-fullpath")
+    ));
+    assert!(raw.ends_with("8% \x1b[2m\u{00B7} /home/me/work/proj\x1b[0m\n"), "{raw:?}");
+}
+
+/// "a Windows path is shown with its backslashes, and its last segment is still the directory name"
+#[test]
+fn a_windows_path_is_shown_with_its_backslashes_and_its_last_segment_is_still_the_directory_name() {
+    let raw = render_raw(&format!(
+        r#"{{"session_id":"{}","workspace":{{"current_dir":"C:\\Users\\me\\work\\proj"}},"context_window":{{"used_percentage":8}}}}"#,
+        sid("statusline-winpath")
+    ));
+    assert!(raw.ends_with("\x1b[2m\u{00B7} C:\\Users\\me\\work\\proj\x1b[0m\n"), "{raw:?}");
+    let plain =
+        render(&sid("statusline-winpath-plain"), r#"{"current_dir":"C:\\Users\\me\\work\\proj"}"#, "{}", "text");
+    assert!(plain.contains(" \u{00B7} dir proj \u{00B7} "), "{plain}");
+}
+
+/// "cwd is the fallback for the path when the workspace has no directory"
+#[test]
+fn cwd_is_the_fallback_for_the_path_when_the_workspace_has_no_directory() {
+    let raw = render_raw(&format!(
+        r#"{{"session_id":"{}","cwd":"/srv/app","context_window":{{"used_percentage":8}}}}"#,
+        sid("statusline-cwd")
+    ));
+    assert!(raw.ends_with("\x1b[2m\u{00B7} /srv/app\x1b[0m\n"), "{raw:?}");
+}
+
+/// "no directory in the input means no path part"
+#[test]
+fn no_directory_in_the_input_means_no_path_part() {
+    let raw = render_raw(&format!(
+        r#"{{"session_id":"{}","context_window":{{"used_percentage":8}}}}"#,
+        sid("statusline-nodir")
+    ));
+    assert!(raw.ends_with("8%\n"), "{raw:?}");
 }
 
 /// "shows a higher effort when Claude Code asked for one"
@@ -136,7 +200,7 @@ fn inside_a_worktree_the_branch_and_the_worktree_are_each_named() {
     let line =
         render(&sid("statusline-worktree"), "{}", r#"{"worktree":{"name":"login-fix","branch":"fix/login"}}"#, "text");
     assert!(
-        line.ends_with(" \u{00B7} dir proj \u{00B7} branch fix/login \u{00B7} worktree login-fix \u{00B7} ctx 8%"),
+        line.ends_with(" \u{00B7} dir proj \u{00B7} branch fix/login \u{00B7} worktree login-fix \u{00B7} ctx 8% \u{00B7} /work/proj"),
         "{line}"
     );
 }
@@ -146,7 +210,7 @@ fn inside_a_worktree_the_branch_and_the_worktree_are_each_named() {
 fn a_worktree_named_like_the_directory_is_not_said_twice() {
     let line =
         render(&sid("statusline-samename"), r#"{"current_dir":"/work/COR-1","git_worktree":"COR-1"}"#, "{}", "text");
-    assert!(line.ends_with(" \u{00B7} worktree COR-1 \u{00B7} ctx 8%"), "{line}");
+    assert!(line.ends_with(" \u{00B7} worktree COR-1 \u{00B7} ctx 8% \u{00B7} /work/COR-1"), "{line}");
     assert!(!line.contains("dir"));
 }
 
@@ -181,9 +245,11 @@ fn the_main_working_tree_shows_its_branch_and_no_worktree() {
         o
     }));
     let line = render(&sid("statusline-main"), &String::from_utf8(ws).unwrap(), "{}", "text");
-    assert!(line.ends_with(" \u{00B7} branch main-line \u{00B7} ctx 8%"), "{line}");
+    assert!(
+        line.ends_with(&format!(" \u{00B7} branch main-line \u{00B7} ctx 8% \u{00B7} {}", dir.to_string_lossy())),
+        "{line}"
+    );
     assert!(!line.contains("worktree"));
-    let _ = std::fs::remove_dir_all(&dir);
 }
 
 /// "a directory that is not a git checkout shows neither a branch nor a worktree"

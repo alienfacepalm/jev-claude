@@ -17,14 +17,19 @@ pub mod bytes_compat {
     pub use hyper::body::Bytes;
 }
 
+/// The error type for bodies and connections.
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
 /// The parts of a URL the proxy and the client use (Node's `new URL`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Url {
+    /// Whether the scheme is `https:`.
     pub https: bool,
+    /// Host name without the port.
     pub hostname: String,
+    /// Explicit port, if the URL names one.
     pub port: Option<u16>,
+    /// Path, `/` when the URL has none.
     pub pathname: String,
 }
 
@@ -76,6 +81,7 @@ impl Url {
         }
     }
 
+    /// The explicit port, or the scheme's default (443 or 80).
     pub fn port_or_default(&self) -> u16 {
         self.port.unwrap_or(if self.https { 443 } else { 80 })
     }
@@ -139,6 +145,7 @@ pub struct ChannelBody {
 }
 
 impl ChannelBody {
+    /// A body with room for `capacity` chunks, and the sender that feeds it.
     pub fn new(capacity: usize) -> (mpsc::Sender<Result<Bytes, BoxError>>, ChannelBody) {
         let (tx, rx) = mpsc::channel(capacity);
         (tx, ChannelBody { rx })
@@ -161,7 +168,9 @@ impl Body for ChannelBody {
 
 /// The body every proxy response uses: buffered or streamed.
 pub enum ProxyBody {
+    /// A complete body (None for an empty one).
     Full(Option<Bytes>),
+    /// A body streamed from a channel.
     Stream(ChannelBody),
 }
 

@@ -1,7 +1,7 @@
 //! The launcher (SPEC 10; `node/bin/jev-claude.mjs`).
 
 use jev_router::config::AUTO_MODEL;
-use jev_router::env::{PRIVATE_KEYS, load_process_env};
+use jev_router::env::{apply_child_env, load_process_env};
 use jev_router::envx;
 use jev_router::firstrun::{
     Answer, FIRST_RUN_FILE, ask_yes_no, mark_offered, shadows_skill, should_offer, was_offered,
@@ -40,7 +40,7 @@ impl Cleanup {
 type SharedCleanup = Arc<Mutex<Cleanup>>;
 
 fn exit_with(cleanup: &SharedCleanup, code: i32) -> ! {
-    cleanup.lock().unwrap_or_else(|e| e.into_inner()).run();
+    cleanup.lock().unwrap_or_else(std::sync::PoisonError::into_inner).run();
     let _ = std::io::stderr().flush();
     std::process::exit(code);
 }
@@ -107,9 +107,10 @@ fn ignore_interrupts() {
     });
 }
 
-/// Resolves when the console closes, the user logs off, the system shuts down, or (elsewhere)
-/// SIGHUP/SIGTERM arrives.
-async fn hangup() {
+/// Resolves when the console closes, the user logs off, or the system shuts down (Windows), or
+/// when SIGHUP or SIGTERM arrives (Unix). On Unix it yields the signal's number, so that the same
+/// signal can be forwarded to Claude Code (step 8).
+async fn hangup() -> Option<i32> {
     #[cfg(windows)]
     {
         use tokio::signal::windows::{ctrl_close, ctrl_logoff, ctrl_shutdown};
@@ -121,6 +122,7 @@ async fn hangup() {
             _ = logoff.recv() => {},
             _ = shutdown.recv() => {},
         }
+        None
     }
     #[cfg(unix)]
     {
@@ -129,12 +131,26 @@ async fn hangup() {
             return std::future::pending().await;
         };
         tokio::select! {
-            _ = hup.recv() => {},
-            _ = term.recv() => {},
+            _ = hup.recv() => Some(SignalKind::hangup().as_raw_value()),
+            _ = term.recv() => Some(SignalKind::terminate().as_raw_value()),
         }
     }
     #[cfg(not(any(unix, windows)))]
-    std::future::pending::<()>().await
+    std::future::pending().await
+}
+
+/// Sends `signal` to the process `pid`, as Node's `child.kill(signal)` does.
+#[cfg(unix)]
+#[allow(unsafe_code)] // kill(2) through a one-line FFI declaration, as osdirs declares getuid.
+fn forward_signal(pid: u32, signal: i32) {
+    unsafe extern "C" {
+        fn kill(pid: std::os::raw::c_int, sig: std::os::raw::c_int) -> std::os::raw::c_int;
+    }
+    let Ok(pid) = std::os::raw::c_int::try_from(pid) else { return };
+    // SAFETY: kill(2) takes two plain integers and has no memory preconditions. A failure (the
+    // child has already gone) is reported by its return value, ignored because the caller's
+    // wait() observes the exit either way.
+    let _ = unsafe { kill(pid, signal) };
 }
 
 fn exit_code(status: ExitStatus) -> i32 {
@@ -247,14 +263,7 @@ async fn main() {
     let mut command = command_for(&spec, &args);
     // `childEnv`: the Jev key stays with jev; Claude Code gets everything else, including what
     // the settings files added.
-    for key in PRIVATE_KEYS {
-        command.env_remove(key);
-    }
-    for (k, v) in &extra_env {
-        if !PRIVATE_KEYS.contains(&k.as_str()) {
-            command.env(k, v);
-        }
-    }
+    apply_child_env(&mut command, &extra_env);
     let mut child = match tokio::process::Command::from(command).spawn() {
         Ok(c) => c,
         Err(e) => {
@@ -268,10 +277,22 @@ async fn main() {
             let code = status.map_or(1, exit_code);
             exit_with(&cleanup, code);
         }
-        _ = hangup() => {
-            let _ = child.start_kill();
-            let _ = tokio::time::timeout(std::time::Duration::from_secs(5), child.wait()).await;
-            exit_with(&cleanup, 1);
+        signal = hangup() => {
+            // Step 8: forward the signal, then exit with Claude Code's code, or 1 after 5 s.
+            #[cfg(unix)]
+            if let (Some(signal), Some(pid)) = (signal, child.id()) {
+                forward_signal(pid, signal);
+            }
+            #[cfg(not(unix))]
+            {
+                let _ = signal;
+                // Node's child.kill() is TerminateProcess on Windows.
+                let _ = child.start_kill();
+            }
+            match tokio::time::timeout(std::time::Duration::from_secs(5), child.wait()).await {
+                Ok(Ok(status)) => exit_with(&cleanup, exit_code(status)),
+                _ => exit_with(&cleanup, 1),
+            }
         }
     }
 }

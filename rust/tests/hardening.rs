@@ -1,11 +1,16 @@
 //! Port of node/test/hardening.test.mjs.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
+use http_body_util::BodyExt;
 use hyper::body::Bytes;
 use jev_router::config::id_of;
-use jev_router::env::{child_env, load_env};
+use jev_router::env::{apply_child_env, child_env, load_env};
 use jev_router::envx::{EnvMap, map};
 use jev_router::jsjson::Value;
 use jev_router::launch::{LaunchSpec, command_for, launch_spec, quote_for_cmd, resolve_command, shim_script};
@@ -114,6 +119,66 @@ async fn print_mode_keeps_the_conversations_tier_when_the_session_id_appears_lat
 
 const GO: &str = r#"{"model":"jev-router","tools":[{"name":"Bash"}],"messages":[{"role":"user","content":"go"}]}"#;
 
+/// SPEC 7.2 step 3 and 20.10 (no Node test covers it): a client that disconnects while Jev is
+/// being asked still gets its decision recorded, and nothing is sent upstream for it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_client_that_leaves_while_jev_is_asked_is_recorded_but_not_forwarded() {
+    use tokio::io::AsyncWriteExt;
+    isolate_status();
+    let (asked_tx, asked_rx) = tokio::sync::oneshot::channel::<()>();
+    let asked_tx = Arc::new(std::sync::Mutex::new(Some(asked_tx)));
+    // A Jev that takes 300 ms to answer, and says when it has been asked.
+    let slow_jev: RouteFn = Arc::new(move |_args| {
+        let asked = asked_tx.lock().unwrap().take();
+        Box::pin(async move {
+            if let Some(tx) = asked {
+                let _ = tx.send(());
+            }
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let mut o = jev_router::jsjson::Object::new();
+            o.insert("choice", Value::from(HAIKU));
+            o.insert("confidence", Value::Number(0.97));
+            o.insert("ms", Value::Number(300.0));
+            Ok(Some(Value::Object(o)))
+        })
+    });
+    let (url, seen) = serve(Arc::new(|_: &Seen| Reply::json(200, r#"{"id":"msg_1","type":"message"}"#))).await;
+    let proxy = start_proxy(ProxyOptions { upstream_url: Some(url), route: Some(slow_jev), ..Default::default() })
+        .await
+        .unwrap();
+
+    let session = format!("left-{}", std::process::id());
+    let body = format!(
+        r#"{{"model":"jev-router","tools":[{{"name":"Bash"}}],{},"messages":[{{"role":"user","content":"go"}}]}}"#,
+        metadata(&session)
+    );
+    let mut client = tokio::net::TcpStream::connect(("127.0.0.1", proxy.port)).await.unwrap();
+    let head = format!(
+        "POST /v1/messages HTTP/1.1\r\nhost: 127.0.0.1\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n",
+        body.len()
+    );
+    client.write_all(head.as_bytes()).await.unwrap();
+    client.write_all(body.as_bytes()).await.unwrap();
+    tokio::time::timeout(Duration::from_secs(5), asked_rx).await.expect("Jev was asked").unwrap();
+    drop(client); // Claude Code goes away while Jev is still thinking.
+
+    let status = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let status = jev_router::status::read_status(&Value::from(session.as_str()));
+            if status.truthy() {
+                return status;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await
+    .expect("the decision is recorded even though the client left");
+    assert_eq!(status.get("tier"), &Value::from("haiku"));
+    // Give a wrongly forwarded request time to arrive before checking that none did.
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(seen.lock().unwrap().is_empty(), "nothing is sent upstream for a client that has gone");
+}
+
 /// "a client that leaves stops the upstream response"
 #[tokio::test]
 async fn a_client_that_leaves_stops_the_upstream_response() {
@@ -148,7 +213,6 @@ async fn a_client_that_leaves_stops_the_upstream_response() {
     {
         let res = send(proxy.port, "POST", "/v1/messages", &[], GO.as_bytes()).await;
         let mut body = res.into_body();
-        use http_body_util::BodyExt;
         let first = body.frame().await;
         assert!(first.is_some(), "a first chunk arrived");
         // Dropping the body and its connection is the client leaving.
@@ -178,7 +242,6 @@ async fn an_upstream_that_drops_mid_stream_fails_the_client() {
 
     let ended = tokio::time::timeout(Duration::from_secs(3), async {
         let res = send(proxy.port, "POST", "/v1/messages", &[], GO.as_bytes()).await;
-        use http_body_util::BodyExt;
         res.into_body().collect().await.is_ok()
     })
     .await
@@ -256,6 +319,46 @@ fn a_claude_api_key_in_the_users_own_file_reaches_claude_code() {
     assert_eq!(from_project_only.get("ANTHROPIC_API_KEY"), None);
 }
 
+/// The launcher's own path (`apply_child_env`): a real child process never sees the Jev keys,
+/// whether inherited, set on the command, or added by a settings file, but gets everything else.
+#[test]
+fn the_launchers_child_process_never_sees_the_jev_keys() {
+    let mut command = if cfg!(windows) {
+        let mut c = std::process::Command::new("cmd");
+        c.args(["/d", "/c", "set"]);
+        c
+    } else {
+        std::process::Command::new("env")
+    };
+    // What Claude Code would otherwise inherit from the launcher's own environment.
+    command.env("JEV_API_KEY", "inherited-jev").env("TYPESAFE_API_KEY", "inherited-typesafe");
+    let extra: Vec<(String, String)> = [
+        ("ANTHROPIC_BASE_URL", "http://127.0.0.1:9"),
+        ("JEV_API_KEY", "from-settings"),
+        ("TYPESAFE_API_KEY", "from-settings"),
+        ("jev_api_key", "lower-case"),
+    ]
+    .iter()
+    .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+    .collect();
+    apply_child_env(&mut command, &extra);
+    let out = command.stdin(std::process::Stdio::null()).output().unwrap();
+    assert!(out.status.success());
+    let text = String::from_utf8_lossy(&out.stdout);
+    let seen: Vec<(&str, &str)> = text.lines().filter_map(|l| l.split_once('=')).collect();
+    let value = |name: &str| seen.iter().find(|(k, _)| *k == name).map(|(_, v)| *v);
+    assert_eq!(value("ANTHROPIC_BASE_URL"), Some("http://127.0.0.1:9"), "ordinary keys reach Claude Code");
+    assert!(seen.iter().any(|(k, _)| k.eq_ignore_ascii_case("PATH")), "the inherited environment is kept");
+    assert_eq!(value("JEV_API_KEY"), None);
+    assert_eq!(value("TYPESAFE_API_KEY"), None);
+    if cfg!(windows) {
+        // Environment names are case-insensitive on Windows, so `jev_api_key` is the same key.
+        assert!(!seen.iter().any(|(k, _)| k.eq_ignore_ascii_case("JEV_API_KEY")), "{text}");
+    } else {
+        assert_eq!(value("jev_api_key"), Some("lower-case"), "a different name on Unix");
+    }
+}
+
 /// "a blank key in a copied .env.example does not hide the real one"
 #[test]
 fn a_blank_key_in_a_copied_env_example_does_not_hide_the_real_one() {
@@ -270,7 +373,7 @@ fn a_blank_key_in_a_copied_env_example_does_not_hide_the_real_one() {
 }
 
 /// A directory holding an npm-style `name.cmd` shim, its script, and a `.ps1` beside it.
-fn shim_dir(name: &str, with_script: bool) -> (std::path::PathBuf, std::path::PathBuf) {
+fn shim_dir(name: &str, with_script: bool) -> (TempDir, std::path::PathBuf) {
     let dir = temp_dir("jev-shim-");
     let script = dir.join("node_modules").join("pkg").join("cli.js");
     std::fs::create_dir_all(script.parent().unwrap()).unwrap();
@@ -292,7 +395,7 @@ fn run(spec: &LaunchSpec, args: &[String]) -> Value {
 
 // Values whose quoting the old shell path broke: embedded quotes, a space, and cmd metacharacters.
 fn awkward() -> Vec<String> {
-    ["name=\"Jev Router\"", "fix a&b|c", "50% done", "say \"hi\"", "plain"].iter().map(|s| s.to_string()).collect()
+    ["name=\"Jev Router\"", "fix a&b|c", "50% done", "say \"hi\"", "plain"].iter().map(|s| (*s).to_string()).collect()
 }
 
 fn awkward_value() -> Value {

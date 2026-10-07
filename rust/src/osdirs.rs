@@ -70,7 +70,7 @@ pub fn simplify(path: PathBuf) -> PathBuf {
 }
 
 #[cfg(windows)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, unsafe_code)] // Win32 FFI: the standard library has no profile-directory call.
 fn os_profile_dir() -> Option<PathBuf> {
     use std::ffi::c_void;
     use std::os::windows::ffi::OsStringExt;
@@ -91,12 +91,12 @@ fn os_profile_dir() -> Option<PathBuf> {
     // SAFETY: plain Win32 calls with valid out-pointers; the token handle is closed after use.
     unsafe {
         let mut token: *mut c_void = std::ptr::null_mut();
-        if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {
+        if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &raw mut token) == 0 {
             return None;
         }
         let mut buf = vec![0u16; 1024];
         let mut size = buf.len() as u32;
-        let ok = GetUserProfileDirectoryW(token, buf.as_mut_ptr(), &mut size);
+        let ok = GetUserProfileDirectoryW(token, buf.as_mut_ptr(), &raw mut size);
         CloseHandle(token);
         if ok == 0 {
             return None;
@@ -107,6 +107,7 @@ fn os_profile_dir() -> Option<PathBuf> {
 }
 
 #[cfg(unix)]
+#[allow(unsafe_code)] // getuid(2) FFI: the standard library does not expose the real user id.
 fn os_profile_dir() -> Option<PathBuf> {
     unsafe extern "C" {
         fn getuid() -> u32;

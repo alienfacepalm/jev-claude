@@ -16,14 +16,19 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
+/// Jev's API, unless `TYPESAFE_BASE_URL` says otherwise.
 pub const TYPESAFE_BASE_URL: &str = "https://api.typesafe.ai";
 
 /// What the proxy hands the router.
 #[derive(Debug, Clone)]
 pub struct RouteArgs {
+    /// The user's prompt for this turn.
     pub prompt: JsStr,
+    /// The model the conversation is on now.
     pub current: JsStr,
+    /// Estimated context size in tokens.
     pub context_tokens: f64,
+    /// The models Jev may choose from, newest per tier.
     pub models: Vec<Model>,
 }
 
@@ -123,7 +128,7 @@ static SEED: AtomicU64 = AtomicU64::new(0);
 fn random() -> f64 {
     let mut x = SEED.load(Ordering::Relaxed);
     if x == 0 {
-        x = (now_ms() as u64) ^ 0x9E37_79B9_7F4A_7C15 ^ (std::process::id() as u64) << 32;
+        x = (now_ms() as u64) ^ 0x9E37_79B9_7F4A_7C15 ^ u64::from(std::process::id()) << 32;
     }
     x ^= x << 13;
     x ^= x >> 7;

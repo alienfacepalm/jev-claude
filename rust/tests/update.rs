@@ -2,6 +2,10 @@
 //! for GitHub, clones are made the way the installer makes them (including the shallow
 //! `--depth 1` one), and the "upstream" moves on by real commits.
 
+// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
+// compared line by line; Markdown backticks would change the titles.
+#![allow(clippy::doc_markdown)]
+
 mod common;
 
 use common::*;
@@ -32,7 +36,7 @@ fn pkg(version: &str) -> String {
 
 /// An origin at 0.1.0, a working copy that pushes to it, and helpers to release and clone.
 struct Fixture {
-    base: PathBuf,
+    base: TempDir,
     origin: PathBuf,
     upstream: PathBuf,
     _serial: std::sync::MutexGuard<'static, ()>,
@@ -44,7 +48,7 @@ static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 impl Fixture {
     fn new() -> Fixture {
-        let guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+        let guard = SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let base = temp_dir("jev-update-");
         let origin = base.join("origin.git");
         let upstream = base.join("upstream");
@@ -287,7 +291,7 @@ fn the_check_is_due_when_missing_stale_unreadable_or_from_the_future() {
 fn versions_compare_as_numbers_not_text() {
     assert!(compare_versions("0.10.0", "0.9.9") > 0.0, "0.10 is newer than 0.9");
     assert!(compare_versions("0.6.5", "0.6.6") < 0.0);
-    assert_eq!(compare_versions("1.0", "1.0.0"), 0.0);
+    assert!(compare_versions("1.0", "1.0.0").abs() < f64::EPSILON, "missing parts count as 0");
     assert!(compare_versions("0.7.0-beta.1", "0.6.9") > 0.0, "a pre-release tag is ignored");
 }
 
@@ -316,5 +320,4 @@ fn the_state_file_round_trips_and_a_damaged_one_reads_as_no_state() {
     assert_eq!(read_state(&file), None, "damaged");
     std::fs::write(&file, "42").unwrap();
     assert_eq!(read_state(&file), None, "valid JSON that is not a state object");
-    let _ = std::fs::remove_dir_all(&dir);
 }

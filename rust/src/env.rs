@@ -1,7 +1,7 @@
 //! Loading jev's settings files (SPEC 9.1; `node/src/env.mjs`), with Node's `util.parseEnv`
 //! ported line for line from `conformance/reference/node_dotenv_parse_content.cc`.
 
-use crate::envx::{Env, EnvMut};
+use crate::envx::EnvMut;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -117,16 +117,15 @@ pub fn parse_env(input: &str) -> BTreeMap<String, String> {
         if matches!(content[0], b'\'' | b'"' | b'`') {
             let quote = content[0];
             match find(content, quote, 1) {
-                None => match find(content, b'\n', 0) {
-                    Some(newline) => {
+                None => {
+                    if let Some(newline) = find(content, b'\n', 0) {
                         store.insert(key.to_vec(), content[..newline].to_vec());
                         content = &content[newline + 1..];
-                    }
-                    None => {
+                    } else {
                         store.insert(key.to_vec(), content.to_vec());
                         break;
                     }
-                },
+                }
                 Some(closing) => {
                     store.insert(key.to_vec(), content[1..closing].to_vec());
                     match find(content, b'\n', closing + 1) {
@@ -136,25 +135,20 @@ pub fn parse_env(input: &str) -> BTreeMap<String, String> {
                     continue;
                 }
             }
-        } else {
-            match find(content, b'\n', 0) {
-                Some(newline) => {
-                    let mut value = &content[..newline];
-                    if let Some(hash) = find(value, b'#', 0) {
-                        value = &value[..hash];
-                    }
-                    store.insert(key.to_vec(), trim_spaces(value).to_vec());
-                    content = &content[newline + 1..];
-                }
-                None => {
-                    let mut value = content;
-                    if let Some(hash) = find(value, b'#', 0) {
-                        value = &content[..hash];
-                    }
-                    store.insert(key.to_vec(), trim_spaces(value).to_vec());
-                    content = &[];
-                }
+        } else if let Some(newline) = find(content, b'\n', 0) {
+            let mut value = &content[..newline];
+            if let Some(hash) = find(value, b'#', 0) {
+                value = &value[..hash];
             }
+            store.insert(key.to_vec(), trim_spaces(value).to_vec());
+            content = &content[newline + 1..];
+        } else {
+            let mut value = content;
+            if let Some(hash) = find(value, b'#', 0) {
+                value = &content[..hash];
+            }
+            store.insert(key.to_vec(), trim_spaces(value).to_vec());
+            content = &[];
         }
 
         content = trim_spaces(content);
@@ -193,12 +187,28 @@ pub fn load_process_env() {
     load_env(&cwd, &home, &mut crate::envx::ProcessEnv);
 }
 
-/// `childEnv(env)`: a copy without the private keys.
-pub fn child_env(env: &BTreeMap<String, String>) -> BTreeMap<String, String> {
-    env.iter().filter(|(k, _)| !PRIVATE_KEYS.contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect()
+/// Whether `key` is one of [`PRIVATE_KEYS`]. Names compare ASCII case-insensitively on Windows,
+/// where environment names are case-insensitive, and exactly elsewhere.
+pub fn is_private_key(key: &str) -> bool {
+    PRIVATE_KEYS.iter().any(|p| if cfg!(windows) { p.eq_ignore_ascii_case(key) } else { *p == key })
 }
 
-/// Whether `env` lacks a key, for `??=` (an empty-but-set value counts as present).
-pub fn has(env: &dyn Env, key: &str) -> bool {
-    env.get(key).is_some()
+/// `childEnv(env)`: a copy without the private keys.
+pub fn child_env(env: &BTreeMap<String, String>) -> BTreeMap<String, String> {
+    env.iter().filter(|(k, _)| !is_private_key(k)).map(|(k, v)| (k.clone(), v.clone())).collect()
+}
+
+/// `childEnv` for the launcher's child process: removes [`PRIVATE_KEYS`] from what `command`
+/// inherits (and from anything already set on it), then adds each `extra` pair whose name is not
+/// private. Claude Code thus gets the whole environment, including what the settings files added,
+/// except the Jev key.
+pub fn apply_child_env(command: &mut std::process::Command, extra: &[(String, String)]) {
+    for key in PRIVATE_KEYS {
+        command.env_remove(key);
+    }
+    for (key, value) in extra {
+        if !is_private_key(key) {
+            command.env(key, value);
+        }
+    }
 }

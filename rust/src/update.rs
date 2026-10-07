@@ -1,6 +1,6 @@
 //! The update library (SPEC 14; `node/src/update.mjs`).
 
-use crate::fsx::temp_name;
+use crate::fsx::{rename_over, temp_name};
 use crate::jsjson::{self, Object, Value};
 use crate::jsstr::trim_str;
 use crate::osdirs::{home_dir, simplify};
@@ -16,7 +16,7 @@ pub static UPDATE_FILE: LazyLock<PathBuf> = LazyLock::new(|| home_dir().join(".j
 /// How long a check stays fresh.
 pub const CHECK_EVERY_MS: f64 = 6.0 * 60.0 * 60.0 * 1000.0;
 
-const FETCH_TIMEOUT: Duration = Duration::from_millis(20_000);
+const FETCH_TIMEOUT: Duration = Duration::from_secs(20);
 const LOCAL_TIMEOUT: Duration = Duration::from_millis(5_000);
 
 /// Runs `git -C <root> args...`; Ok(trimmed stdout) or Err(message).
@@ -47,6 +47,7 @@ pub fn read_state(file: &Path) -> Option<Value> {
     matches!(v, Value::Object(_) | Value::Array(_)).then_some(v)
 }
 
+/// Writes the update state to `file`, creating its directory; errors are ignored.
 pub fn write_state(state: &Value, file: &Path) {
     let _ = (|| -> std::io::Result<()> {
         if let Some(dir) = file.parent() {
@@ -54,7 +55,7 @@ pub fn write_state(state: &Value, file: &Path) {
         }
         let temp = temp_name(file);
         std::fs::write(&temp, jsjson::to_bytes(state))?;
-        std::fs::rename(&temp, file)
+        rename_over(&temp, file)
     })();
 }
 
@@ -122,7 +123,18 @@ pub fn installed_version(root: &Path) -> Value {
 /// What `inspectClone` found.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CloneCheck {
-    Ok { branch: String, head: String, remote: String, behind: bool },
+    /// The checkout can be updated.
+    Ok {
+        /// The checked-out branch.
+        branch: String,
+        /// The local commit.
+        head: String,
+        /// The commit just fetched from the remote branch (`FETCH_HEAD`).
+        remote: String,
+        /// Whether the remote has commits the checkout lacks.
+        behind: bool,
+    },
+    /// The checkout cannot be updated, and why.
     Refused(String),
 }
 
@@ -151,9 +163,8 @@ pub fn inspect_clone(root: &Path) -> CloneCheck {
         }
         Err(_) => return CloneCheck::Refused("this folder is not a git clone".into()),
     }
-    let branch = match git(root, &["symbolic-ref", "--short", "HEAD"], LOCAL_TIMEOUT) {
-        Ok(b) => b,
-        Err(_) => return CloneCheck::Refused("the checkout is not on a branch".into()),
+    let Ok(branch) = git(root, &["symbolic-ref", "--short", "HEAD"], LOCAL_TIMEOUT) else {
+        return CloneCheck::Refused("the checkout is not on a branch".into());
     };
     let result = (|| -> Result<CloneCheck, String> {
         if !git(root, &["status", "--porcelain", "--untracked-files=no"], LOCAL_TIMEOUT)?.is_empty() {
@@ -205,6 +216,7 @@ pub fn check_for_update(root: &Path, now: f64) -> Value {
     Value::Object(o)
 }
 
+/// [`check_for_update`] at the current time.
 pub fn check_for_update_now(root: &Path) -> Value {
     check_for_update(root, now_ms())
 }

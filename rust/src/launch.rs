@@ -8,15 +8,14 @@ use std::sync::LazyLock;
 
 /// `resolveCommand(name, {exts, path, win})`.
 pub fn resolve_command(name: &str, exts: Option<&[&str]>, path: Option<&str>, win: bool) -> Option<PathBuf> {
-    let path = path.map(str::to_string).unwrap_or_else(|| envx::get("PATH").unwrap_or_default());
+    let path = path.map_or_else(|| envx::get("PATH").unwrap_or_default(), str::to_string);
     let pathext;
     let suffixes: Vec<&str> = if win {
-        match exts {
-            Some(e) => e.to_vec(),
-            None => {
-                pathext = envx::get("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".to_string());
-                pathext.split(';').collect()
-            }
+        if let Some(e) = exts {
+            e.to_vec()
+        } else {
+            pathext = envx::get("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".to_string());
+            pathext.split(';').collect()
         }
     } else {
         vec![""]
@@ -113,7 +112,9 @@ pub fn quote_for_cmd(arg: &str) -> String {
 /// How to start a resolved executable.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LaunchSpec {
+    /// The program to run.
     pub command: PathBuf,
+    /// Arguments placed before the user's (for example a shim's script path).
     pub prefix: Vec<String>,
     /// A `.cmd`/`.bat` shim with no script to run directly, run through cmd.exe verbatim.
     pub shim: Option<PathBuf>,

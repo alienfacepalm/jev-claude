@@ -335,16 +335,13 @@ fn json_stringify_and_parse() {
             jsjson::stringify_pretty(i.get("value"))
         };
         let mut o = Object::new();
-        match text {
-            Some(t) => {
-                let len = utf16_len_bytes(t.as_bytes()) as f64;
-                o.insert("text", Value::String(t));
-                o.insert("utf16Length", Value::Number(len));
-            }
-            None => {
-                o.insert("text", Value::Undefined);
-                o.insert("utf16Length", Value::Undefined);
-            }
+        if let Some(t) = text {
+            let len = utf16_len_bytes(t.as_bytes()) as f64;
+            o.insert("text", Value::String(t));
+            o.insert("utf16Length", Value::Number(len));
+        } else {
+            o.insert("text", Value::Undefined);
+            o.insert("utf16Length", Value::Undefined);
         }
         Ok(Value::Object(o))
     });

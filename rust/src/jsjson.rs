@@ -10,11 +10,17 @@ pub enum Value {
     /// `undefined`: omitted from objects and written as `null` in arrays by `stringify`.
     #[default]
     Undefined,
+    /// `null`.
     Null,
+    /// A boolean.
     Bool(bool),
+    /// A number (an IEEE-754 double, as in JavaScript).
     Number(f64),
+    /// A string, which may hold lone surrogates.
     String(JsStr),
+    /// An array.
     Array(Vec<Value>),
+    /// An object, keys in JavaScript order.
     Object(Object),
 }
 
@@ -39,30 +45,37 @@ fn array_index(key: &JsStr) -> Option<u32> {
 }
 
 impl Object {
+    /// An empty object.
     pub fn new() -> Self {
         Object { entries: Vec::new() }
     }
 
+    /// The number of properties.
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
+    /// Whether the object has no properties.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
+    /// The value of property `key`.
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
+    /// The value of property `key`, for a key that may hold lone surrogates.
     pub fn get_js(&self, key: &JsStr) -> Option<&Value> {
         self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
+    /// A mutable reference to the value of property `key`.
     pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
         self.entries.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
+    /// Whether property `key` exists.
     pub fn contains_key(&self, key: &str) -> bool {
         self.get(key).is_some()
     }
@@ -93,19 +106,23 @@ impl Object {
         Some(self.entries.remove(pos).1)
     }
 
+    /// `delete obj[key]` for a key that may hold lone surrogates.
     pub fn remove_js(&mut self, key: &JsStr) -> Option<Value> {
         let pos = self.entries.iter().position(|(k, _)| k == key)?;
         Some(self.entries.remove(pos).1)
     }
 
+    /// Properties in JavaScript order.
     pub fn iter(&self) -> impl Iterator<Item = (&JsStr, &Value)> {
         self.entries.iter().map(|(k, v)| (k, v))
     }
 
+    /// Properties in JavaScript order, values mutable.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&JsStr, &mut Value)> {
         self.entries.iter_mut().map(|(k, v)| (&*k, v))
     }
 
+    /// Keys in JavaScript order.
     pub fn keys(&self) -> impl Iterator<Item = &JsStr> {
         self.entries.iter().map(|(k, _)| k)
     }
@@ -195,6 +212,7 @@ impl Value {
         }
     }
 
+    /// `value[i]` for an array; `undefined` otherwise or out of range.
     pub fn idx(&self, i: usize) -> &Value {
         match self {
             Value::Array(a) => a.get(i).unwrap_or(&UNDEFINED),
@@ -202,10 +220,12 @@ impl Value {
         }
     }
 
+    /// Whether the value is `null` or `undefined`.
     pub fn is_nullish(&self) -> bool {
         matches!(self, Value::Undefined | Value::Null)
     }
 
+    /// Whether the value is `undefined`.
     pub fn is_undefined(&self) -> bool {
         matches!(self, Value::Undefined)
     }
@@ -226,6 +246,7 @@ impl Value {
         }
     }
 
+    /// The string, if this is one.
     pub fn as_str(&self) -> Option<&JsStr> {
         match self {
             Value::String(s) => Some(s),
@@ -233,6 +254,7 @@ impl Value {
         }
     }
 
+    /// The number, if this is one.
     pub fn as_number(&self) -> Option<f64> {
         match self {
             Value::Number(n) => Some(*n),
@@ -240,6 +262,7 @@ impl Value {
         }
     }
 
+    /// The elements, if this is an array.
     pub fn as_array(&self) -> Option<&Vec<Value>> {
         match self {
             Value::Array(a) => Some(a),
@@ -247,6 +270,7 @@ impl Value {
         }
     }
 
+    /// The object, if this is one.
     pub fn as_object(&self) -> Option<&Object> {
         match self {
             Value::Object(o) => Some(o),
@@ -254,6 +278,7 @@ impl Value {
         }
     }
 
+    /// The object, mutably, if this is one.
     pub fn as_object_mut(&mut self) -> Option<&mut Object> {
         match self {
             Value::Object(o) => Some(o),
@@ -282,7 +307,7 @@ impl Value {
     /// ECMAScript `ToNumber` (3.6).
     pub fn to_number(&self) -> f64 {
         match self {
-            Value::Undefined => f64::NAN,
+            Value::Undefined | Value::Object(_) => f64::NAN,
             Value::Null => 0.0,
             Value::Bool(b) => {
                 if *b {
@@ -294,7 +319,6 @@ impl Value {
             Value::Number(n) => *n,
             Value::String(s) => string_to_number(s),
             Value::Array(a) => string_to_number(&join_array(a, ",")),
-            Value::Object(_) => f64::NAN,
         }
     }
 
@@ -488,9 +512,9 @@ impl Parser<'_> {
                 self.i += 1;
             }
         }
-        if matches!(s.get(self.i), Some(b'e') | Some(b'E')) {
+        if matches!(s.get(self.i), Some(b'e' | b'E')) {
             self.i += 1;
-            if matches!(s.get(self.i), Some(b'+') | Some(b'-')) {
+            if matches!(s.get(self.i), Some(b'+' | b'-')) {
                 self.i += 1;
             }
             if !s.get(self.i).is_some_and(u8::is_ascii_digit) {
@@ -668,7 +692,7 @@ fn write_string(s: &JsStr, out: &mut Vec<u8>) {
             c if c < 0x20 => out.extend_from_slice(format!("\\u{c:04x}").as_bytes()),
             // A lone surrogate in WTF-8: ED A0..BF xx.
             0xED if i + 2 < b.len() && b[i + 1] >= 0xA0 => {
-                let cp = 0xD000 | (((b[i + 1] & 0x3F) as u32) << 6) | (b[i + 2] & 0x3F) as u32;
+                let cp = 0xD000 | (u32::from(b[i + 1] & 0x3F) << 6) | u32::from(b[i + 2] & 0x3F);
                 out.extend_from_slice(format!("\\u{cp:04x}").as_bytes());
                 i += 3;
                 continue;
@@ -678,17 +702,6 @@ fn write_string(s: &JsStr, out: &mut Vec<u8>) {
         i += 1;
     }
     out.push(b'"');
-}
-
-/// Builds an object from `(key, value)` pairs in order.
-#[macro_export]
-macro_rules! obj {
-    () => { $crate::jsjson::Object::new() };
-    ($($k:expr => $v:expr),+ $(,)?) => {{
-        let mut o = $crate::jsjson::Object::new();
-        $( o.insert($k, $crate::jsjson::Value::from($v)); )+
-        o
-    }};
 }
 
 #[cfg(test)]

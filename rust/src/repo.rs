@@ -49,5 +49,5 @@ pub fn release_version() -> String {
 pub fn version_in(root: &Path) -> Option<String> {
     let text = std::fs::read(root.join("package.json")).ok()?;
     let v = jsjson::parse_bytes(&text).ok()?;
-    v.get("version").as_str().map(|s| s.to_string_lossy())
+    v.get("version").as_str().map(super::jsstr::JsStr::to_string_lossy)
 }
