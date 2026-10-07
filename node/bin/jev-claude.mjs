@@ -123,7 +123,16 @@ if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
   // somewhere it cannot see, and most likely fail to authenticate at all. So jev picks the
   // model and hands the request to whoever was upstream before it.
   const inherited = process.env.ANTHROPIC_BASE_URL;
-  const { port, close } = await startProxy(inherited ? { upstreamURL: inherited } : {});
+  let proxy;
+  try {
+    proxy = await startProxy(inherited ? { upstreamURL: inherited } : {});
+  } catch (err) {
+    // A malformed ANTHROPIC_BASE_URL. Stopped here, before Claude Code starts and before the exit
+    // handler is registered, so nothing is left running and nothing needs restoring.
+    process.stderr.write(`[jev] ${err.message}\n`);
+    process.exit(1);
+  }
+  const { port, close } = proxy;
   if (inherited && process.env.JEV_DEBUG) process.stderr.write(`[jev] upstream ${inherited}\n`);
   env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${port}`;
   env.CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY = "1";

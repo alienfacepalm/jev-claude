@@ -7,7 +7,15 @@
 const SYMBOLS = { model: "✧✦", effort: "◔", agents: "✦", dir: "❐", branch: "", worktree: "⌂", context: "≡" };
 
 // For a console that cannot draw them: the word instead of the glyph.
-const TEXT = { model: "model", effort: "effort", agents: "agents", dir: "dir", branch: "branch", worktree: "worktree", context: "ctx" };
+const TEXT = {
+  model: "model",
+  effort: "effort",
+  agents: "agents",
+  dir: "dir",
+  branch: "branch",
+  worktree: "worktree",
+  context: "ctx",
+};
 
 /**
  * The labels for the status line's items. Glyphs everywhere except the legacy Windows console

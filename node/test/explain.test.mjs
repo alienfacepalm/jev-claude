@@ -22,7 +22,7 @@ test("formats the last routing decision", () => {
     },
   });
 
-  assert.match(output, /Task complexity     0\.82/);
+  assert.match(output, /Task complexity {5}0\.82/);
   assert.match(output, /Prompt: Explain the router/);
   assert.match(output, /Current model: HAIKU/);
   assert.match(output, /Context tokens: 6200/);

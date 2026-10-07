@@ -14,7 +14,9 @@ import { readStatus } from "../src/status.mjs";
 // Assertions are on what the upstream received, checked after the response: an assertion
 // thrown inside `route` would be swallowed by the proxy's own error handling.
 
-const CAPTURED = JSON.parse(readFileSync(new URL("../../conformance/fixtures/claude-code-print-request.json", import.meta.url), "utf8"));
+const CAPTURED = JSON.parse(
+  readFileSync(new URL("../../conformance/fixtures/claude-code-print-request.json", import.meta.url), "utf8"),
+);
 const realRequest = () => structuredClone(CAPTURED.body);
 const SESSION = JSON.parse(CAPTURED.body.metadata.user_id).session_id;
 
@@ -115,7 +117,10 @@ test("tool-call continuations keep the tier the turn was routed to", async (t) =
   await post(continuation(opening));
 
   assert.equal(prompts.length, 1, "Jev is asked once per turn, not once per tool call");
-  assert.deepEqual(seen.map((s) => s.body.model), ["claude-sonnet-5-5", "claude-sonnet-5-5", "claude-sonnet-5-5"]);
+  assert.deepEqual(
+    seen.map((s) => s.body.model),
+    ["claude-sonnet-5-5", "claude-sonnet-5-5", "claude-sonnet-5-5"],
+  );
 });
 
 test("the main thread keeps its tier after more than 50 sub-agents start", async (t) => {

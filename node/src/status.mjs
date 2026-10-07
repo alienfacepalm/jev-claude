@@ -1,15 +1,7 @@
-import {
-  chmodSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { renameOver } from "./atomic-rename.mjs";
 
 // One file per session rather than a shared map, so concurrent jev-claude sessions can never
 // clobber each other's status. Kept in the temp dir so the OS eventually cleans up.
@@ -35,13 +27,15 @@ const fileFor = (sessionId) => join(DIR, `${sessionId.replace(/[^\w-]/g, "")}.js
  * Writes `text` to `file` inside the status directory, owner-only.
  *
  * Written to a temporary name and renamed into place, so the status line, which reads these
- * files on every redraw, never sees one half-written and drops back to "waiting".
+ * files on every redraw, never sees one half-written and drops back to "waiting". The rename
+ * retries briefly while Windows reports the file in use, and the temporary file is removed if it
+ * still fails (`renameOver`), so a failed write leaves nothing behind.
  */
 export function writePrivate(file, text) {
   ensureDir();
   const temp = `${file}.${process.pid}.tmp`;
   writeFileSync(temp, text, { mode: FILE_MODE });
-  renameSync(temp, file);
+  renameOver(temp, file);
   // `mode` only applies on creation; tighten files written by earlier versions too.
   chmodSync(file, FILE_MODE);
 }
@@ -141,9 +135,7 @@ function mergeAgent(existing, agent, entry) {
   const keys = Object.keys(agents);
   if (keys.length > MAX_AGENTS) {
     // Keep the main thread regardless of age; it is the one line always worth showing.
-    const ordered = keys
-      .filter((k) => !agents[k].main)
-      .sort((a, b) => (agents[b].at ?? 0) - (agents[a].at ?? 0));
+    const ordered = keys.filter((k) => !agents[k].main).sort((a, b) => (agents[b].at ?? 0) - (agents[a].at ?? 0));
     for (const stale of ordered.slice(MAX_AGENTS - 1)) delete agents[stale];
   }
   return agents;
@@ -160,9 +152,7 @@ export function agentView(status, { freshMs = 90_000, now = Date.now() } = {}) {
   const entries = Object.entries(status?.agents ?? {}).map(([key, a]) => ({ key, ...a }));
   return {
     main: entries.find((a) => a.main) ?? null,
-    subagents: entries
-      .filter((a) => !a.main && now - (a.at ?? 0) <= freshMs)
-      .sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
+    subagents: entries.filter((a) => !a.main && now - (a.at ?? 0) <= freshMs).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
   };
 }
 

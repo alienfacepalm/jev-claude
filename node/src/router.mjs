@@ -1,11 +1,5 @@
 import { TypeSafeClient } from "@typesafe-ai/sdk";
-import {
-  COMPLEXITY_MAX_SCORE,
-  CONTEXT_WINDOW_TOKENS,
-  QUESTIONS,
-  questionForModels,
-  THRESHOLDS,
-} from "./config.mjs";
+import { COMPLEXITY_MAX_SCORE, CONTEXT_WINDOW_TOKENS, QUESTIONS, questionForModels, THRESHOLDS } from "./config.mjs";
 import { log } from "./log.mjs";
 
 // The SDK's defaults (10s per attempt, 2 retries, no total budget) are far too slow for a

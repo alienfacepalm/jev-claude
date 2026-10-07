@@ -29,9 +29,7 @@ export function detectOverride(prompt) {
 function clampToAvailable(tier, available) {
   if (available.includes(tier)) return tier;
   const rank = rankOf(tier);
-  const up = TIER_NAMES.filter(
-    (t, i) => i > rank && available.includes(t) && (t !== "fable" || tier === "fable"),
-  );
+  const up = TIER_NAMES.filter((t, i) => i > rank && available.includes(t) && (t !== "fable" || tier === "fable"));
   if (up.length) return up[0];
   const down = TIER_NAMES.filter((t, i) => i < rank && available.includes(t));
   return down.length ? down[down.length - 1] : null;
@@ -61,7 +59,7 @@ export function decide({ prompt, jev, current, available, contextTokens = 0 }) {
 
   if (!jev || !TIER_NAMES.includes(jev.choice)) return settle(current, "jev-unavailable");
 
-  let target = jev.choice;
+  const target = jev.choice;
 
   // Written so a missing or non-numeric confidence counts as unsure rather than as certain.
   if (!(jev.confidence >= THRESHOLDS.minConfidence)) {

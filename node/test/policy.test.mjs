@@ -33,7 +33,10 @@ test("an explicit user override beats Jev", () => {
 test("a sub-agent report quoting an override phrase does not force a model", () => {
   // Captured from a real session: a test-review report delivered as a message quoted
   // `"use strong" -> opus`, and that turn was forced onto Opus.
-  const prompt = readFileSync(new URL("../../conformance/fixtures/subagent-handback-prompt.txt", import.meta.url), "utf8");
+  const prompt = readFileSync(
+    new URL("../../conformance/fixtures/subagent-handback-prompt.txt", import.meta.url),
+    "utf8",
+  );
   assert.equal(detectOverride(prompt), null);
   const out = decide({ ...base, prompt, current: "opus", jev: sure("sonnet") });
   assert.equal(out.tier, "sonnet", "Jev's confident answer is acted on, not the quoted phrase");

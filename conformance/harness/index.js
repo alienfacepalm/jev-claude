@@ -4,6 +4,8 @@
 // Running `node --test "conformance/harness/*.test.mjs"` runs the same tests, one process per file.
 import { readdirSync } from "node:fs";
 
-for (const name of readdirSync(new URL(".", import.meta.url)).filter((n) => n.endsWith(".test.mjs")).sort()) {
+for (const name of readdirSync(new URL(".", import.meta.url))
+  .filter((n) => n.endsWith(".test.mjs"))
+  .sort()) {
   await import(new URL(name, import.meta.url));
 }

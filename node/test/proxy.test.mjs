@@ -82,7 +82,10 @@ test("routing status retains the exact recent Jev exchanges", () => {
   writeDecision(sid, { prompt: "second", jev: { request: { id: 2 }, response: { confidence: 0.8 } } });
   const status = readStatus(sid);
   assert.equal(status.prompt, "second");
-  assert.deepEqual(status.history.map(({ prompt }) => prompt), ["first", "second"]);
+  assert.deepEqual(
+    status.history.map(({ prompt }) => prompt),
+    ["first", "second"],
+  );
   assert.equal(status.history[0].jev.response.confidence, 0.6);
 });
 
@@ -146,7 +149,10 @@ test("a Claude API key reaches Anthropic untouched, on routed and manual request
     body: JSON.stringify({ model: "claude-opus-5-5", messages: [{ role: "user", content: "hi" }] }),
   });
 
-  assert.deepEqual(seen.map((s) => s.key), ["sk-ant-api03-test", "sk-ant-api03-test", "sk-ant-api03-test", undefined]);
+  assert.deepEqual(
+    seen.map((s) => s.key),
+    ["sk-ant-api03-test", "sk-ant-api03-test", "sk-ant-api03-test", undefined],
+  );
   assert.equal(seen[3].auth, "Bearer gateway-token");
 });
 
@@ -158,13 +164,15 @@ test("Claude proxy sends exact account models to Jev and routes the chosen versi
     req.on("end", () => {
       if (req.url.startsWith("/v1/models")) {
         res.setHeader("content-type", "application/json");
-        return res.end(JSON.stringify({
-          data: [
-            { id: "claude-opus-4-8", display_name: "Claude Opus 4.8", created_at: "2026-01-05" },
-            { id: "claude-opus-5-5", display_name: "Claude Opus 5.5", created_at: "2026-09-02" },
-            { id: "claude-sonnet-5-5", display_name: "Claude Sonnet 5.5", created_at: "2026-08-11" },
-          ],
-        }));
+        return res.end(
+          JSON.stringify({
+            data: [
+              { id: "claude-opus-4-8", display_name: "Claude Opus 4.8", created_at: "2026-01-05" },
+              { id: "claude-opus-5-5", display_name: "Claude Opus 5.5", created_at: "2026-09-02" },
+              { id: "claude-sonnet-5-5", display_name: "Claude Sonnet 5.5", created_at: "2026-08-11" },
+            ],
+          }),
+        );
       }
       seen.push(JSON.parse(Buffer.concat(chunks)));
       res.setHeader("content-type", "application/json");
@@ -182,7 +190,10 @@ test("Claude proxy sends exact account models to Jev and routes the chosen versi
     // Only the newest of each tier is on the menu, newest first: the older Opus the account
     // can still reach is not a choice Jev gets to make.
     route: async ({ models }) => {
-      assert.deepEqual(models.map((model) => model.id), ["claude-opus-5-5", "claude-sonnet-5-5"]);
+      assert.deepEqual(
+        models.map((model) => model.id),
+        ["claude-opus-5-5", "claude-sonnet-5-5"],
+      );
       return { choice: "claude-opus-5-5", confidence: 0.91, ms: 1 };
     },
     calibrationFile,
@@ -240,7 +251,11 @@ test("a routed request without metadata is recorded under the conversation key",
   assert.ok(status, "the decision is filed under the conversation key instead of being dropped");
   assert.equal(status.tier, "sonnet");
   assert.equal(status.confidence, 0.77);
-  assert.equal(status.effort, "high", "records the effort that went out, here Sonnet's own since the request named none");
+  assert.equal(
+    status.effort,
+    "high",
+    "records the effort that went out, here Sonnet's own since the request named none",
+  );
   assert.equal(agentView(status).main.effort, "high", "and carries it to the per-agent entry the status line reads");
 });
 
@@ -396,7 +411,9 @@ test("JEV_<TIER>_EFFORT overrides a tier's effort, and a bad value is ignored", 
 
 test("a new major version is picked as the newest of its tier, dated or not", () => {
   const ids = (catalog) => newestPerTier(claudeModels(catalog)).map((m) => m.id);
-  assert.deepEqual(ids([{ id: "claude-opus-5-5" }, { id: "claude-opus-6" }, { id: "claude-opus-4-8" }]), ["claude-opus-6"]);
+  assert.deepEqual(ids([{ id: "claude-opus-5-5" }, { id: "claude-opus-6" }, { id: "claude-opus-4-8" }]), [
+    "claude-opus-6",
+  ]);
   assert.deepEqual(ids([{ id: "claude-sonnet-5-5" }, { id: "claude-sonnet-5-10" }]), ["claude-sonnet-5-10"]);
   assert.deepEqual(
     ids([{ id: "claude-haiku-4-5-20251001" }, { id: "claude-haiku-4-6" }]),
@@ -453,7 +470,10 @@ test("a forced effort is ignored when unrecognised and never reaches Haiku", () 
 test("a conversation keeps one key as it grows, and differs from a sub-agent", () => {
   const main = { messages: [{ role: "user", content: "main task" }] };
   const grown = {
-    messages: [{ role: "user", content: "main task" }, { role: "assistant", content: "ok" }],
+    messages: [
+      { role: "user", content: "main task" },
+      { role: "assistant", content: "ok" },
+    ],
   };
   const sub = { messages: [{ role: "user", content: "sub-agent task" }] };
   assert.equal(conversationKey(main), conversationKey(grown));
@@ -522,10 +542,7 @@ test("the first tool-bearing conversation in a session is the main thread", () =
 test("auxiliary calls without tools never claim the main slot", () => {
   const mains = new Map();
   const sid = JSON.stringify({ session_id: "s-aux" });
-  const aux = agentOf(
-    { metadata: { user_id: sid }, messages: [{ role: "user", content: "summarise this" }] },
-    mains,
-  );
+  const aux = agentOf({ metadata: { user_id: sid }, messages: [{ role: "user", content: "summarise this" }] }, mains);
   const real = agentOf(
     {
       metadata: { user_id: sid },
@@ -605,7 +622,9 @@ test("an id in the old version-first naming never outranks a current model", () 
 
 test("a provider prefix does not hide the version", () => {
   assert.deepEqual(
-    newestPerTier(claudeModels([{ id: "anthropic.claude-opus-5-5" }, { id: "anthropic.claude-opus-6" }])).map((m) => m.id),
+    newestPerTier(claudeModels([{ id: "anthropic.claude-opus-5-5" }, { id: "anthropic.claude-opus-6" }])).map(
+      (m) => m.id,
+    ),
     ["anthropic.claude-opus-6"],
   );
 });

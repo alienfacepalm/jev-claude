@@ -39,7 +39,8 @@ for (let run = 1; run <= runs; run++) {
   console.log(`--- run ${run}`);
   for (const { want, prompt } of cases) {
     asked++;
-    const tally = (byTier[want] ??= { picks: 0, asked: 0 });
+    byTier[want] ??= { picks: 0, asked: 0 };
+    const tally = byTier[want];
     tally.asked++;
     const answer = await askJev({
       prompt,

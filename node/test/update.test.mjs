@@ -22,13 +22,13 @@ import {
 // real commits. What is checked is what the user's checkout looks like afterwards.
 
 const git = (cwd, ...args) =>
-  execFileSync(
-    "git",
-    ["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args],
-    { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-  ).trim();
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", ...args], {
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
 
-const pkg = (version) => JSON.stringify({ name: "jev-router", version }, null, 2) + "\n";
+const pkg = (version) => `${JSON.stringify({ name: "jev-router", version }, null, 2)}\n`;
 
 /** An origin at 0.1.0, a working copy that pushes to it, and a helper to release from it. */
 function fixture(t) {
@@ -104,7 +104,10 @@ test("changed dependencies ask for an install; unchanged ones do not", async (t)
   const install = cloneTo("install");
   release("0.1.1", { "notes.txt": "docs only\n" });
   const calls = [];
-  const recorded = async (root) => (calls.push(root), 0);
+  const recorded = async (root) => {
+    calls.push(root);
+    return 0;
+  };
 
   assert.equal((await applyUpdate(install, { install: recorded })).status, "updated");
   assert.deepEqual(calls, [], "a change that leaves package.json's dependencies alone installs nothing");

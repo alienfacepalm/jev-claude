@@ -6,7 +6,10 @@ Every `expected` is what the real Node function returned for that `input` (SPEC.
 that believes a case is wrong reports it rather than editing it.
 
 Regenerating is deterministic: running the generator twice leaves `git status conformance/cases`
-unchanged.
+unchanged. The generator enforces this. It refuses to run on any Node but 24.21.x (`--force`
+re-baselines on purpose), and it stops, rather than writing a case, when a `write-decision` step's
+status write did not land (on Windows, a rename refused while another process holds the file).
+CI regenerates the cases and fails if anything here changes.
 
 ## Tagged encoding
 
@@ -46,7 +49,7 @@ absent from `input` takes the function's default, and `expected` is the return v
 | `sanitize-schema.json` | `proxy.sanitizeSchema(node)` | `node` | `node` after the call | mutates in place; the return value is ignored |
 | `version-of.json` | `proxy.versionOf(arg)` | the argument object itself (`id`, `tier`, either may be absent) | `[major, minor]` | |
 | `short-name.json` | `modelNames.shortName(model)` | `model` (any value) | string or `null` | |
-| `claude-models.json` | `proxy.claudeModels(catalog)` | `catalog` | the model list | |
+| `claude-models.json` | `proxy.claudeModels(catalog)` | `catalog` | the model list | every `created_at` here is a string; SPEC 20.8 covers other types, which no case pins |
 | `newest-per-tier.json` | `proxy.newestPerTier(models)` | `models` | the model list | |
 | `newer-than-calibrated.json` | `proxy.newerThanCalibrated(catalog)` | `catalog` | list of ids | |
 | `session-of.json` | `proxy.sessionOf(body)` | `body` | the session id: any JSON value, `""` on failure | |

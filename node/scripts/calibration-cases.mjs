@@ -26,7 +26,10 @@ export const CASES = [
   // Fable: long-horizon work, problems that beat a strong model, adversarial review of plans.
   { want: "fable", prompt: "migrate the entire monorepo from webpack to vite" },
   { want: "fable", prompt: "implement the full payment reconciliation service described in spec.md, end to end" },
-  { want: "fable", prompt: "this race condition has beaten two previous attempts; dig through git history and find the real cause" },
+  {
+    want: "fable",
+    prompt: "this race condition has beaten two previous attempts; dig through git history and find the real cause",
+  },
   { want: "fable", prompt: "build a financial model spreadsheet and a slide deck from the Q3 data in data/" },
   { want: "fable", prompt: "red-team our OAuth migration plan in docs/plan.md and poke holes in the rollout" },
 ];

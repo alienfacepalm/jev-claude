@@ -32,8 +32,7 @@ const wrapped = (label, value) => {
 
 // A decision that kept the model says so, since "why am I still here" is the question a held
 // turn raises; the wording itself comes from src/reasons.mjs, which both surfaces share.
-const decision = (reason = "") =>
-  `${isNoChange(reason) ? "kept this model - " : ""}${longReason(reason)}`;
+const decision = (reason = "") => `${isNoChange(reason) ? "kept this model - " : ""}${longReason(reason)}`;
 
 const AGENT_WIDTH = 52;
 const agentRow = (text = "") => `│ ${text.slice(0, AGENT_WIDTH - 2).padEnd(AGENT_WIDTH - 2)} │`;
@@ -68,6 +67,11 @@ export function formatAgents(status, now = Date.now()) {
   return lines.join("\n");
 }
 
+/**
+ * The boxed `jev-explain` report for one decision: the prompt and session Jev was sent, its
+ * scores, the recommended tier, the model selected, and why. A one-line notice instead when there
+ * is no decision yet or the user picked a model manually.
+ */
 export function formatExplanation(status) {
   if (!status) return "Jev Router: no routing decision has been recorded for this session.";
   if (status.manual) return "Jev Router: routing is paused because you selected a model manually.";
