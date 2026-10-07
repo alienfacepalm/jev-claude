@@ -22,3 +22,65 @@ jev-proxy-host = "jev_router.cli.proxy_host:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Development tools only: the programs themselves use the standard library alone (SPEC 2.2).
+# An extra rather than a PEP 735 dependency group, so `pip install -e "./python[dev]"` works on
+# the pip that ships with Python 3.12 (`pip install --group` needs pip 25.1 or newer).
+[project.optional-dependencies]
+dev = ["ruff~=0.16.10", "mypy~=2.4"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120 # the width the port was written to; matches rust/rustfmt.toml max_width
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade, for Python 3.12
+    "B",   # flake8-bugbear
+    "A",   # builtins shadowed
+    "BLE", # blind except: every deliberate catch-all carries `# noqa: BLE001 - <reason>`
+    "C4",  # comprehensions
+    "PIE",
+    "SIM",
+    "RUF",
+    "PLE", # pylint errors
+    "PLW", # pylint warnings
+    "PLC", # pylint conventions
+    "D",   # docstrings on the public API (pep257 convention, below)
+]
+ignore = [
+    # The ported functions keep the Node source's try/catch and if/else shapes so the two can be
+    # read side by side; contextlib.suppress and ternaries would hide that correspondence.
+    "SIM105",
+    "SIM108",
+    # Docstrings say what a function returns ("The tier ...", "`Math.round` ..."), the style the
+    # Node JSDoc uses, rather than an imperative verb.
+    "D401",
+    # Dunder methods and __init__ are documented by their class.
+    "D105",
+    "D107",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.per-file-ignores]
+# The prose sent to Jev stays one string per line so it diffs byte for byte against
+# node/src/config.mjs (SPEC 4.4 requires the exact text).
+"src/jev_router/config.py" = ["E501"]
+# A test docstring is the title of the Node test it ports, verbatim (lower case, no full stop).
+"tests/**" = ["D"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = ["$MYPY_CONFIG_FILE_DIR/src", "$MYPY_CONFIG_FILE_DIR"]
+files = ["$MYPY_CONFIG_FILE_DIR/src/jev_router", "$MYPY_CONFIG_FILE_DIR/tests"]
+explicit_package_bases = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool", "possibly-undefined"]

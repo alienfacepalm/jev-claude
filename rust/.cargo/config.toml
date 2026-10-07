@@ -1,0 +1,5 @@
+# Applies to every cargo command run inside rust/.
+[build]
+# `cargo doc` fails on any rustdoc warning (broken intra-doc links, bad code blocks), so the
+# documentation gate is the same command on every shell and in CI.
+rustdocflags = ["-D", "warnings"]

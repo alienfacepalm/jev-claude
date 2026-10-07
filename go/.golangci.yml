@@ -1,0 +1,125 @@
+# golangci-lint v2 configuration for the Go port. Pinned version: v2.1.6, the newest release
+# whose module builds with Go 1.23 (see doc/GO.md, "Lint and format"). Run from go/:
+#   golangci-lint run ./...
+#   golangci-lint fmt --diff ./...
+version: "2"
+
+run:
+  go: "1.23"
+  tests: true
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - errcheck       # unchecked errors
+    - govet          # go vet, plus the extra analyzers enabled below
+    - staticcheck    # staticcheck, gosimple and stylecheck (merged in v2)
+    - unused         # unused code
+    - ineffassign    # assignments that are never read
+    - errorlint      # errors.Is/As and %w instead of == and type assertions on errors
+    - bodyclose      # HTTP response bodies are closed
+    - noctx          # HTTP requests carry a context
+    - nilerr         # returning nil after checking err != nil
+    - copyloopvar    # pointless loop-variable copies (Go 1.22+ semantics)
+    - durationcheck  # multiplying two time.Durations
+    - makezero       # append to a slice made with a non-zero length
+    - wastedassign   # assignments overwritten before use
+    # Style and documentation
+    - revive         # golint successor: exported identifiers documented, naming
+    - gocritic       # diagnostic and style checks
+    - misspell       # common English misspellings in comments and strings
+    - unconvert      # unnecessary type conversions
+    - usestdlibvars  # http.MethodGet and friends instead of literals
+    - nolintlint     # every //nolint names its linter and carries a reason
+    - predeclared    # shadowing builtins (len, min, new, ...)
+  settings:
+    errcheck:
+      # Unchecked type assertions are left to panic: they assert types the code has just built.
+      check-type-assertions: false
+    govet:
+      enable:
+        - nilness
+        - unusedwrite
+        - sortslice
+        - stringintconv
+    staticcheck:
+      checks:
+        - all
+        # ST1000 (package comment) is covered by revive's package-comments rule.
+        - -ST1000
+        # ST1003 (initialisms such as Id/Url) would rename exported identifiers that mirror the
+        # Node names; revive's var-naming covers new code.
+        - -ST1003
+        # ST1005 (lower-case error strings): the port's error texts reproduce Node's thrown
+        # messages verbatim ("Command failed: git ...", "Connection error: ...", V8 TypeErrors),
+        # and they reach update.json, the debug log and Claude Code. go/staticcheck.conf says
+        # the same for standalone staticcheck.
+        - -ST1005
+    revive:
+      severity: error
+      enable-all-rules: false
+      rules:
+        - name: exported
+          arguments: [checkPrivateReceivers, sayRepetitiveInsteadOfStutters]
+        - name: package-comments
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+          # Same rule as staticcheck ST1005; reported once, by staticcheck.
+          disabled: true
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: var-declaration
+        - name: var-naming
+        - name: early-return
+        - name: unnecessary-stmt
+        - name: useless-break
+        - name: defer
+        - name: identical-branches
+        - name: atomic
+        - name: waitgroup-by-value
+        - name: datarace
+    gocritic:
+      enabled-tags: [diagnostic, style, performance]
+      disabled-checks:
+        # Signature-level advice for value parameters; the port keeps Node-shaped signatures.
+        - hugeParam
+        - paramTypeCombine
+        - unnamedResult
+    # misspell: no locale is set on purpose. The project writes British English ("behaviour"),
+    # so only real typos are flagged, not US/UK variants.
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+  exclusions:
+    presets:
+      # Close, Flush, os.Remove(All), os.(Un)Setenv, and writes to stdout/stderr: errors that
+      # cannot be acted on. Everything else (os.WriteFile, io.Copy, json, ...) is checked.
+      - std-error-handling
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/alienfacepalm/jev-claude/go
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

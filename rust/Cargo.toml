@@ -22,6 +22,42 @@ webpki-roots = "1"
 sha1 = "0.10"
 regex = "1"
 
-[profile.release]
-opt-level = 3
+# The lint policy, picked up by every `cargo build`, `cargo clippy` and `cargo doc`. CI runs
+# `cargo clippy --all-targets -- -D warnings`, so each warning here fails the build.
+[lints.rust]
+# The only unsafe code is two FFI calls that the standard library does not expose (the Windows
+# profile directory and the Unix uid, for `os.homedir`) and kill(2) for the launcher's signal
+# forwarding; each carries `#[allow(unsafe_code)]` and a SAFETY comment.
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+# The allows below are deliberate, one reason each.
+# This port reproduces JavaScript Number and UTF-16 arithmetic (SPEC 3), so numeric `as` casts
+# between f64, integers and code units are the specified semantics, not accidents.
+cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
+cast_precision_loss = "allow"
+cast_sign_loss = "allow"
+# `publish = false`: the library exists only for this crate's binaries and tests, so marking
+# ~140 public functions `#[must_use]` would be noise with no external caller to protect.
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+# Errors are the JavaScript exception messages SPEC.md specifies per function, and panics are
+# unreachable-by-construction `unwrap`s on literals; the section references in each doc say more
+# than a generic "# Errors" heading would.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+# Functions and local names follow the Node source line by line (SPEC traceability), so a long
+# Node function stays one long Rust function and keeps Node's short names.
+too_many_lines = "allow"
+similar_names = "allow"
+many_single_char_names = "allow"
 
