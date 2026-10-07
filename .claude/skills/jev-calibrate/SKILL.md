@@ -1,26 +1,31 @@
 ---
 name: jev-calibrate
-description: Check Jev Router's setup and models; in the router's own repository, re-tune it for new Claude models.
+description: Check Jev Router's setup and models (read-only). In the router's own repository, `retune` re-tunes it for new Claude models.
 disable-model-invocation: true
 allowed-tools: Bash(node *)
 ---
 
 !`node "${CLAUDE_SKILL_DIR}/../../../node/bin/jev-check.mjs"`
 
-## Report only
+## Report only (the default)
 
-If the report above says `Mode installed`, this is an installed copy of Jev Router. The same goes
-when the arguments are `check` (they are: `$ARGUMENTS`), which asks for the report alone, as the
-first-launch offer does. Return the report verbatim in a plain text code block. Then add at most two sentences, only about what needs
-the user's attention: routing being off, a model newer than the tuning, or tiers the account does
-not offer. Stop there. Do not edit files, run other tools, or search the web: tuning is done in
-the router's repository and reaches users through jev-router updates.
+Re-tuning happens only when the arguments are exactly `retune` (they are: `$ARGUMENTS`) and the
+report above says `Mode repository`. In every other case, report only: no arguments, `check` (the
+first-launch offer's), `Mode installed`, anything else. `Mode repository` alone is not a request to
+re-tune, because every copy made by the installer is a git clone and says it too. Return the report
+verbatim in a plain text code block. Then add at most two sentences, only about what needs the
+user's attention: routing being off, a model newer than the tuning, or tiers the account does not
+offer. Stop there. Do not edit files, run other tools, or search the web: tuning is done in the
+router's repository and reaches users through jev-router updates.
 
-## Repository: re-calibrate
+If the arguments are `retune` but the report says `Mode installed`, say that re-tuning is done in
+a clone of the router's repository, not an installed copy, and stop.
 
-If it says `Mode repository`, re-calibrate Jev Router for the current Claude models, using the
-report as part of step 1. The repo is the directory containing this skill's `.claude` folder:
-`${CLAUDE_SKILL_DIR}/../../..`. Work there, on a branch.
+## Repository: re-calibrate (only on `retune`)
+
+When the arguments are `retune` and the report says `Mode repository`, re-calibrate Jev Router for
+the current Claude models, using the report as part of step 1. The repo is the directory containing
+this skill's `.claude` folder: `${CLAUDE_SKILL_DIR}/../../..`. Work there, on a branch.
 
 The goal is the cheapest route to the best end result. Quality comes first, then cost; speed does
 not matter. When two models would both succeed, prefer the cheaper; when it is unclear whether the
