@@ -7,7 +7,25 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:f
 import http from "node:http";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
+import { test as nodeTest } from "node:test";
 import { fileURLToPath } from "node:url";
+
+/**
+ * Every harness test runs under one time limit, so a port that accepts a request and never answers
+ * fails that test instead of hanging `node --test conformance/harness` forever (node:test sets no
+ * limit by default). It sits well above the slowest legitimate test: a cold start of the proxy may
+ * take up to 20 s on its own, and two transport tests then race 5 s timers.
+ */
+export const TEST_TIMEOUT_MS = 60_000;
+
+/** How long `send` waits for a response: below TEST_TIMEOUT_MS, so the failure names the cause. */
+export const RESPONSE_TIMEOUT_MS = 20_000;
+
+/** `node:test`'s `test(name, [options], fn)` under the harness time limit; every harness test uses it. */
+export function test(name, options, fn) {
+  if (typeof options === "function") return nodeTest(name, { timeout: TEST_TIMEOUT_MS }, options);
+  return nodeTest(name, { timeout: TEST_TIMEOUT_MS, ...options }, fn);
+}
 
 export const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 export const FIXTURE = JSON.parse(readFileSync(join(ROOT, "conformance", "fixtures", "claude-code-print-request.json"), "utf8"));
@@ -179,7 +197,7 @@ export const UPSTREAM_REPLY_HEADERS = {
 export async function fakeUpstream(handle) {
   return recordingServer(
     handle ??
-      ((record, res) => {
+      ((_record, res) => {
         res.writeHead(200, UPSTREAM_REPLY_HEADERS);
         res.end('{"id":"msg_1","type":"message","model":"claude-haiku-4-5-20251001","content":[]}');
       }),
@@ -261,6 +279,7 @@ export function send(port, { method = "POST", path = "/v1/messages", headers = {
       res.on("end", () => done({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks.map((c) => c.data)), chunks, sent: all }));
       res.on("error", fail);
     });
+    req.setTimeout(RESPONSE_TIMEOUT_MS, () => req.destroy(new Error(`the proxy under test sent no response within ${RESPONSE_TIMEOUT_MS / 1000}s`)));
     req.on("error", fail);
     req.end(payload ?? undefined);
   });
@@ -305,7 +324,11 @@ const comparedOnClient = (name) => ["content-type", "content-encoding", "request
 
 /** SPEC 7.7, client side: the compared headers are exactly the upstream's. */
 export function assertRelayedHeaders(upstreamHeaders, clientHeaders) {
-  const want = Object.fromEntries(Object.entries(upstreamHeaders).map(([k, v]) => [k.toLowerCase(), String(v)]).filter(([k]) => comparedOnClient(k)));
+  const want = Object.fromEntries(
+    Object.entries(upstreamHeaders)
+      .map(([k, v]) => [k.toLowerCase(), String(v)])
+      .filter(([k]) => comparedOnClient(k)),
+  );
   const got = Object.fromEntries(Object.entries(clientHeaders).filter(([k]) => comparedOnClient(k)));
   assert.deepEqual(got, want, "content-type, content-encoding, request-id, anthropic-* and x-* are relayed as sent");
 }
@@ -336,7 +359,10 @@ export function continuation(body) {
 /** What the proxy should forward for a routed or defaulted body, by the reference functions. */
 export function rewritten(body, tier, model = node.config.idOf(tier)) {
   const copy = structuredClone(body);
-  copy.tools?.forEach((t) => node.proxy.sanitizeSchema(t.input_schema));
+  // forEach, as the proxy does: a `tools` that is not an array must throw (SPEC 7.3 step 1).
+  copy.tools?.forEach((t) => {
+    node.proxy.sanitizeSchema(t.input_schema);
+  });
   node.proxy.applyTier(copy, tier, model, {});
   return Buffer.from(JSON.stringify(copy));
 }
@@ -383,11 +409,13 @@ export function assertStatusFile(actual, expected, { from, to }) {
   const zero = (value, check) => {
     if (Array.isArray(value)) return value.map((v) => zero(v, check));
     if (value && typeof value === "object") {
-      return Object.fromEntries(Object.entries(value).map(([k, v]) => {
-        if (k !== "at") return [k, zero(v, check)];
-        if (check) assert.ok(typeof v === "number" && v >= from && v <= to, `at ${v} is a clock reading within the test (${from}..${to})`);
-        return [k, 0];
-      }));
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => {
+          if (k !== "at") return [k, zero(v, check)];
+          if (check) assert.ok(typeof v === "number" && v >= from && v <= to, `at ${v} is a clock reading within the test (${from}..${to})`);
+          return [k, 0];
+        }),
+      );
     }
     return value;
   };

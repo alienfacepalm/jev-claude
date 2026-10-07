@@ -17,8 +17,7 @@ const PROJECT_KEYS = new Set([
   "JEV_NO_STATUSLINE",
   "JEV_ICONS",
 ]);
-const isProjectKey = (key) =>
-  PROJECT_KEYS.has(key) || /^JEV_(?:[A-Z]+_)?(?:FORCE_)?EFFORT$/.test(key);
+const isProjectKey = (key) => PROJECT_KEYS.has(key) || /^JEV_(?:[A-Z]+_)?(?:FORCE_)?EFFORT$/.test(key);
 
 /** Keys only jev itself reads, removed from the environment handed to Claude Code. */
 export const PRIVATE_KEYS = ["JEV_API_KEY", "TYPESAFE_API_KEY"];

@@ -50,12 +50,17 @@ lines.push(
 lines.push(row("Tuned for", TIERS.map((t) => `${t.name} ${t.id}`).join(", ")));
 
 if (at === null) {
-  lines.push(row("Your account", "not read yet - Claude Code has not loaded the model list. Run /jev-calibrate again shortly."));
+  lines.push(
+    row("Your account", "not read yet - Claude Code has not loaded the model list. Run /jev-calibrate again shortly."),
+  );
 } else {
-  lines.push(row("Your account", `${models.join(", ") || "no Claude models listed"} (as of ${new Date(at).toLocaleString()})`));
+  lines.push(
+    row("Your account", `${models.join(", ") || "no Claude models listed"} (as of ${new Date(at).toLocaleString()})`),
+  );
   const offered = new Set(models.map((id) => tierOf(id)));
   const missing = TIERS.filter((t) => !offered.has(t.name)).map((t) => t.name);
-  if (missing.length) lines.push(row("", `not offered to this account: ${missing.join(", ")} (routing steps around them)`));
+  if (missing.length)
+    lines.push(row("", `not offered to this account: ${missing.join(", ")} (routing steps around them)`));
   lines.push(
     row(
       "Newer models",

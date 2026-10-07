@@ -2,17 +2,27 @@ import "./isolate-status.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync, copyFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  unlinkSync,
+  copyFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { startProxy } from "../src/proxy.mjs";
 import { idOf } from "../src/config.mjs";
-import { writeDecision, readStatus, dumpBody, STATUS_DIR } from "../src/status.mjs";
+import { dumpBody, STATUS_DIR } from "../src/status.mjs";
 import { loadEnv, childEnv } from "../src/env.mjs";
 import { resolveCommand, shimScript, launchSpec, spawnSpec, quoteForCmd } from "../src/launch.mjs";
 
 const HAIKU = idOf("haiku");
-const OPUS = idOf("opus");
 const SONNET = idOf("sonnet");
 const sure = (choice) => async () => ({ choice, confidence: 0.97, ms: 1 });
 const metadata = (session) => ({ user_id: JSON.stringify({ session_id: session }) });
@@ -126,7 +136,9 @@ test("a client that leaves stops the upstream response", async (t) => {
   const client = http.request({ port: proxy.port, host: "127.0.0.1", method: "POST", path: "/v1/messages" });
   client.on("response", (res) => res.once("data", () => client.destroy()));
   client.on("error", () => {});
-  client.end(JSON.stringify({ model: "jev-router", tools: [{ name: "Bash" }], messages: [{ role: "user", content: "go" }] }));
+  client.end(
+    JSON.stringify({ model: "jev-router", tools: [{ name: "Bash" }], messages: [{ role: "user", content: "go" }] }),
+  );
 
   assert.equal(await gaveUp, true, "the upstream stream was cut short rather than run to the end");
 });
@@ -159,9 +171,35 @@ test("an upstream that drops mid-stream fails the client instead of hanging it",
       clearTimeout(timer);
       resolve(false);
     });
-    client.end(JSON.stringify({ model: "jev-router", tools: [{ name: "Bash" }], messages: [{ role: "user", content: "go" }] }));
+    client.end(
+      JSON.stringify({ model: "jev-router", tools: [{ name: "Bash" }], messages: [{ role: "user", content: "go" }] }),
+    );
   });
   assert.equal(await ended, false, "the client sees an incomplete response, not a clean end");
+});
+
+test("an upstream URL that is not http(s) is refused at startup, not on the first request", async () => {
+  for (const upstreamURL of ["api.anthropic.com", "localhost:4000", "not a url", "ftp://example.com"]) {
+    await assert.rejects(startProxy({ upstreamURL, route: sure(HAIKU) }), {
+      message: `invalid upstream URL (ANTHROPIC_BASE_URL): ${upstreamURL}`,
+    });
+  }
+});
+
+test("the proxy host exits 1 with a [jev] message, and no port, for a malformed ANTHROPIC_BASE_URL", () => {
+  // A throwaway home, so the user's own ~/.jev-router.env can neither supply nor change anything.
+  const home = mkdtempSync(join(tmpdir(), "jev-badurl-home-"));
+  const host = fileURLToPath(new URL("../scripts/proxy-host.mjs", import.meta.url));
+  const out = spawnSync(process.execPath, [host], {
+    cwd: home,
+    encoding: "utf8",
+    timeout: 20_000,
+    env: { ...process.env, HOME: home, USERPROFILE: home, ANTHROPIC_BASE_URL: "api.anthropic.com", JEV_API_KEY: "x" },
+  });
+  rmSync(home, { recursive: true, force: true });
+  assert.equal(out.status, 1);
+  assert.equal(out.stderr, "[jev] invalid upstream URL (ANTHROPIC_BASE_URL): api.anthropic.com\n");
+  assert.doesNotMatch(out.stdout, /PORT=/);
 });
 
 test("a project's .env may only set jev's own keys", () => {
@@ -265,10 +303,17 @@ test("prefers Claude's .cmd shim over its .ps1 and runs the script behind it dir
 });
 
 test("a PowerShell shim is run past the default execution policy", () => {
-  assert.deepEqual(launchSpec("C:\\bin\\claude.ps1").prefix.slice(0, 4), ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
+  assert.deepEqual(launchSpec("C:\\bin\\claude.ps1").prefix.slice(0, 4), [
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+  ]);
 });
 
-test("a shim with no script to run directly is quoted for cmd.exe", { skip: process.platform !== "win32" }, async () => {
+test("a shim with no script to run directly is quoted for cmd.exe", {
+  skip: process.platform !== "win32",
+}, async () => {
   const { dir } = shimDir("opaque", { withScript: false });
   const spec = launchSpec(join(dir, "opaque.cmd"));
   assert.ok(spec.shim, "falls back to cmd.exe");

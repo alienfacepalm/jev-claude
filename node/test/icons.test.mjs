@@ -11,7 +11,12 @@ test("symbols everywhere but the legacy Windows console", () => {
 });
 
 test("a Windows terminal that announces itself gets symbols", () => {
-  for (const env of [{ WT_SESSION: "1" }, { TERM_PROGRAM: "vscode" }, { TERM_PROGRAM: "mintty" }, { ConEmuPID: "42" }]) {
+  for (const env of [
+    { WT_SESSION: "1" },
+    { TERM_PROGRAM: "vscode" },
+    { TERM_PROGRAM: "mintty" },
+    { ConEmuPID: "42" },
+  ]) {
     assert.equal(isText(icons(env, "win32")), false, JSON.stringify(env));
   }
 });

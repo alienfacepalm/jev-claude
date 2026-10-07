@@ -1,6 +1,5 @@
 // GET /v1/models through the proxy under test: the reply is relayed whatever its status, the
 // account's catalog feeds the Jev menu, and calibration.json records it (SPEC 7.2 step 5, 8.3).
-import test from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import {
@@ -19,6 +18,7 @@ import {
   send,
   setup,
   FIXTURE,
+  test,
 } from "./helpers.mjs";
 
 const CATALOG = {
@@ -69,7 +69,10 @@ test("a 200 catalog is relayed, recorded for calibration, and becomes the Jev me
   assertForwardedHeaders(res.sent, forwarded, { host: upstream.url.slice("http://".length), body: Buffer.alloc(0), acceptEncodingRemoved: true });
 
   const menu = node.proxy.newestPerTier(node.proxy.claudeModels(CATALOG.data));
-  assert.deepEqual(menu.map((m) => m.id), ["claude-opus-6", "claude-sonnet-5-5", "claude-haiku-4-5-20251001"]);
+  assert.deepEqual(
+    menu.map((m) => m.id),
+    ["claude-opus-6", "claude-sonnet-5-5", "claude-haiku-4-5-20251001"],
+  );
   assertStatusFile(calibrationOf(proxy), { newer: ["claude-opus-6"], models: menu.map((m) => m.id), at: 0 }, { from, to: afterModels });
 
   const body = fixtureBody("harness-catalog");
@@ -93,11 +96,7 @@ test("a 401 is relayed as sent and calibration falls back to the configured mode
   assert.equal(res.body.toString(), error);
   assertRelayedHeaders(MODELS_HEADERS, res.headers);
   assertForwardedHeaders(res.sent, upstream.requests[0], { host: upstream.url.slice("http://".length), body: Buffer.alloc(0), acceptEncodingRemoved: true });
-  assertStatusFile(
-    calibrationOf(proxy),
-    { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 },
-    { from, to },
-  );
+  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to });
 });
 
 test("a catalog whose data cannot be iterated, or that is not JSON, writes no calibration file", async (t) => {
@@ -119,9 +118,5 @@ test("a catalog whose data cannot be iterated, or that is not JSON, writes no ca
   }
   const from = Date.now();
   await send(proxy.port, { method: "GET", path: "/v1/models", headers: modelsHeaders });
-  assertStatusFile(
-    calibrationOf(proxy),
-    { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 },
-    { from, to: Date.now() },
-  );
+  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to: Date.now() });
 });

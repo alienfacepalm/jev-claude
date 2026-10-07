@@ -35,7 +35,8 @@ try {
 }
 
 const status = readStatus(input.session_id);
-const dir = (input.workspace?.current_dir ?? input.cwd ?? "").split(/[\\/]/).pop();
+const fullDir = input.workspace?.current_dir ?? input.cwd ?? "";
+const dir = fullDir.split(/[\\/]/).pop();
 const pct = Math.round(input.context_window?.used_percentage ?? 0);
 const { main, subagents } = agentView(status);
 
@@ -75,8 +76,8 @@ if (subagents.length) {
   const shown = subagents.slice(0, 3);
   const names = shown.map((a) => {
     const color = COLOR[a.tier ?? tierOf(a.model)] ?? "";
-    // ☞ (hand-picked), not ☞: U+23F8 is an emoji, so terminals draw it double-width in a
-    // single cell and it would cover the next character.
+    // ☞ (hand-picked), not the pause button (U+23F8): that one is an emoji, so terminals draw it
+    // double-width in a single cell and it would cover the next character.
     return `${color}${a.manual ? "☞ " : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
@@ -94,10 +95,17 @@ const notice = newer.length
 // not say which branch is checked out there, and a worktree is exactly where one gets lost.
 // Every item on the line is a dimmed label (a glyph, or its word) and its value.
 const loc = locationInfo(input);
-const branchPart = loc?.branch != null ? ` ${DIM}·${RESET} ${I.branch} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}` : "";
+const branchPart =
+  loc?.branch != null
+    ? ` ${DIM}·${RESET} ${I.branch} \x1b[34m${clip(loc.branch || "(detached)", MAX_BRANCH)}${RESET}`
+    : "";
 const worktreePart = loc?.worktree ? ` ${DIM}·${RESET} ${I.worktree} \x1b[32m${loc.worktree}${RESET}` : "";
 const where = branchPart + worktreePart;
 // A worktree is usually a directory of the same name, and saying it twice costs a whole item.
 const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${I.dir} ${dir}` : "";
 
-process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${notice}\n`);
+// The whole path last, dimmed: the line cannot be right-aligned (Claude Code does not say how wide
+// the terminal is), but last is the rightmost item, and the first one cut when the line is too long.
+const fullPath = fullDir ? ` ${DIM}· ${fullDir}${RESET}` : "";
+
+process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${notice}${fullPath}\n`);

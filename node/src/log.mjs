@@ -13,6 +13,7 @@ const interactive = process.stdout.isTTY;
 const FILE_MODE = 0o600;
 let tightened = false;
 
+/** Writes one `[jev]` line: to stderr in print mode, to LOG_FILE (owner-only) under the TUI. */
 export function log(line) {
   const text = `[jev] ${line}\n`;
   if (!interactive) return void process.stderr.write(text);
@@ -28,4 +29,5 @@ export function log(line) {
   }
 }
 
+/** `log`, only when JEV_DEBUG is set. */
 export const debug = (line) => process.env.JEV_DEBUG && log(line);

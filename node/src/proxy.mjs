@@ -88,7 +88,7 @@ export function newTurnPrompt(body) {
   // user's prompt. It is not a turn of its own, and treating it as the last message meant the
   // first prompt of every session with a hook installed was never routed.
   const last = [...(body?.messages ?? [])].reverse().find((m) => m?.role !== "system");
-  if (!last || last.role !== "user") return null;
+  if (last?.role !== "user") return null;
   let text;
   if (typeof last.content === "string") {
     text = last.content;
@@ -175,7 +175,9 @@ export function claudeModels(catalog = []) {
         model.display_name,
         model.created_at && `released ${model.created_at.slice(0, 10)}`,
         model.max_input_tokens && `${model.max_input_tokens} input tokens`,
-      ].filter(Boolean).join("; "),
+      ]
+        .filter(Boolean)
+        .join("; "),
     }))
     .sort((a, b) => compareVersions(versionOf(b), versionOf(a)) || b.releasedAt.localeCompare(a.releasedAt));
   return models.length
@@ -213,16 +215,6 @@ export function newerThanCalibrated(catalog = []) {
 }
 
 /**
- * Identifies the conversation a request belongs to. Claude Code runs sub-agents through the
- * same endpoint, so a single pinned model would let a sub-agent's choice leak into the main
- * conversation.
- *
- * Only stable fields may be used. Claude Code moves its `cache_control` breakpoint between
- * requests and rewrites message metadata, so the key is built from the session id plus the
- * text of the first message, which is fixed once a conversation starts and differs between
- * the main agent and each sub-agent.
- */
-/**
  * Session id Claude Code embeds in request metadata, or "" when it isn't present.
  * `metadata.user_id` is a JSON string, not a plain id.
  */
@@ -234,6 +226,16 @@ export function sessionOf(body) {
   }
 }
 
+/**
+ * Identifies the conversation a request belongs to. Claude Code runs sub-agents through the
+ * same endpoint, so a single pinned model would let a sub-agent's choice leak into the main
+ * conversation.
+ *
+ * Only stable fields may be used. Claude Code moves its `cache_control` breakpoint between
+ * requests and rewrites message metadata, so the key is built from the session id plus the
+ * text of the first message, which is fixed once a conversation starts and differs between
+ * the main agent and each sub-agent.
+ */
 export function conversationKey(body) {
   const session = sessionOf(body);
   const content = body?.messages?.[0]?.content;
@@ -263,7 +265,10 @@ export function agentLabel(body, max = 48) {
     typeof content === "string"
       ? content
       : Array.isArray(content)
-        ? content.filter((b) => b.type === "text").map((b) => b.text).join(" ")
+        ? content
+            .filter((b) => b.type === "text")
+            .map((b) => b.text)
+            .join(" ")
         : "";
   const clean = text
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "")
@@ -297,7 +302,34 @@ export function agentOf(body, mains) {
 // Conversations whose routing state is kept per proxy.
 const MAX_CONVERSATIONS = 50;
 
+/**
+ * The upstream to forward to, parsed once. Anything but an absolute http(s) URL is refused here, at
+ * startup: parsing it per request instead threw inside the request handler, which killed the
+ * launcher on the first turn and left Claude Code talking to a dead port.
+ */
+function parseUpstream(upstreamURL) {
+  let target = null;
+  try {
+    target = new URL(upstreamURL);
+  } catch {
+    // Reported below with the value itself, which is what the user needs to see.
+  }
+  if (!target || (target.protocol !== "http:" && target.protocol !== "https:")) {
+    throw new Error(`invalid upstream URL (ANTHROPIC_BASE_URL): ${upstreamURL}`);
+  }
+  return target;
+}
+
+/**
+ * Starts the local routing proxy on an ephemeral 127.0.0.1 port and resolves `{ port, close }`.
+ * `upstreamURL` is where requests are forwarded (the real Anthropic API by default, or the proxy
+ * that was upstream before jev); it must be an http(s) URL, or this rejects before listening.
+ * `route` picks a model for a new turn (`askJev` by default; tests pass a stub), and
+ * `calibrationFile` overrides where the model-catalog calibration notice is written.
+ */
 export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = askJev, calibrationFile } = {}) {
+  const target = parseUpstream(upstreamURL);
+  const transport = target.protocol === "http:" ? http : https;
   // Tier routed for each conversation's turn in flight, reused by its follow-up requests and
   // by the cache-rebuild guard, which needs to know what the prompt cache was built on.
   const convos = new Map();
@@ -326,7 +358,8 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
       const oldest = [...convos.keys()];
       convos.delete(oldest.find((k) => !mainKeys.has(k)) ?? oldest[0]);
     }
-    convos.set(key, (s ??= { tier: null }));
+    s ??= { tier: null };
+    convos.set(key, s);
     return s;
   };
 
@@ -353,7 +386,11 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
           body = JSON.parse(out.toString());
           // Claude Code's request shape is undocumented and moves; JEV_DUMP captures it.
           dumpBody(body);
-          body.tools?.forEach((t) => sanitizeSchema(t.input_schema));
+          // forEach, not for...of: a `tools` that is not an array must throw (SPEC 7.3 step 1), where
+          // a loop would walk a string's characters.
+          body.tools?.forEach((t) => {
+            sanitizeSchema(t.input_schema);
+          });
 
           // Anything that is not the sentinel is a model the user chose, and an explicit
           // choice beats the router. That also covers Claude Code's own cheap Haiku calls
@@ -381,9 +418,7 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
             let fresh = null;
             if (prompt && !explaining) {
               const models = newestPerTier(
-                claudeModels([...catalog.values()]).filter((model) =>
-                  availableTiers().includes(model.tier),
-                ),
+                claudeModels([...catalog.values()]).filter((model) => availableTiers().includes(model.tier)),
               );
               const available = [...new Set(models.map((model) => model.tier))];
               const currentModel = state.model ?? modelForTier(models, current);
@@ -404,12 +439,11 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
                 // cache for a downgrade to throw away.
                 contextTokens: state.tier ? contextTokens : 0,
               });
-              const model =
-                shouldUseExactModel(reason, chosen?.tier, tier)
-                  ? chosen.id
-                  : tier === current
-                    ? currentModel
-                    : modelForTier(models, tier);
+              const model = shouldUseExactModel(reason, chosen?.tier, tier)
+                ? chosen.id
+                : tier === current
+                  ? currentModel
+                  : modelForTier(models, tier);
               state.tier = tier;
               state.model = model;
               fresh = {
@@ -461,85 +495,95 @@ export async function startProxy({ upstreamURL = ANTHROPIC_BASE_URL, route = ask
       // The user gave up while Jev was being asked; there is nobody to send this turn for.
       if (res.destroyed) return;
 
-      const target = new URL(upstreamURL);
-      const transport = target.protocol === "http:" ? http : https;
-      const headers = upstreamHeaders(req.headers, target.host, out);
-      if (req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "")) {
-        delete headers["accept-encoding"];
-      }
-      // Under JEV_DEBUG, ask for an uncompressed stream so the model the API reports can be
-      // read back out of it. Not worth the bandwidth cost in normal operation.
-      if (process.env.JEV_DEBUG) delete headers["accept-encoding"];
-      upstream = transport.request(
-        {
-          hostname: target.hostname,
-          port: target.port || undefined,
-          path: `${target.pathname.replace(/\/$/, "")}${req.url}`,
-          method: req.method,
-          headers,
-        },
-        (up) => {
-          const isModels = req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "");
-          if (isModels) {
-            const chunks = [];
-            up.on("error", (e) => res.destroy(e));
-            up.on("data", (chunk) => chunks.push(chunk));
-            up.on("end", () => {
-              const data = Buffer.concat(chunks);
-              try {
-                for (const model of JSON.parse(data.toString()).data ?? []) {
-                  if (tierOf(model?.id)) catalog.set(model.id, model);
-                }
-                writeCalibration(
-                  {
-                    newer: newerThanCalibrated([...catalog.values()]),
-                    models: newestPerTier(claudeModels([...catalog.values()])).map((model) => model.id),
-                  },
-                  calibrationFile,
-                );
-              } catch (err) {
-                debug(`could not read Claude model catalog: ${err.message}`);
-              }
-              const headers = { ...up.headers };
-              delete headers["content-length"];
-              res.writeHead(up.statusCode, headers);
-              res.end(data);
-            });
-            return;
-          }
-          res.writeHead(up.statusCode, up.headers);
-          // Report the model the API itself says it used, so the routing can be confirmed
-          // from the wire rather than trusted from our own decision log. Claude Code's UI
-          // always shows the model it asked for, never the one we rewrote to.
-          if (process.env.JEV_DEBUG) {
-            let seen = false;
-            up.on("data", (c) => {
-              if (seen) return;
-              const m = /"model"\s*:\s*"([^"]+)"/.exec(c.toString("utf8"));
-              if (!m) return;
-              seen = true;
-              debug(`${up.statusCode} served by ${m[1]}`);
-            });
-          }
-          // Ties the two streams together both ways: a client that leaves stops the upstream
-          // read, and an upstream that drops mid-stream fails the client fast rather than
-          // leaving Claude Code waiting on a response that will never finish.
-          pipeline(up, res, (err) => {
-            if (err) debug(`stream ended early: ${err.message}`);
-          });
-        },
-      );
-      upstream.on("error", (e) => {
-        // Destroyed on purpose after the client left; there is no one to tell.
+      // An error reported to the client the one way the proxy reports any: a 502 with a JSON body,
+      // or, once the response has started, cutting it, since an error body would be appended to an
+      // event stream as garbage. Destroyed on purpose after the client left: no one to tell.
+      const fail = (e) => {
         if (res.destroyed) return;
-        debug(`upstream error: ${e.message}`);
-        // Mid-stream, an error body would be appended to an event stream as garbage.
         if (res.headersSent) return void res.destroy(e);
         res.writeHead(502, { "content-type": "application/json" });
         res.end(JSON.stringify({ type: "error", error: { message: e.message } }));
-      });
-      if (out.length) upstream.write(out);
-      upstream.end();
+      };
+
+      // Nothing past here may reject: this listener is async, and an unhandled rejection ends the
+      // process the proxy shares with the launcher.
+      try {
+        const headers = upstreamHeaders(req.headers, target.host, out);
+        if (req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "")) {
+          delete headers["accept-encoding"];
+        }
+        // Under JEV_DEBUG, ask for an uncompressed stream so the model the API reports can be
+        // read back out of it. Not worth the bandwidth cost in normal operation.
+        if (process.env.JEV_DEBUG) delete headers["accept-encoding"];
+        upstream = transport.request(
+          {
+            hostname: target.hostname,
+            port: target.port || undefined,
+            path: `${target.pathname.replace(/\/$/, "")}${req.url}`,
+            method: req.method,
+            headers,
+          },
+          (up) => {
+            const isModels = req.method === "GET" && /^\/v1\/models(?:\?|$)/.test(req.url ?? "");
+            if (isModels) {
+              const chunks = [];
+              up.on("error", (e) => res.destroy(e));
+              up.on("data", (chunk) => chunks.push(chunk));
+              up.on("end", () => {
+                const data = Buffer.concat(chunks);
+                try {
+                  for (const model of JSON.parse(data.toString()).data ?? []) {
+                    if (tierOf(model?.id)) catalog.set(model.id, model);
+                  }
+                  writeCalibration(
+                    {
+                      newer: newerThanCalibrated([...catalog.values()]),
+                      models: newestPerTier(claudeModels([...catalog.values()])).map((model) => model.id),
+                    },
+                    calibrationFile,
+                  );
+                } catch (err) {
+                  debug(`could not read Claude model catalog: ${err.message}`);
+                }
+                const headers = { ...up.headers };
+                delete headers["content-length"];
+                res.writeHead(up.statusCode, headers);
+                res.end(data);
+              });
+              return;
+            }
+            res.writeHead(up.statusCode, up.headers);
+            // Report the model the API itself says it used, so the routing can be confirmed
+            // from the wire rather than trusted from our own decision log. Claude Code's UI
+            // always shows the model it asked for, never the one we rewrote to.
+            if (process.env.JEV_DEBUG) {
+              let seen = false;
+              up.on("data", (c) => {
+                if (seen) return;
+                const m = /"model"\s*:\s*"([^"]+)"/.exec(c.toString("utf8"));
+                if (!m) return;
+                seen = true;
+                debug(`${up.statusCode} served by ${m[1]}`);
+              });
+            }
+            // Ties the two streams together both ways: a client that leaves stops the upstream
+            // read, and an upstream that drops mid-stream fails the client fast rather than
+            // leaving Claude Code waiting on a response that will never finish.
+            pipeline(up, res, (err) => {
+              if (err) debug(`stream ended early: ${err.message}`);
+            });
+          },
+        );
+        upstream.on("error", (e) => {
+          if (!res.destroyed) debug(`upstream error: ${e.message}`);
+          fail(e);
+        });
+        if (out.length) upstream.write(out);
+        upstream.end();
+      } catch (e) {
+        debug(`request failed: ${e.message}`);
+        fail(e);
+      }
     });
   });
 

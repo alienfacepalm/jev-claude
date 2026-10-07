@@ -36,7 +36,7 @@ export default function statusCases({ status }) {
     // Thirteen sub-agents: the map passes 12 keys and the trim keeps the main entry plus the 11
     // newest sub-agents by `at`, ties in insertion order.
     const ats = [2000, 2000, 2000, 1500, 4000, 2000, 1500, 2500, 2500, 2000, 1000, 4000, 2000];
-    ats.forEach((at, i) => steps.push(wd(id, decision(at, { tier: "haiku", model: "claude-haiku-4-5-20251001", effort: null, reason: "jev" }), sub(i))));
+    for (const [i, at] of ats.entries()) steps.push(wd(id, decision(at, { tier: "haiku", model: "claude-haiku-4-5-20251001", effort: null, reason: "jev" }), sub(i)));
     steps.push(mm(id, "claude-haiku-4-5", sub(1)));
     steps.push(mm(id, "claude-opus-4-6", sub(99)));
     steps.push(wd(id, decision(5000, { confidence: undefined, reason: "low-confidence-default" }), sub(1)));
@@ -96,13 +96,20 @@ export default function statusCases({ status }) {
   // times against Date.now. Under the pinned clock it would delete the file just written, making
   // the first step depend on when the generator ran, so it is triggered here, unpinned, first.
   status.writeStatus("wd-prune-warmup", { at: 0 });
+  // Every step with an id changes its file (writeDecision always appends to the history, markManual
+  // always rewrites the agent or the flag), so a file that did not change is a write the OS refused
+  // (on Windows, a rename over a file someone else holds open). Recording it would make the previous
+  // file this step's expected value, so the generator stops instead.
   const writeDecision = sequences.map(([name, steps]) => {
-    const files = steps.map((step) =>
+    const files = steps.map((step, i) =>
       pin(() => {
         const agent = step.agent ?? null;
+        const before = JSON.stringify(status.readStatus(step.id));
         if (step.op === "writeDecision") status.writeDecision(step.id, structuredClone(step.decision), agent);
         else status.markManual(step.id, step.model, agent);
-        return { file: tagClock(status.readStatus(step.id)) };
+        const after = status.readStatus(step.id);
+        if (step.id && JSON.stringify(after) === before) throw new Error(`${name} step ${i}: status write did not land`);
+        return { file: tagClock(after) };
       }),
     );
     return { name, input: { steps }, expected: files };

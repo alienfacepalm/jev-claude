@@ -1,7 +1,6 @@
 // Routed, passthrough, auxiliary, continuation, and failure turns through the proxy under test,
 // with the Jev request, the forwarded request, the status file, and the status line checked for
 // each (SPEC 7.2-7.7, 8.2, 12, 16.3).
-import test from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import {
@@ -29,6 +28,7 @@ import {
   setup,
   UPSTREAM_REPLY_HEADERS,
   FIXTURE,
+  test,
 } from "./helpers.mjs";
 
 const HAIKU = "claude-haiku-4-5-20251001";
@@ -38,9 +38,10 @@ const CYAN = "\x1b[36m";
 const PATH = FIXTURE.url;
 
 /** The status line's stdin for a session, in a directory that does not exist (so no git branch). */
-const statusInput = (proxy, session, extra = {}) =>
-  JSON.stringify({ session_id: session, workspace: { current_dir: join(proxy.dirs.base, "no-such-dir", "proj") }, context_window: { used_percentage: 12.5 }, ...extra });
-const tail = `${SEP}${icon("❐")} proj${SEP}${icon("≡")} 13%\n`;
+const statusDir = (proxy) => join(proxy.dirs.base, "no-such-dir", "proj");
+const statusInput = (proxy, session, extra = {}) => JSON.stringify({ session_id: session, workspace: { current_dir: statusDir(proxy) }, context_window: { used_percentage: 12.5 }, ...extra });
+// The end of the line: the directory name, the context share, then the whole path, dimmed (SPEC 12).
+const tailOf = (proxy) => `${SEP}${icon("❐")} proj${SEP}${icon("≡")} 13% ${DIM}· ${statusDir(proxy)}${RESET}\n`;
 
 const fileOf = (proxy, session) => readJSON(join(proxy.dirs.status, `${session}.json`));
 
@@ -81,19 +82,18 @@ test("a routed turn: the Jev request, the rewritten request, the status file, an
   const label = node.proxy.agentLabel(body);
   const decision = routedStatus({ body, tier: "haiku", model: HAIKU, jev: answer, reason: "jev", request, effort: null });
   const agent = { label, main: true, tier: "haiku", model: HAIKU, confidence: 0.92, effort: null, reason: "jev", at: 0 };
-  assertStatusFile(
-    fileOf(proxy, session),
-    { ...decision, agents: { [key]: agent }, history: [{ ...decision, agent: { key, label, main: true } }] },
-    { from, to },
-  );
+  assertStatusFile(fileOf(proxy, session), { ...decision, agents: { [key]: agent }, history: [{ ...decision, agent: { key, label, main: true } }] }, { from, to });
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${tailOf(proxy)}`);
 
   // The fire-and-forget prewarm (SPEC 5.4) reaches Jev's origin.
   const deadline = Date.now() + 3000;
   while (!jev.requests.some((r) => r.method === "HEAD") && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50));
-  assert.ok(jev.requests.some((r) => r.method === "HEAD" && r.url === "/"), "a HEAD request warmed the Jev connection");
+  assert.ok(
+    jev.requests.some((r) => r.method === "HEAD" && r.url === "/"),
+    "a HEAD request warmed the Jev connection",
+  );
 });
 
 test("an auxiliary call is not routed, a tool continuation keeps the tier, and a sub-agent gets its own", async (t) => {
@@ -158,7 +158,7 @@ test("an auxiliary call is not routed, a tool continuation keeps the tier, and a
   );
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tailOf(proxy)}`);
 });
 
 test("a model the user picked passes through untouched and pauses routing", async (t) => {
@@ -191,7 +191,7 @@ test("a model the user picked passes through untouched and pauses routing", asyn
   assert.equal(jev.posts().length, 0);
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session, { model: { display_name: "Opus 5.5" } }));
-  assert.equal(line, `${DIM}☞ manual${RESET} Opus 5.5${tail}`);
+  assert.equal(line, `${DIM}☞ manual${RESET} Opus 5.5${tailOf(proxy)}`);
 });
 
 test("a Jev answer naming a model that is not on the menu counts as no answer", async (t) => {
@@ -220,7 +220,7 @@ test("a Jev answer naming a model that is not on the menu counts as no answer", 
     { from, to },
   );
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET} ${DIM}(90%)${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET} ${DIM}(90%)${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tailOf(proxy)}`);
 });
 
 test("when Jev fails after its one retry, the turn runs on the default tier", async (t) => {
@@ -251,7 +251,7 @@ test("when Jev fails after its one retry, the turn runs on the default tier", as
     { from, to },
   );
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tailOf(proxy)}`);
 });
 
 test("a token count request is processed like a turn", async (t) => {

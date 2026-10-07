@@ -158,7 +158,10 @@ export default function displayCases({ root, reasons, icons, legend, explain, wo
   ];
   const locationInfo = locations.map(([name, input, branch]) => {
     const asked = [];
-    const result = worktree.locationInfo(structuredClone(input), (dir) => (asked.push(dir), branch));
+    const result = worktree.locationInfo(structuredClone(input), (dir) => {
+      asked.push(dir);
+      return branch;
+    });
     return { name, input: { input, branch }, expected: { result, asked } };
   });
 

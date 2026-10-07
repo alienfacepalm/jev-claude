@@ -28,7 +28,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -60,7 +60,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -92,7 +92,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(91%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m xhigh \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(91%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m xhigh \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -124,7 +124,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m(97%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m(97%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -156,7 +156,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[33mFable 5.1\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[33mFable 5.1\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -188,7 +188,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(keeping the cache)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(keeping the cache)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -220,7 +220,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(router offline)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(router offline)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -252,7 +252,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mmystery-9\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mmystery-9\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -282,7 +282,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mopus\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mopus\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -314,7 +314,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(13%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(13%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -339,7 +339,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m☞ manual\u001b[0m Opus 4.6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m Opus 4.6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -364,7 +364,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m☞ manual\u001b[0m claude-opus-4-6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m claude-opus-4-6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -387,7 +387,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m☞ manual\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -403,7 +403,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m☞ manual\u001b[0m Sonnet 5 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m Sonnet 5 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -436,7 +436,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -455,7 +455,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -465,7 +465,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -507,7 +507,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -539,7 +539,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -614,7 +614,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m☞ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m☞ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -651,7 +651,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1magents\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[1mmodel\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1meffort\u001b[0m high \u001b[2m·\u001b[0m \u001b[1magents\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -687,7 +687,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m mystery\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m mystery\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -697,7 +697,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -707,7 +707,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mCOR-1\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mCOR-1\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/COR-1\u001b[0m\n"
     }
   },
   {
@@ -717,7 +717,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mCOR-1263/multi-edit-inspect…\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mCOR-1263/multi-edit-inspect…\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -727,7 +727,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34maaaaaaaaaaaaaaaaaaaaaaaaaaaa\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34maaaaaaaaaaaaaaaaaaaaaaaaaaaa\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -737,7 +737,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mbbbbbbbbbbbbbbbbbbbbbbbbbbb…\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mbranch\u001b[0m \u001b[34mbbbbbbbbbbbbbbbbbbbbbbbbbbb…\u001b[0m \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -747,7 +747,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34m🚀ccccccccccccccccccccccccc…\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34m🚀ccccccccccccccccccccccccc…\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -757,7 +757,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34m(detached)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34m(detached)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mwt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -767,7 +767,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mscratch\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mworktree\u001b[0m \u001b[32mscratch\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -777,7 +777,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· C:\\Users\\me\\proj\u001b[0m\n"
     }
   },
   {
@@ -787,7 +787,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj/\u001b[0m\n"
     }
   },
   {
@@ -797,7 +797,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m repo \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 0%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m repo \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 0% \u001b[2m· /elsewhere/repo\u001b[0m\n"
     }
   },
   {
@@ -807,7 +807,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 13%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 13% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -817,7 +817,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 42%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 42% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -827,7 +827,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 0%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 0% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -837,7 +837,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m NaN%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m NaN% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -847,7 +847,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 0%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 0% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -857,7 +857,7 @@
       "icons": "symbols"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 50%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 50% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -898,7 +898,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -917,7 +917,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6 +2: /jev-calibrate\u001b[0m\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6 +2: /jev-calibrate\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -932,7 +932,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -947,7 +947,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
     }
   },
   {
@@ -958,7 +958,7 @@
       "icons": "text"
     },
     "expected": {
-      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8%\n"
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
     }
   }
 ]

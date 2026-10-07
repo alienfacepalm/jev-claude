@@ -1,8 +1,9 @@
 import { execFile } from "node:child_process";
-import { mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
+import { renameOver } from "./atomic-rename.mjs";
 
 const run = promisify(execFile);
 
@@ -30,6 +31,7 @@ async function git(root, args, timeout = LOCAL_TIMEOUT_MS) {
   return stdout.trim();
 }
 
+/** The saved update-check state, or null when it is missing or unreadable. */
 export function readState(file = UPDATE_FILE) {
   try {
     const state = JSON.parse(readFileSync(file, "utf8"));
@@ -39,13 +41,14 @@ export function readState(file = UPDATE_FILE) {
   }
 }
 
+/** Saves the update-check state atomically; a failure is ignored, since the check simply runs again. */
 export function writeState(state, file = UPDATE_FILE) {
   try {
     mkdirSync(dirname(file), { recursive: true });
     // Renamed into place: a launch reading it while a background check writes never sees half.
     const temp = `${file}.${process.pid}.tmp`;
     writeFileSync(temp, JSON.stringify(state));
-    renameSync(temp, file);
+    renameOver(temp, file);
   } catch {
     // Unwritable home directory: the check runs again next launch, which is harmless.
   }
@@ -59,7 +62,11 @@ export function isCheckDue(state, now = Date.now(), everyMs = CHECK_EVERY_MS) {
 
 /** Compares dotted release numbers; negative when `a` is older than `b`. Pre-release tags are ignored. */
 export function compareVersions(a, b) {
-  const parts = (v) => String(v).split("-")[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const parts = (v) =>
+    String(v)
+      .split("-")[0]
+      .split(".")
+      .map((n) => Number.parseInt(n, 10) || 0);
   const [x, y] = [parts(a), parts(b)];
   for (let i = 0; i < Math.max(x.length, y.length); i++) {
     const diff = (x[i] ?? 0) - (y[i] ?? 0);
@@ -75,6 +82,7 @@ export function updateNotice(state, currentVersion) {
   return `[jev] Update available: ${currentVersion} -> ${state.latest}. Run \`jev-claude --update\`.`;
 }
 
+/** The version in `root`/package.json, or null when it cannot be read. */
 export function installedVersion(root) {
   try {
     return JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version ?? null;

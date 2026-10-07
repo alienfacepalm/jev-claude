@@ -18,5 +18,7 @@ for (const prompt of prompts) {
     console.log(`FAIL  ${prompt}`);
     continue;
   }
-  console.log(`${a.choice.padEnd(26)} conf=${Number(a.confidence).toFixed(2)} ${String(a.ms).padStart(5)}ms | ${prompt}`);
+  console.log(
+    `${a.choice.padEnd(26)} conf=${Number(a.confidence).toFixed(2)} ${String(a.ms).padStart(5)}ms | ${prompt}`,
+  );
 }

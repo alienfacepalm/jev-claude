@@ -71,8 +71,7 @@ export const AUTO_MODEL = "jev-router";
 export const isAuto = (model) => model === AUTO_MODEL;
 
 /** Tier name for a model string Claude Code sent, or null if we don't recognise it. */
-export const tierOf = (model) =>
-  TIERS.find((t) => typeof model === "string" && model.includes(t.family))?.name ?? null;
+export const tierOf = (model) => TIERS.find((t) => typeof model === "string" && model.includes(t.family))?.name ?? null;
 
 /**
  * Every tier is on offer by default, Fable included. Fable bills extra usage credits rather
@@ -80,11 +79,9 @@ export const tierOf = (model) =>
  * off the menu. Even when allowed, policy never steps up into it as a substitute; only an explicit
  * ask or a confident Jev answer reaches it.
  */
-export const fableAllowed = (env = process.env) =>
-  !/^(0|false|no|off)$/i.test(env.JEV_ALLOW_FABLE?.trim() ?? "");
+export const fableAllowed = (env = process.env) => !/^(0|false|no|off)$/i.test(env.JEV_ALLOW_FABLE?.trim() ?? "");
 
-export const availableTiers = (env = process.env) =>
-  TIER_NAMES.filter((n) => n !== "fable" || fableAllowed(env));
+export const availableTiers = (env = process.env) => TIER_NAMES.filter((n) => n !== "fable" || fableAllowed(env));
 
 export const THRESHOLDS = {
   /**
@@ -195,8 +192,7 @@ const GUIDANCE = {
   // FrontierCode 54.0 vs 49.4) and ~70 Elo on knowledge work (AA-Briefcase 1705 vs 1634), at
   // 1.6-2.6x Sonnet's cost per task.
   sonnet: {
-    what:
-      "Well-scoped everyday work, and documents and knowledge work, where it does well for well under Opus's cost.",
+    what: "Well-scoped everyday work, and documents and knowledge work, where it does well for well under Opus's cost.",
     signals: [
       "Implement a specified function or change, add tests, or fix a bug whose cause is already known",
       "Write or edit documents, specs, summaries, or analysis",
@@ -205,8 +201,7 @@ const GUIDANCE = {
       "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-21 points higher on agentic coding.",
   },
   opus: {
-    what:
-      "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet, for about twice the cost per task.",
+    what: "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet, for about twice the cost per task.",
     signals: [
       "Unknown-cause or intermittent bugs, multi-step changes across a codebase, cross-module design, API or behaviour-preserving changes, security, auth, concurrency, or migrations",
     ],
@@ -217,8 +212,7 @@ const GUIDANCE = {
   // default for most work, complex agentic coding included. Context size is not a reason to pick
   // it: Sonnet and Opus share its 1M window. Adversarial plan review is the user's own addition.
   fable: {
-    what:
-      "Long-horizon autonomous work, the most demanding reasoning, and adversarial review that hardens a plan, spec, or design by hunting for how it fails.",
+    what: "Long-horizon autonomous work, the most demanding reasoning, and adversarial review that hardens a plan, spec, or design by hunting for how it fails.",
     // Kept to a few signals that do not overlap Opus's. A longer list of everything Fable is good
     // at measured worse: Jev split between Opus and Fable, and a red-team prompt that scored 0.80
     // on a short list fell to 0.31, under the confidence bar.

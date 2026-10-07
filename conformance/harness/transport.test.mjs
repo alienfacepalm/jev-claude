@@ -1,20 +1,9 @@
 // How the proxy under test carries bytes: live streaming, aborts in both directions, the 502 path,
 // HEAD probes, redirects, compressed bodies, and an upstream base path (SPEC 7.1, 7.2, 7.7).
-import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { gzipSync } from "node:zlib";
-import {
-  CLIENT_HEADERS,
-  assertForwardedHeaders,
-  assertRelayedHeaders,
-  fakeJev,
-  fakeUpstream,
-  fixtureBody,
-  send,
-  setup,
-  startProxy,
-} from "./helpers.mjs";
+import { CLIENT_HEADERS, assertForwardedHeaders, assertRelayedHeaders, fakeJev, fakeUpstream, fixtureBody, send, setup, startProxy, test } from "./helpers.mjs";
 
 // A model the user picked, so these tests exercise transport without asking Jev anything.
 const passthrough = () => ({ ...fixtureBody("harness-transport"), model: "claude-opus-5-5", stream: true });
@@ -22,10 +11,14 @@ const SSE_HEADERS = { "content-type": "text/event-stream; charset=utf-8", "reque
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 test("a streamed response reaches the client chunk by chunk, before the upstream finishes", async (t) => {
-  const events = ['event: message_start\ndata: {"type":"message_start"}\n\n', 'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"text":"hi"}}\n\n', 'event: message_stop\ndata: {"type":"message_stop"}\n\n'];
+  const events = [
+    'event: message_start\ndata: {"type":"message_start"}\n\n',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"text":"hi"}}\n\n',
+    'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+  ];
   const writes = [];
   const { proxy } = await setup(t, {
-    upstream: async (record, res) => {
+    upstream: async (_record, res) => {
       res.writeHead(200, SSE_HEADERS);
       for (const [i, event] of events.entries()) {
         if (i) await pause(400);
@@ -48,7 +41,7 @@ test("a client that disconnects stops the upstream response", async (t) => {
   let resolveClosed;
   const closed = new Promise((r) => (resolveClosed = r));
   const { proxy } = await setup(t, {
-    upstream: (record, res) => {
+    upstream: (_record, res) => {
       res.writeHead(200, SSE_HEADERS);
       let sent = 0;
       const timer = setInterval(() => {
@@ -77,7 +70,7 @@ test("a client that disconnects stops the upstream response", async (t) => {
 
 test("an upstream that drops mid-stream ends the client's response instead of hanging it", async (t) => {
   const { proxy } = await setup(t, {
-    upstream: (record, res, req) => {
+    upstream: (_record, res, req) => {
       res.writeHead(200, SSE_HEADERS);
       res.write('data: {"n":0}\n\n');
       setTimeout(() => req.socket.destroy(), 100);
