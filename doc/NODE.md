@@ -186,6 +186,8 @@ at it with `ANTHROPIC_BASE_URL`, adds **Jev Router** to `/model`, installs its s
 `/jev-*` skills are available, and exits with Claude Code's exit code. On the way out it puts back
 the default model Claude Code had saved before the session.
 
+A first argument that is a Claude Code subcommand (`jev-claude mcp list`, `plugin`, `doctor`, `update`, `auth`, and the rest of `claude --help`'s commands) is passed straight through: no proxy, no `--add-dir`, no status line, since those commands manage Claude Code and reject the extra flags.
+
 If `ANTHROPIC_BASE_URL` is already set, the proxy forwards to it instead of
 `https://api.anthropic.com`. It must be an absolute `http://` or `https://` URL: anything else
 stops the launch before Claude Code starts, with
@@ -386,10 +388,8 @@ node conformance/generate.mjs
 git diff --exit-code conformance/cases
 ```
 
-Today the only workflow, `.github/workflows/version-bump.yml`, runs `pnpm install
---frozen-lockfile` and `pnpm test` on Linux with Node 22 before it cuts a release. Since
-`pnpm test` includes the harness, that release gate now covers it too; the lint, format,
-Windows and golden-case checks above are the gates for the CI matrix that is still to be added.
+CI runs all of the above in `.github/workflows/ci.yml` (see [LAYOUT.md](LAYOUT.md#continuous-integration)),
+and its `release` job cuts a version only after every job passes.
 
 ## Troubleshooting
 

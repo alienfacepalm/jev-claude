@@ -643,7 +643,23 @@ Each must match Node on every golden case.
 - `ownWords(prompt)`: `String(prompt ?? "")`, then replace with one space, in this order, every
   match of `<agent-message[\s\S]*?<\/agent-message>`,
   `<system-reminder>[\s\S]*?<\/system-reminder>`, ```` ```[\s\S]*?``` ````, `` `[^`\n]*` ``,
-  `"[^"\n]*"`.
+  `"[^"\n]*"`, then these two, both case-insensitive (3.1):
+  - the **negated verb**, so a tier that follows it has no verb left:
+    `(?:\bnot|\bcannot|n['’]t|\bnever|\bno|\bavoid|\bwithout|\bdont)\s+(?:(?:ever|really|actually|just|simply)\s+)?(?:use|switch to|switch over to|route to)`
+    (`’` is U+2019; the spaces inside `switch to` and `switch over to` are single literal spaces;
+    `\s` is `JSWS`). "do not use fable", "don't ever switch to haiku" and "never use fable for
+    this" no longer name a tier, and "don't use haiku, use opus" is left as "do haiku, use opus".
+    `\bno` needs whitespace right after it, so "nobody use opus" and "know use opus" are not
+    negated, and a word between the negation and the verb ("do not just now use opus") is not
+    skipped;
+  - the **question**: `[^.!?\n]*\?`, every run of characters that contains no `.`, `!`, `?` or
+    line break and ends in a `?`, so "why does the planner use opus?" asks about a model rather
+    than asking for one. A `.` or `!` inside the question ends the run early, so "use opus for the
+    v1.2 migration?" is still an override (a pinned limitation, not a goal); a `?` inside a URL
+    only drops the text before it back to the previous `.`.
+
+  Both are plain patterns with no lookahead and no restart, and both are applied with the same
+  every-match, leftmost-first, non-overlapping rules as the other replacements.
 - `detectOverride(prompt)`: the tier of the first override pattern (4.5), in tier order, that
   matches `ownWords(prompt)`; else null.
 - `clampToAvailable(tier, available)`: the tier if available; else the first available tier above
@@ -798,7 +814,8 @@ In order, as `node/bin/jev-claude.mjs`:
 
 1. `savedModelBefore = readSavedModel()`.
 2. `loadEnv()`.
-3. `args = argv[1:]` followed by `--add-dir <root>` (omitted with no root, 2.4); `env = childEnv()`.
+3. `args = argv[1:]`. `passthrough = isClaudeSubcommand(args)` (10.3). Unless `passthrough`, append
+   `--add-dir <root>` (also omitted with no root, 2.4). `env = childEnv()`.
 4. Resolve `claude` (10.2). If absent, print to stderr exactly:
    `[jev] Claude Code is not installed, or \`claude\` is not on your PATH.`,
    `[jev] jev-claude runs the real Claude Code CLI; install it first:`,
@@ -808,7 +825,9 @@ In order, as `node/bin/jev-claude.mjs`:
    lines in `node/bin/jev-claude.mjs` verbatim. `interrupt` exits 130; a non-null answer is
    recorded with `markOffered`; `true` inserts `/jev-calibrate check` as the first element of
    `args`.
-6. If `JEV_API_KEY || TYPESAFE_API_KEY` is truthy: start the proxy with `upstreamURL` =
+6. If `passthrough`, do nothing here (no proxy, no model variables, no status-line args, no
+   "no JEV_API_KEY" notice): the subcommand runs on `env` as `childEnv()` left it. Otherwise, if
+   `JEV_API_KEY || TYPESAFE_API_KEY` is truthy: start the proxy with `upstreamURL` =
    `ANTHROPIC_BASE_URL` when truthy (else the default) and set in `env`:
    `ANTHROPIC_BASE_URL=http://127.0.0.1:<port>`, `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`,
    `ANTHROPIC_CUSTOM_MODEL_OPTION=jev-router`, `ANTHROPIC_CUSTOM_MODEL_OPTION_NAME=Jev Router`,
@@ -858,6 +877,18 @@ to the running one>"`; Python `"<sys.executable>" -m jev_router.cli.statusline`.
 - `quoteForCmd(arg)`: double each run of backslashes that precedes a `"` and escape the `"`;
   double a trailing run of backslashes; wrap in `"`; then caret-escape every character of
   `()[]%!^"`<>&|;, *?` and do that a second time on the result.
+
+### 10.3 Claude subcommands (`isClaudeSubcommand`, `node/src/launch.mjs`)
+
+`isClaudeSubcommand(args)` is true when `args[0]` is exactly (case-sensitive, the whole argument)
+one of the names of the `claude` CLI's own subcommands as of Claude Code 2.1.292:
+`agents`, `attach`, `auth`, `auto-mode`, `doctor`, `gateway`, `import`, `install`, `kill`, `logs`,
+`mcp`, `plugin`, `plugins`, `purge`, `respawn`, `rm`, `setup-token`, `stop`, `ultrareview`,
+`update`, `upgrade`. False for an empty `args`. Only the first argument counts: `-p mcp` and
+`--model opus mcp list` are sessions, as is a prompt such as `"update the docs"`. These commands
+manage Claude Code and reject `--add-dir` (`claude mcp list --add-dir x` fails with "unknown
+option"), so a launch that names one runs it untouched (10, steps 3 and 6). A subcommand added in a
+later Claude Code is not in the list and is launched as a session, as before.
 
 ---
 
@@ -1012,7 +1043,7 @@ Required case files and what each must include beyond ordinary inputs:
 
 | Case file | Must include |
 | --- | --- |
-| `detect-override` | the prose negatives in `node/test/policy.test.mjs`; `use\u00a0opus`, `use\u3000opus`, `use\ufeffopus`, `use\u001fopus`; `ſ`/U+212A variants; restart-at-start+1 cases (`use opus-x use opus`) |
+| `detect-override` | the prose negatives in `node/test/policy.test.mjs`; `use\u00a0opus`, `use\u3000opus`, `use\ufeffopus`, `use\u001fopus`; `ſ`/U+212A variants; restart-at-start+1 cases (`use opus-x use opus`); negated instructions (`do not use fable`, `don't use haiku, use opus`, curly apostrophe, `cannot`, `dont`) and questions (`why does the planner use opus?`, a `?` in a URL, a `.` inside a question) |
 | `decide` | `confidence` as `"0.9"`, `[0.9]`, `" 0x1 "`, `null`, `""`, `"abc"`, `true`, missing |
 | `new-turn-prompt`, `agent-label` | JSWS edge characters; non-string `text`; system messages after the user turn |
 | `apply-tier` | `output_config.effort` as `""`, `0`, `false`; force and floor env combinations |

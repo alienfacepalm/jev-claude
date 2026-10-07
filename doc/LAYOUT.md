@@ -11,7 +11,7 @@ jev-claude/
 ├─ package.json          # the installed launcher and the release version (see below)
 ├─ pnpm-workspace.yaml  pnpm-lock.yaml
 ├─ biome.json            # Biome lint and format policy for node/ and conformance/
-├─ .github/workflows/    # ci.yml (every implementation), version-bump.yml (releases)
+├─ .github/workflows/    # ci.yml (every implementation, then the release)
 ├─ .claude/skills/       # /jev-calibrate, /jev-explain, /jev-legend
 ├─ plugin/  .claude-plugin/
 ├─ install.sh  install.ps1  shim/
@@ -68,9 +68,11 @@ Each implementation is one job, run on `windows-latest` (the gating platform, SP
 | `rust` | `cargo fmt --check`, clippy with `-D warnings`, `cargo test`, `cargo doc`, `cargo +1.85 check` (MSRV), `cargo build --release`, then the harness against `rust/target/release` |
 | `python` | a virtual environment with the `dev` extra, `ruff format --check`, `ruff check`, mypy for `win32` and `linux`, `compileall`, `unittest`, then the harness against the venv interpreter |
 
-[`.github/workflows/version-bump.yml`](../.github/workflows/version-bump.yml) is separate: on a
-push to `master` it runs `pnpm test` on Ubuntu, then bumps and tags the release. It does not wait
-for `ci.yml`, so check that CI is green before relying on a release.
+The `release` job at the end of `ci.yml` `needs` all four, on both platforms, so a version is only
+cut from a push that passed everything. It runs on pushes to `master` (not pull requests, and not
+the `chore(release):` commit it makes itself), bumps the version in the root `package.json` from the
+commits pushed, commits it and tags it. Runs for `master` are never cancelled by a newer push, so
+each bump sees its own push's commits.
 
 ## Why the root keeps a package.json
 
