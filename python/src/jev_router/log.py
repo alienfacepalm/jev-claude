@@ -19,7 +19,7 @@ LOG_FILE = os.path.join(osdirs.home(), ".jev-claude.log")
 def _isatty() -> bool:
     try:
         return sys.stdout is not None and sys.stdout.isatty()
-    except Exception:
+    except Exception:  # noqa: BLE001 - a closed or odd stdout just means "not a terminal"
         return False
 
 
@@ -32,16 +32,18 @@ _lock = threading.Lock()
 
 def iso_now() -> str:
     """`new Date().toISOString()`."""
-    return iso(datetime.datetime.now(datetime.timezone.utc))
+    return iso(datetime.datetime.now(datetime.UTC))
 
 
 def iso(moment: datetime.datetime) -> str:
-    moment = moment.astimezone(datetime.timezone.utc)
+    """`Date.prototype.toISOString()` for a moment."""
+    moment = moment.astimezone(datetime.UTC)
     return moment.strftime("%Y-%m-%dT%H:%M:%S.") + f"{moment.microsecond // 1000:03d}Z"
 
 
-def iso_from_ms(ms) -> str:
-    moment = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(milliseconds=ms)
+def iso_from_ms(ms: float) -> str:
+    """`new Date(ms).toISOString()`."""
+    moment = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC) + datetime.timedelta(milliseconds=ms)
     return iso(moment)
 
 
@@ -56,12 +58,13 @@ def write_stderr(text: str) -> None:
             stream.flush()
         else:
             sys.stderr.write(text)
-    except Exception:
+    except Exception:  # noqa: BLE001 - a message that cannot be shown must not stop the caller
         pass
 
 
 def log(line: str) -> None:
-    global _tightened
+    """One `[jev]` line: to stderr when not interactive, else appended to LOG_FILE (SPEC 15)."""
+    global _tightened  # noqa: PLW0603 - the log file is chmod'ed once per process (SPEC 15)
     text = f"[jev] {line}\n"
     if not INTERACTIVE:
         write_stderr(text)
@@ -76,10 +79,11 @@ def log(line: str) -> None:
             if not _tightened:
                 _tightened = True
                 os.chmod(LOG_FILE, FILE_MODE)
-    except Exception:
+    except Exception:  # noqa: BLE001 - logging is diagnostic and must never interfere with a request
         pass
 
 
 def debug(line: str) -> None:
+    """`log(line)`, only when JEV_DEBUG is set."""
     if truthy(os.environ.get("JEV_DEBUG")):
         log(line)

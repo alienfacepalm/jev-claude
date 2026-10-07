@@ -5,8 +5,11 @@ from __future__ import annotations
 import atexit
 import os
 import signal
+import subprocess
 import sys
 import threading
+from collections.abc import Callable
+from types import FrameType
 
 from .. import jsjson, osdirs, repo
 from ..config import AUTO_MODEL
@@ -24,12 +27,15 @@ QUESTION = (
 )
 
 
-def auto_model_env() -> dict:
+def auto_model_env() -> dict[str, str]:
+    """The environment that offers Jev Router in /model and starts on it (SPEC 10.1)."""
     env = {
         "ANTHROPIC_CUSTOM_MODEL_OPTION": AUTO_MODEL,
         "ANTHROPIC_CUSTOM_MODEL_OPTION_NAME": "Jev Router",
         "ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION": "Route each turn to the cheapest model that can do it",
-        "ANTHROPIC_CUSTOM_MODEL_OPTION_SUPPORTED_CAPABILITIES": "thinking,adaptive_thinking,interleaved_thinking,effort,max_effort",
+        "ANTHROPIC_CUSTOM_MODEL_OPTION_SUPPORTED_CAPABILITIES": (
+            "thinking,adaptive_thinking,interleaved_thinking,effort,max_effort"
+        ),
         "CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT": "1",
     }
     if not os.environ.get("ANTHROPIC_MODEL"):
@@ -42,7 +48,8 @@ def status_line_command() -> str:
     return f'"{sys.executable}" -m jev_router.cli.statusline'
 
 
-def status_line_args() -> list:
+def status_line_args() -> list[str]:
+    """`--settings <file>` registering the status line, unless the user already has one."""
     if os.environ.get("JEV_NO_STATUSLINE"):
         return []
     for directory in (os.path.join(os.getcwd(), ".claude"), os.path.join(osdirs.home(), ".claude")):
@@ -51,24 +58,25 @@ def status_line_args() -> list:
                 settings = jsjson.parse(handle.read())
             if isinstance(settings, dict) and truthy(settings.get("statusLine")):
                 return []
-        except Exception:
+        except Exception:  # noqa: BLE001 - no settings file, or an unreadable one: it has no status line
             pass
     command = status_line_command()
     try:
         write_private(SETTINGS_FILE, jsjson.dumps_bytes({"statusLine": {"type": "command", "command": command}}))
-    except Exception:
+    except Exception:  # noqa: BLE001 - without the settings file Claude Code simply shows no status line
         return []
     return ["--settings", SETTINGS_FILE]
 
 
-def _isatty(stream) -> bool:
+def _isatty(stream: object) -> bool:
     try:
-        return stream is not None and stream.isatty()
-    except Exception:
+        return stream is not None and bool(getattr(stream, "isatty")())  # noqa: B009 - any stream-like object
+    except Exception:  # noqa: BLE001 - a closed or odd stream is not a terminal
         return False
 
 
 def main() -> int:
+    """Runs Claude Code through the proxy; returns its exit code."""
     saved_model_before = read_saved_model()
     load_env()
 
@@ -100,9 +108,9 @@ def main() -> int:
         if answer is True:
             args.insert(0, "/jev-calibrate check")
 
-    cleanups = []
+    cleanups: list[Callable[[], None]] = []
     if os.environ.get("JEV_API_KEY") or os.environ.get("TYPESAFE_API_KEY"):
-        from ..proxy import start_proxy
+        from ..proxy import start_proxy  # noqa: PLC0415 - the proxy is loaded only when routing is on
 
         inherited = os.environ.get("ANTHROPIC_BASE_URL")
         proxy = start_proxy(upstream_url=inherited) if inherited else start_proxy()
@@ -112,7 +120,7 @@ def main() -> int:
         env["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] = "1"
         env.update(auto_model_env())
 
-        def cleanup():
+        def cleanup() -> None:
             try:
                 proxy.close()
             finally:
@@ -131,13 +139,13 @@ def main() -> int:
 
     ran = threading.Lock()
 
-    def run_cleanups():
+    def run_cleanups() -> None:
         if not ran.acquire(blocking=False):
             return
         for fn in cleanups:
             try:
                 fn()
-            except Exception:
+            except Exception:  # noqa: BLE001 - one failed cleanup must not stop the others
                 pass
 
     atexit.register(run_cleanups)
@@ -163,17 +171,17 @@ def main() -> int:
     return 1 if code < 0 else code
 
 
-def _install_signal_handlers(child, run_cleanups) -> None:
-    def forward(signum=None, frame=None):
+def _install_signal_handlers(child: subprocess.Popen[bytes], run_cleanups: Callable[[], None]) -> None:
+    def forward(signum: int | None = None, frame: FrameType | None = None) -> None:
         try:
             if sys.platform == "win32" or signum is None:
                 child.terminate()
             else:
                 child.send_signal(signum)
-        except Exception:
+        except Exception:  # noqa: BLE001 - already gone; its exit is on its way
             pass
 
-        def give_up():
+        def give_up() -> None:
             run_cleanups()
             os._exit(1)
 
@@ -192,31 +200,33 @@ def _install_signal_handlers(child, run_cleanups) -> None:
             signal.signal(getattr(signal, name), forward)
 
 
-_console_handler = None
+# Kept referenced for the life of the process: Windows calls it after main() has set it.
+_console_handler: object = None
 
 
-def _install_console_handler(forward, run_cleanups) -> None:
+def _install_console_handler(forward: Callable[[], None], run_cleanups: Callable[[], None]) -> None:
     """Console close, logoff and shutdown count as SIGHUP/SIGTERM; Ctrl+C and Ctrl+Break as SIGINT."""
-    global _console_handler
-    try:
-        import ctypes
-        from ctypes import wintypes
+    global _console_handler  # noqa: PLW0603 - the ctypes callback must outlive this call
+    if sys.platform == "win32":  # a literal check, so type checkers skip the Windows API elsewhere
+        try:
+            import ctypes  # noqa: PLC0415 - Windows only
+            from ctypes import wintypes  # noqa: PLC0415 - Windows only
 
-        handler_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.DWORD)
+            handler_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.DWORD)
 
-        def handler(event):
-            if event in (0, 1):  # CTRL_C_EVENT, CTRL_BREAK_EVENT: Claude Code decides
-                return True
-            if event in (2, 5, 6):  # CLOSE, LOGOFF, SHUTDOWN
-                forward()
-                run_cleanups()
-                return True
-            return False
+            def handler(event: int) -> bool:
+                if event in (0, 1):  # CTRL_C_EVENT, CTRL_BREAK_EVENT: Claude Code decides
+                    return True
+                if event in (2, 5, 6):  # CLOSE, LOGOFF, SHUTDOWN
+                    forward()
+                    run_cleanups()
+                    return True
+                return False
 
-        _console_handler = handler_type(handler)
-        ctypes.windll.kernel32.SetConsoleCtrlHandler(_console_handler, True)
-    except Exception:
-        pass
+            _console_handler = handler_type(handler)
+            ctypes.windll.kernel32.SetConsoleCtrlHandler(_console_handler, True)
+        except Exception:  # noqa: BLE001 - without the handler, closing the console still ends Claude Code
+            pass
 
 
 if __name__ == "__main__":

@@ -6,7 +6,20 @@ import re
 
 from .. import jsjson
 from ..icons import icons
-from ..jsstr import UNDEFINED, coalesce, is_nullish, math_round, to_number, to_string, truthy, u16_len, u16_slice
+from ..jsstr import (
+    JSWS_CHARS,
+    UNDEFINED,
+    JsValue,
+    Undefined,
+    coalesce,
+    is_nullish,
+    math_round,
+    to_number,
+    to_string,
+    truthy,
+    u16_len,
+    u16_slice,
+)
 from ..model_names import short_name
 from ..reasons import short_reason
 from ..status import agent_view, read_calibration, read_status
@@ -22,24 +35,25 @@ RESET = "\x1b[0m"
 COLOR = {"haiku": "\x1b[32m", "sonnet": "\x1b[36m", "opus": "\x1b[35m", "fable": "\x1b[33m"}
 
 
-def _get(obj, key):
+def _get(obj: object, key: str) -> JsValue:
     if isinstance(obj, dict):
-        return obj.get(key, UNDEFINED)
+        value: JsValue = obj.get(key, UNDEFINED)
+        return value
     return UNDEFINED
 
 
-def _prop(obj, key):
+def _prop(obj: object, key: str) -> JsValue:
     if is_nullish(obj):
         raise TypeError(f"Cannot read properties of {to_string(obj)} (reading '{key}')")
     return _get(obj, key)
 
 
-def _status_tier_of(model):
+def _status_tier_of(model: object) -> str | Undefined:
     match = _FAMILY.search(to_string(coalesce(model, "")))
     return match.group(1) if match else UNDEFINED
 
 
-def _color(tier) -> str:
+def _color(tier: object) -> str:
     return COLOR.get(tier, "") if isinstance(tier, str) else ""
 
 
@@ -48,6 +62,7 @@ def _clip(text: str, limit: int) -> str:
 
 
 def render(input_bytes: bytes) -> str:
+    """The status line for Claude Code's JSON on stdin (SPEC 12)."""
     marks = {name: f"{BOLD}{mark}{RESET}" for name, mark in icons().items()}
 
     try:
@@ -60,12 +75,13 @@ def render(input_bytes: bytes) -> str:
     directory = coalesce(_get(_get(data, "workspace"), "current_dir"), _get(data, "cwd"), "")
     if not isinstance(directory, str):
         raise TypeError("current_dir.split is not a function")
+    full_path = directory
     directory = re.split(r"[/\\]", directory)[-1]
     pct = math_round(to_number(coalesce(_get(_get(data, "context_window"), "used_percentage"), 0)))
     view = agent_view(status)
     main, subagents = view["main"], view["subagents"]
 
-    def main_line(entry) -> str:
+    def main_line(entry: object) -> str:
         color = _color(_get(entry, "tier"))
         confidence = _get(entry, "confidence")
         p = "" if is_nullish(confidence) else f" {DIM}({to_string(math_round(to_number(confidence) * 100))}%){RESET}"
@@ -79,7 +95,8 @@ def render(input_bytes: bytes) -> str:
     routed = f"{DIM}jev: waiting for first prompt{RESET}"
     if truthy(_get(main, "manual")) or (not truthy(main) and truthy(_get(status, "manual"))):
         shown = coalesce(_get(_get(data, "model"), "display_name"), _get(main, "model"), "")
-        routed = f"{DIM}\u261e manual{RESET} {to_string(shown)}".rstrip(_TRIM_END)
+        # `trimEnd()` strips the JavaScript whitespace set.
+        routed = f"{DIM}\u261e manual{RESET} {to_string(shown)}".rstrip(JSWS_CHARS)
     elif truthy(main):
         routed = main_line(main)
     elif truthy(status):
@@ -88,12 +105,14 @@ def render(input_bytes: bytes) -> str:
     agents = ""
     if subagents:
         first = subagents[:3]
-        names = []
+        names: list[str] = []
         for a in first:
             color = _color(coalesce(a.get("tier", UNDEFINED), _status_tier_of(a.get("model", UNDEFINED))))
             # U+261E, not the emoji U+23F8, which terminals draw double-width in one cell.
             picked = "\u261e " if truthy(a.get("manual", UNDEFINED)) else ""
-            name = coalesce(short_name(a.get("model", UNDEFINED)), a.get("tier", UNDEFINED), a.get("model", UNDEFINED), "?")
+            name = coalesce(
+                short_name(a.get("model", UNDEFINED)), a.get("tier", UNDEFINED), a.get("model", UNDEFINED), "?"
+            )
             names.append(f"{color}{picked}{to_string(name)}{RESET}")
         more = f"{DIM}+{len(subagents) - len(first)}{RESET}" if len(subagents) > len(first) else ""
         agents = f" {DIM}\u00b7{RESET} {marks['agents']} " + f"{DIM},{RESET}".join(n for n in [*names, more] if n)
@@ -111,18 +130,21 @@ def render(input_bytes: bytes) -> str:
     if not is_nullish(branch):
         label = branch if truthy(branch) else "(detached)"
         branch_part = f" {DIM}\u00b7{RESET} {marks['branch']} \x1b[34m{_clip(to_string(label), MAX_BRANCH)}{RESET}"
-    worktree_part = f" {DIM}\u00b7{RESET} {marks['worktree']} \x1b[32m{to_string(worktree)}{RESET}" if truthy(worktree) else ""
+    worktree_part = (
+        f" {DIM}\u00b7{RESET} {marks['worktree']} \x1b[32m{to_string(worktree)}{RESET}" if truthy(worktree) else ""
+    )
     where = branch_part + worktree_part
     dir_part = f" {DIM}\u00b7{RESET} {marks['dir']} {directory}" if directory and directory != worktree else ""
 
-    return f"{routed}{agents}{dir_part}{where} {DIM}\u00b7{RESET} {marks['context']} {to_string(pct)}%{notice}\n"
+    # The whole path last, dimmed (SPEC 12).
+    path_part = f" {DIM}\u00b7 {full_path}{RESET}" if full_path else ""
 
-
-# `trimEnd()` strips the JavaScript whitespace set.
-from ..jsstr import JSWS_CHARS as _TRIM_END  # noqa: E402
+    context_part = f" {DIM}\u00b7{RESET} {marks['context']} {to_string(pct)}%"
+    return f"{routed}{agents}{dir_part}{where}{context_part}{notice}{path_part}\n"
 
 
 def main() -> int:
+    """Prints the status line for the JSON Claude Code writes to stdin."""
     write_stdout(render(read_stdin()))
     return 0
 

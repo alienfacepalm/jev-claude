@@ -7,6 +7,7 @@ from ._io import write_stdout
 
 
 def main() -> int:
+    """Prints the status line key."""
     write_stdout(f"Status line key\n\n{format_legend()}\n")
     return 0
 

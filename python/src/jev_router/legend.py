@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .icons import icons
 from .jsstr import code_points
 
 
-def format_legend(marks=None) -> str:
+def format_legend(marks: Mapping[str, str] | None = None) -> str:
+    """The status line key: each label and what it means."""
     marks = icons() if marks is None else marks
     rows = [
         [marks["model"], "the model the last turn ran on, then Jev's confidence in that pick"],

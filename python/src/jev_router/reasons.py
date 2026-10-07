@@ -2,7 +2,20 @@
 
 from __future__ import annotations
 
-REASONS = [
+from typing import Final, TypedDict
+
+from .jsstr import is_nullish, truthy
+
+
+class Reason(TypedDict):
+    """How one routing reason is said on the status line and in the panel."""
+
+    match: str
+    short: str | None
+    long: str
+
+
+REASONS: Final[list[Reason]] = [
     {"match": "override", "short": None, "long": "you named this model in the prompt"},
     {
         "match": "jev-unavailable",
@@ -27,7 +40,7 @@ REASONS = [
 ]
 
 
-def _includes(reason, needle) -> bool:
+def _includes(reason: object, needle: str) -> bool:
     # `reason.includes(x)`: a string search; an array's `includes` compares elements instead.
     if isinstance(reason, str):
         return needle in reason
@@ -36,9 +49,7 @@ def _includes(reason, needle) -> bool:
     raise TypeError("reason.includes is not a function")
 
 
-def _find(reason):
-    from .jsstr import truthy
-
+def _find(reason: object) -> Reason | None:
     if not truthy(reason):
         return None
     for entry in REASONS:
@@ -47,21 +58,20 @@ def _find(reason):
     return None
 
 
-def short_reason(reason):
+def short_reason(reason: object) -> str | None:
     """A few words for the status line, or None."""
     entry = _find(reason)
     return entry["short"] if entry else None
 
 
-def long_reason(reason):
+def long_reason(reason: object) -> str:
     """A sentence for the explanation panel."""
     entry = _find(reason)
     return entry["long"] if entry else "the router's recommendation"
 
 
-def is_no_change(reason) -> bool:
-    from .jsstr import is_nullish
-
+def is_no_change(reason: object) -> bool:
+    """Whether the decision kept the model it already had."""
     if is_nullish(reason):
         return False
     return _includes(reason, "no-change")

@@ -15,6 +15,7 @@ from ._io import write_stdout
 
 
 def main() -> int:
+    """Starts the proxy, prints `PORT=<port>` and serves until interrupted."""
     load_env()
     inherited = os.environ.get("ANTHROPIC_BASE_URL")
     proxy = start_proxy(upstream_url=inherited) if inherited else start_proxy()
