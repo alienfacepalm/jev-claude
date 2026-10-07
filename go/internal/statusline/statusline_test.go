@@ -99,7 +99,7 @@ func TestStatusLine(t *testing.T) {
 		sid := id("symbols")
 		write(sid, decision("sonnet", "claude-sonnet-5-5", 0.94, "high"), mainAgent)
 		line := render(t, sid, none, worktree("login-fix", "fix/login"), "symbols")
-		want := "\xe2\x97\x86 Sonnet 5.5 (94%) \xc2\xb7 \xe2\x97\x94 high \xc2\xb7 \xe2\x9d\x90 proj \xc2\xb7 \xee\x82\xa0 fix/login \xc2\xb7 \xe2\x8c\x82 login-fix \xc2\xb7 \xe2\x89\xa1 8%"
+		want := "\xe2\x9c\xa7\xe2\x9c\xa6 Sonnet 5.5 (94%) \xc2\xb7 \xe2\x97\x94 high \xc2\xb7 \xe2\x9d\x90 proj \xc2\xb7 \xee\x82\xa0 fix/login \xc2\xb7 \xe2\x8c\x82 login-fix \xc2\xb7 \xe2\x89\xa1 8%"
 		if line != want {
 			t.Errorf("\n got  %q\n want %q", line, want)
 		}

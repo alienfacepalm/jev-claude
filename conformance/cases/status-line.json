@@ -28,7 +28,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m\u001b[0m \u001b[34mfix/login\u001b[0m \u001b[2m·\u001b[0m \u001b[1m⌂\u001b[0m \u001b[32mlogin-fix\u001b[0m \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -92,7 +92,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(91%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m xhigh \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(91%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m xhigh \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -124,7 +124,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m(97%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[32mHaiku 4.5\u001b[0m \u001b[2m(97%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -156,7 +156,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[33mFable 5.1\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[33mFable 5.1\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -188,7 +188,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(keeping the cache)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mOpus 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(keeping the cache)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -220,7 +220,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(router offline)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m(router offline)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -252,7 +252,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mmystery-9\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mmystery-9\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -282,7 +282,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[35mopus\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[35mopus\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -314,7 +314,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(13%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(13%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -436,7 +436,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -614,7 +614,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m⏸ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m⏸ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -687,7 +687,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m mystery\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m mystery\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -898,7 +898,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m◆\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m\n"
     }
   },
   {

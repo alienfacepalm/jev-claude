@@ -29,7 +29,7 @@ impl Icons {
 }
 
 pub const SYMBOLS: Icons = Icons {
-    model: "\u{25C6}",
+    model: "\u{2727}\u{2726}",
     effort: "\u{25D4}",
     agents: "\u{2726}",
     dir: "\u{2750}",

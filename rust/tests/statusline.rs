@@ -65,7 +65,7 @@ fn symbols_replace_the_words_and_the_branch_uses_the_powerline_glyph() {
     let line = render(&id, "{}", r#"{"worktree":{"name":"login-fix","branch":"fix/login"}}"#, "symbols");
     assert_eq!(
         line,
-        "\u{25C6} Sonnet 5.5 (94%) \u{00B7} \u{25D4} high \u{00B7} \u{2750} proj \u{00B7} \u{E0A0} fix/login \u{00B7} \u{2302} login-fix \u{00B7} \u{2261} 8%"
+        "\u{2727}\u{2726} Sonnet 5.5 (94%) \u{00B7} \u{25D4} high \u{00B7} \u{2750} proj \u{00B7} \u{E0A0} fix/login \u{00B7} \u{2302} login-fix \u{00B7} \u{2261} 8%"
     );
 }
 

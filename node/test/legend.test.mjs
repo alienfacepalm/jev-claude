@@ -13,6 +13,6 @@ test("the key explains every mark the status line draws, in the set it is drawin
 
 test("the symbols are the same ones the status line prints", () => {
   const legend = formatLegend(icons({ JEV_ICONS: "symbols" }, "darwin"));
-  assert.match(legend, /^◆ +the model/);
+  assert.match(legend, /^✧✦ +the model/);
   assert.match(legend, /\ue0a0 +the git branch/);
 });

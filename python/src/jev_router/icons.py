@@ -6,7 +6,7 @@ import os
 import sys
 
 SYMBOLS = {
-    "model": "\u25c6",
+    "model": "\u2727\u2726",
     "effort": "\u25d4",
     "agents": "\u2726",
     "dir": "\u2750",

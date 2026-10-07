@@ -21,6 +21,6 @@ fn the_key_explains_every_mark_the_status_line_draws() {
 #[test]
 fn the_symbols_are_the_same_ones_the_status_line_prints() {
     let legend = format_legend(&icons_for(&map(&[("JEV_ICONS", "symbols")]), false));
-    assert!(Regex::new("^\u{25C6} +the model").unwrap().is_match(&legend));
+    assert!(Regex::new("^\u{2727}\u{2726} +the model").unwrap().is_match(&legend));
     assert!(Regex::new("(?m)\u{E0A0} +the git branch").unwrap().is_match(&legend));
 }
