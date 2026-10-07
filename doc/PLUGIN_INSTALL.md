@@ -15,7 +15,7 @@ whose only job is to set up the `jev-claude` launcher on the machine.
 on its own. It does the following, one command at a time, each through Claude Code's normal
 permission prompt:
 
-1. Checks `node --version` (22 or later) and `git --version`, and stops with a pointer if either
+1. Checks `node --version` (22.16 or later) and `git --version`, and stops with a pointer if either
    is missing.
 2. Clones `https://github.com/alienfacepalm/jev-claude.git` to `$JEV_CLAUDE_DIR`, or `~/jev-claude`.
    If that folder is already a clone it runs `git pull --ff-only`; if it exists and is something
@@ -33,8 +33,9 @@ permission prompt:
   installer skips it. Keys pasted into a session are kept in its transcript, so the skill never
   asks for them. Add the Jev key by running the installer again in a normal terminal, or by
   editing `~/.jev-router.env`.
-- **Skills and the status line stay with the launcher.** `jev-claude` already adds `/jev-explain`
-  and `/jev-calibrate` and its status line when it starts; the plugin does not duplicate them.
+- **Skills and the status line stay with the launcher.** `jev-claude` already adds `/jev-calibrate`,
+  `/jev-explain`, `/jev-legend` and its status line when it starts; the plugin does not duplicate
+  them.
 
 ## Maintenance
 

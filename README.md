@@ -11,7 +11,7 @@ unchanged: its interface, tools, sessions, permissions, and sign-in all work as 
 
 ## Install
 
-You need [Node.js](https://nodejs.org) 22 or later (24 LTS recommended; see
+You need [Node.js](https://nodejs.org) 22.16 or later (24 LTS recommended; see
 [Installing Node.js](#installing-nodejs)), [git](https://git-scm.com/downloads), and
 [Claude Code](https://code.claude.com/docs/en/setup), signed in with your Claude account or run
 on an Anthropic API key (see [Using an Anthropic API key](#using-an-anthropic-api-key)). You also
@@ -36,7 +36,10 @@ The installer:
 4. asks for your Jev key, and optionally an Anthropic API key, and saves them to
    `~/.jev-router.env`, readable only by you.
 
-Run it again at any time to update. To install somewhere else, set `JEV_CLAUDE_DIR` first; to save
+Run it again at any time to update. An install made before the code moved into `node/` (any install older than
+the move, whatever its version) must be run through the installer again, or the `pnpm add --global` line below: a plain
+`git pull` does not regenerate the `jev-claude` command, which then fails with `Cannot find module
+.../bin/jev-claude.mjs`. To install somewhere else, set `JEV_CLAUDE_DIR` first; to save
 the keys without being asked, set `JEV_API_KEY` and `ANTHROPIC_API_KEY`. From a clone, run `./install.sh`, or `.\install.ps1` in
 PowerShell (`powershell -ExecutionPolicy Bypass -File .\install.ps1` if scripts are blocked).
 
@@ -65,8 +68,9 @@ current pnpm.)
 
 ### Installing Node.js
 
-jev-claude needs Node.js 22 or later: 22 is the oldest release line Node.js still supports
-(until April 2027), and 24 is the current LTS. Check what you have with `node --version`.
+jev-claude needs Node.js 22.16 or later: 22 is the oldest release line Node.js still supports
+(until April 2027), and earlier 22.x releases parse `.env` files differently (the
+`package.json` `engines` field says `^22.16.0 || >=24`); 24 is the current LTS. Check what you have with `node --version`.
 
 A version manager is the easiest way to get it and switch later. Pick one:
 
@@ -105,7 +109,7 @@ Or install Node.js directly:
 | --- | --- |
 | Windows | `winget install OpenJS.NodeJS.LTS`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
 | macOS | `brew install node`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
-| Linux | A version manager above. Distribution packages are often older than 22; check with `node --version` |
+| Linux | A version manager above. Distribution packages are often older than 22.16; check with `node --version` |
 
 Open a new terminal after installing, so it finds the new `node`.
 
@@ -195,10 +199,16 @@ a bold symbol in the terminal's own text colour, so it contrasts with any backgr
 `≡` context):
 
 ```text
-✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8%
-✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34%
-☞ manual Opus 4.6 · ❐ my-project · ≡ 21%
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8% · /home/me/work/my-project
+✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34% · /home/me/work/my-project
+☞ manual Opus 4.6 · ❐ my-project · ≡ 21% · /home/me/work/my-project
 ```
+
+The last item, dimmed, is the full path of the current directory, for quick reference. It is exactly
+the path Claude Code reports (a Windows path keeps its backslashes), and it sits last because that is
+the rightmost place a status line can put it: Claude Code does not say how wide the terminal is, so
+the line cannot be right-aligned, and a line that is too long loses its end first, which is this path
+and not the model. It is left out when Claude Code reports no directory.
 
 `☞` marks a model you picked by hand with `/model`, which Jev leaves alone: in front of `manual` when it
 is the main model, and in front of a sub-agent's name when that sub-agent is pinned to its own model.
@@ -213,7 +223,7 @@ draw. The branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnos
 draw, so it needs a Powerline or Nerd Font in your terminal:
 
 ```text
-✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8%
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8% · /home/me/work/my-project
 ```
 
 Run `/jev-legend` for a key to what each symbol means. It is drawn from the same symbols the line
@@ -221,8 +231,8 @@ prints, so it also reads correctly when the line has fallen back to words. A sta
 prints what it is given, and Claude Code has no keybinding that runs a slash command, so a typed
 `/jev-legend` (Tab completes it) is the way to ask; outside a session, `jev-legend` prints it too.
 
-When your account offers a newer version of a model than the router was tuned for, the line ends
-with a notice such as `new claude-opus-6: /jev-calibrate`. Routing already uses the new model; the
+When your account offers a newer version of a model than the router was tuned for, the line gets
+a notice after the context share, such as `new claude-opus-6: /jev-calibrate`. Routing already uses the new model; the
 notice means the costs and guidance were measured on the previous one, and a jev-claude update
 will bring tuning for it. Only new versions of known models are noticed, not new model names.
 
@@ -312,15 +322,17 @@ in your shell's environment.
 | `JEV_NO_STATUSLINE` | Turns off Jev's status line. |
 | `JEV_ICONS` | `symbols` or `text`: the status line's labels. Symbols by default; on Windows, words in the legacy console, which cannot draw them. |
 | `JEV_DEBUG` | Logs routing decisions to `~/.jev-claude.log`. |
-| `JEV_DUMP` | Saves whole request bodies for debugging. `1` writes them, owner-only, to the status directory; any other value is a path prefix. |
+| `JEV_DUMP` | Saves whole request bodies for debugging. `1` writes them, owner-only, to the status directory; any other value is a path prefix. Shell or `~/.jev-router.env` only; not read from a project's `.env`. |
 
 Your shell's environment wins, then a `.env` in the directory you start `jev-claude` from, then
 `~/.jev-router.env`, then the older `~/.jev-claude.env`. A blank value is ignored, so a copied but
 unfilled `.env.example` never hides your real key.
 
-A project's `.env` may be someone else's file, so only the `JEV_*` settings in the table above are
-read from it. Anything that could redirect traffic or run code, such as `ANTHROPIC_BASE_URL`,
-`TYPESAFE_BASE_URL` or `NODE_OPTIONS`, must be set in your shell or in `~/.jev-router.env`. The
+A project's `.env` may be someone else's file, so only these settings are read from it:
+`JEV_API_KEY`, `TYPESAFE_API_KEY`, `JEV_DEBUG`, `JEV_ALLOW_FABLE`, `JEV_NO_STATUSLINE`, `JEV_ICONS`
+and the `JEV_*EFFORT` settings. `JEV_DUMP`, which names a path, and anything that could redirect
+traffic or run code, such as `ANTHROPIC_BASE_URL`, `TYPESAFE_BASE_URL` or `NODE_OPTIONS`, must be
+set in your shell or in `~/.jev-router.env`. The
 Jev key itself is removed from the environment Claude Code runs with.
 
 ## How it works
@@ -345,7 +357,8 @@ before forwarding, and old MCP tool schemas that the API would reject are normal
 pnpm install
 cp .env.example .env    # then paste your key
 
-pnpm test
+pnpm test               # Node unit tests, then the conformance harness
+pnpm lint               # Biome
 node node/scripts/live-routing.mjs
 node node/bin/jev-claude.mjs -p "what is 2+2?"
 ```
@@ -354,8 +367,43 @@ node node/bin/jev-claude.mjs -p "what is 2+2?"
 prompts.
 
 The Node.js implementation lives in `node/`; ports to Go, Rust, and Python live beside it in
-`go/`, `rust/`, and `python/`, and all of them follow [`SPEC.md`](SPEC.md). See
-[doc/LAYOUT.md](doc/LAYOUT.md) for what lives where and why the root keeps a `package.json`.
+`go/`, `rust/`, and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers use
+the Node.js implementation. See [doc/LAYOUT.md](doc/LAYOUT.md) for each implementation's test
+commands, what lives where, and why the root keeps a `package.json`.
+
+```bash
+node conformance/generate.mjs        # regenerate the golden cases from the Node code (needs Node 24.21.x)
+node --test conformance/harness      # black-box tests, against Node by default
+```
+
+### Implementations
+
+Each implementation has a full guide: installing its toolchain on Windows, macOS and Linux,
+building, installing the programs side by side, running `jev-claude`, tests, lint and format,
+running the conformance harness against it, what CI runs, troubleshooting, and where it knowingly
+differs from Node.
+
+| Implementation | Guide | Quick start | Toolchain | Lint and format |
+| --- | --- | --- | --- | --- |
+| Node.js (reference; what the installers set up) | [doc/NODE.md](doc/NODE.md) | [node/README.md](node/README.md) | Node 22.16+ (24.21 to regenerate golden cases), pnpm | Biome |
+| Go | [doc/GO.md](doc/GO.md) | [go/README.md](go/README.md) | Go 1.23+ | gofmt, go vet, staticcheck, golangci-lint |
+| Rust | [doc/RUST.md](doc/RUST.md) | [rust/README.md](rust/README.md) | Rust stable, MSRV 1.85 | rustfmt, clippy (`all` + `pedantic`, `-D warnings`) |
+| Python | [doc/PYTHON.md](doc/PYTHON.md) | [python/README.md](python/README.md) | CPython 3.12+ | ruff (format and lint), mypy `strict` |
+
+Whichever launcher you run, the `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the
+Node.js scripts in `node/bin/`, so Node.js must be on `PATH`. A Go, Rust or Python build finds the
+repository root (and with it those skills) by walking up from its own location, so build it
+inside the clone; each guide says what a copy installed elsewhere loses and how `JEV_ROOT` fixes
+it.
+
+### Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request, on
+Windows (the gating platform, SPEC.md 16) and Ubuntu, with one job per implementation. Each job
+runs that implementation's lint, format and unit-test gates and then the conformance harness
+against its programs. The Node job also regenerates the golden cases and fails if
+`conformance/cases` changes. The commands are the ones in each guide's "What CI runs" section
+(for Rust, "The full gate").
 
 ### Calibrating for new models
 
@@ -371,8 +419,8 @@ repository. It checks Anthropic's model notes and published per-task measurement
 
 ### Versions and commit messages
 
-Every push to `master` runs [a GitHub Action](.github/workflows/version-bump.yml) that runs the
-tests, bumps the version in the root `package.json`, commits it as `chore(release): vX.Y.Z`, and tags it.
+Every push to `master` also runs [a release workflow](.github/workflows/version-bump.yml) that
+runs the Node tests (`pnpm test`: the unit tests and the harness against Node, on Ubuntu), bumps the version in the root `package.json`, commits it as `chore(release): vX.Y.Z`, and tags it.
 Pull after pushing to pick up that commit. The size of the bump comes from the
 [Conventional Commits](https://www.conventionalcommits.org) prefixes of the commits pushed:
 
@@ -386,7 +434,8 @@ Pull after pushing to pick up that commit. The size of the bump comes from the
 
 - Your prompt text is sent to TypeSafe for the routing decision. Nothing else is.
 - Jev adds a short delay to the first request of each turn; tool calls within a turn add none.
-- Claude Code's request format is not a public contract. Use `JEV_DUMP` to diagnose changes.
+- Claude Code's request format is not a public contract. Use `JEV_DUMP` (set in your shell or
+  `~/.jev-router.env`) to diagnose changes.
 - jev-claude and its installers are written for macOS, Linux (including WSL), and Windows. They
   have been tested on Windows 10 (PowerShell 7 and 5.1, Git Bash) with Claude Code 2.1.287;
   macOS and Linux run the same code but have not been tested yet.
@@ -425,7 +474,9 @@ For a pull request:
 2. Fork the repository and create a focused branch from `master`.
 3. Make the smallest change that solves the problem, with commit subjects as described in
    [Versions and commit messages](#versions-and-commit-messages).
-4. Run `pnpm test` and include tests for non-trivial behaviour changes.
+4. Run `pnpm test` and include tests for non-trivial behaviour changes. A change to `go/`,
+   `rust/` or `python/` must also pass that implementation's gates (its guide's CI section),
+   and a change to Node's behaviour must regenerate the golden cases and pass every port.
 
 Never commit API keys or other secrets: copy `.env.example` to `.env` (which git ignores) for local
 settings. All contributions are reviewed, and only the repository owner merges pull requests.
