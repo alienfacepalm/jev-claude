@@ -45,6 +45,7 @@ pub fn rename_over(temp: &Path, file: &Path) -> std::io::Result<()> {
 }
 
 #[cfg(unix)]
+/// `fs.chmodSync`.
 pub fn chmod(path: &Path, mode: u32) -> std::io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode))
