@@ -1,5 +1,5 @@
 // Bumps the version in the root package.json from the commits being released. Run by
-// .github/workflows/version-bump.yml on every push to master:
+// the `release` job of .github/workflows/ci.yml on every push to master, once CI has passed:
 //   node node/scripts/bump-version.mjs <before-sha> <after-sha>
 // prints the new version, after writing it to package.json.
 //
