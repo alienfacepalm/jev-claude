@@ -134,6 +134,44 @@ func CmdLine(spec Spec, args []string) string {
 	return spec.Command + ` /d /s /c "` + strings.Join(parts, " ") + `"`
 }
 
+// claudeSubcommands are the subcommands of the `claude` CLI (as of Claude Code 2.1.292). They
+// manage Claude Code itself rather than start a session, and none of them takes `--add-dir`
+// (`claude mcp list --add-dir x` fails with "unknown option"), so a launch that names one runs it
+// untouched: no proxy, no model routing, no status line, no added arguments.
+var claudeSubcommands = map[string]struct{}{
+	"agents":      {},
+	"attach":      {},
+	"auth":        {},
+	"auto-mode":   {},
+	"doctor":      {},
+	"gateway":     {},
+	"import":      {},
+	"install":     {},
+	"kill":        {},
+	"logs":        {},
+	"mcp":         {},
+	"plugin":      {},
+	"plugins":     {},
+	"purge":       {},
+	"respawn":     {},
+	"rm":          {},
+	"setup-token": {},
+	"stop":        {},
+	"ultrareview": {},
+	"update":      {},
+	"upgrade":     {},
+}
+
+// IsClaudeSubcommand reports whether args run a `claude` subcommand: the first argument is
+// exactly one of its names (SPEC 10.3).
+func IsClaudeSubcommand(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	_, ok := claudeSubcommands[args[0]]
+	return ok
+}
+
 // Command builds the process for spec and args, never through an implicit shell.
 func Command(spec Spec, args []string) *exec.Cmd {
 	if spec.Shim == "" {

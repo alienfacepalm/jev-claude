@@ -92,7 +92,10 @@ func main() {
 	root := repo.Root()
 	userArgs := os.Args[1:]
 	args := append([]string{}, userArgs...)
-	if root != "" {
+	// `jev-claude mcp list` and the like manage Claude Code, they do not start a session: they get
+	// none of what a session gets (`--add-dir`, which they reject, the proxy, the status line).
+	passthrough := launch.IsClaudeSubcommand(userArgs)
+	if root != "" && !passthrough {
 		args = append(args, "--add-dir", root)
 	}
 	childEnv := env.ChildEnv(os.Environ())
@@ -120,7 +123,10 @@ func main() {
 		}
 	}
 
-	if os.Getenv("JEV_API_KEY") != "" || os.Getenv("TYPESAFE_API_KEY") != "" {
+	switch {
+	case passthrough:
+		// The subcommand runs on childEnv as it is: no proxy, no model variables, no notice.
+	case os.Getenv("JEV_API_KEY") != "" || os.Getenv("TYPESAFE_API_KEY") != "":
 		inherited := os.Getenv("ANTHROPIC_BASE_URL")
 		p, err := proxy.Start(proxy.Options{UpstreamURL: inherited})
 		if err != nil {
@@ -152,7 +158,7 @@ func main() {
 		if os.Getenv("JEV_DEBUG") != "" && logx.IsTerminal(os.Stdout) {
 			fmt.Fprintf(os.Stderr, "[jev] routing decisions -> %s\n", logx.File)
 		}
-	} else {
+	default:
 		fmt.Fprintf(os.Stderr, "[jev] no JEV_API_KEY found - starting Claude Code without routing\n"+
 			"[jev] set it in %s to enable routing\n", filepath.Join(osdirs.Home(), ".jev-router.env"))
 	}

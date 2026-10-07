@@ -86,3 +86,36 @@ export function spawnSpec(spec, args, options = {}) {
     windowsVerbatimArguments: true,
   });
 }
+
+/**
+ * The subcommands of the `claude` CLI (as of Claude Code 2.1.292). They manage Claude Code itself
+ * rather than start a session, and none of them takes `--add-dir` (`claude mcp list --add-dir x`
+ * fails with "unknown option"), so a launch that names one runs it untouched: no proxy, no model
+ * routing, no status line, no added arguments.
+ */
+const CLAUDE_SUBCOMMANDS = new Set([
+  "agents",
+  "attach",
+  "auth",
+  "auto-mode",
+  "doctor",
+  "gateway",
+  "import",
+  "install",
+  "kill",
+  "logs",
+  "mcp",
+  "plugin",
+  "plugins",
+  "purge",
+  "respawn",
+  "rm",
+  "setup-token",
+  "stop",
+  "ultrareview",
+  "update",
+  "upgrade",
+]);
+
+/** Whether `args` run a `claude` subcommand: the first argument is exactly one of its names. */
+export const isClaudeSubcommand = (args) => CLAUDE_SUBCOMMANDS.has(args[0]);

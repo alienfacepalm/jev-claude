@@ -7,7 +7,7 @@ use jev_router::firstrun::{
     Answer, FIRST_RUN_FILE, ask_yes_no, mark_offered, shadows_skill, should_offer, was_offered,
 };
 use jev_router::jsjson::{self, Object, Value};
-use jev_router::launch::{command_for, launch_spec, resolve_command};
+use jev_router::launch::{command_for, is_claude_subcommand, launch_spec, resolve_command};
 use jev_router::log::LOG_FILE;
 use jev_router::osdirs::home_dir;
 use jev_router::proxy::{ProxyHandle, ProxyOptions, start_proxy};
@@ -173,7 +173,11 @@ async fn main() {
     let cli: Vec<String> = std::env::args().skip(1).collect();
     let mut args = cli.clone();
     let root = jev_router::repo::root();
-    if let Some(root) = root {
+    // `jev-claude mcp list` and the like manage Claude Code, they do not start a session: they
+    // get none of what a session gets (`--add-dir`, which they reject, the proxy, the status
+    // line) and run on `childEnv()` alone (SPEC 10.3).
+    let passthrough = is_claude_subcommand(&cli);
+    if let (Some(root), false) = (root, passthrough) {
         args.push("--add-dir".into());
         args.push(root.to_string_lossy().into_owned());
     }
@@ -211,7 +215,9 @@ async fn main() {
     ignore_interrupts();
     let cleanup: SharedCleanup = Arc::new(Mutex::new(Cleanup::default()));
 
-    if envx::truthy("JEV_API_KEY") || envx::truthy("TYPESAFE_API_KEY") {
+    if passthrough {
+        // Nothing to set up: the subcommand runs on `extra_env` as it stands.
+    } else if envx::truthy("JEV_API_KEY") || envx::truthy("TYPESAFE_API_KEY") {
         let inherited = envx::get("ANTHROPIC_BASE_URL").filter(|u| !u.is_empty());
         let proxy = match start_proxy(ProxyOptions { upstream_url: inherited.clone(), ..Default::default() }).await {
             Ok(p) => p,

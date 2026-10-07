@@ -16,7 +16,7 @@ from ..config import AUTO_MODEL
 from ..env import child_env, load_env
 from ..first_run import ask_yes_no, mark_offered, shadows_skill, should_offer, was_offered
 from ..jsstr import truthy
-from ..launch import launch_spec, resolve_command, spawn_spec
+from ..launch import is_claude_subcommand, launch_spec, resolve_command, spawn_spec
 from ..log import INTERACTIVE, LOG_FILE, write_stderr
 from ..settings import read_saved_model, restore_saved_model
 from ..status import SETTINGS_FILE, write_private
@@ -81,7 +81,10 @@ def main() -> int:
     load_env()
 
     args = sys.argv[1:]
-    if repo.ROOT:
+    # `jev-claude mcp list` and the like manage Claude Code, they do not start a session: they get
+    # none of what a session gets (`--add-dir`, which they reject, the proxy, the status line).
+    passthrough = is_claude_subcommand(args)
+    if repo.ROOT and not passthrough:
         args = [*args, "--add-dir", repo.ROOT]
     env = child_env()
 
@@ -109,7 +112,9 @@ def main() -> int:
             args.insert(0, "/jev-calibrate check")
 
     cleanups: list[Callable[[], None]] = []
-    if os.environ.get("JEV_API_KEY") or os.environ.get("TYPESAFE_API_KEY"):
+    if passthrough:
+        pass  # the subcommand runs on `env` as `child_env()` left it
+    elif os.environ.get("JEV_API_KEY") or os.environ.get("TYPESAFE_API_KEY"):
         from ..proxy import start_proxy  # noqa: PLC0415 - the proxy is loaded only when routing is on
 
         inherited = os.environ.get("ANTHROPIC_BASE_URL")

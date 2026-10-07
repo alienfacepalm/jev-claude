@@ -6,6 +6,37 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::LazyLock;
 
+/// The names of the `claude` CLI's own subcommands, as of Claude Code 2.1.292 (SPEC 10.3).
+const CLAUDE_SUBCOMMANDS: [&str; 21] = [
+    "agents",
+    "attach",
+    "auth",
+    "auto-mode",
+    "doctor",
+    "gateway",
+    "import",
+    "install",
+    "kill",
+    "logs",
+    "mcp",
+    "plugin",
+    "plugins",
+    "purge",
+    "respawn",
+    "rm",
+    "setup-token",
+    "stop",
+    "ultrareview",
+    "update",
+    "upgrade",
+];
+
+/// `isClaudeSubcommand(args)`: whether `args` run a `claude` subcommand, that is, the first
+/// argument is exactly one of its names (case-sensitive, the whole argument).
+pub fn is_claude_subcommand(args: &[String]) -> bool {
+    args.first().is_some_and(|first| CLAUDE_SUBCOMMANDS.contains(&first.as_str()))
+}
+
 /// `resolveCommand(name, {exts, path, win})`.
 pub fn resolve_command(name: &str, exts: Option<&[&str]>, path: Option<&str>, win: bool) -> Option<PathBuf> {
     let path = path.map_or_else(|| envx::get("PATH").unwrap_or_default(), str::to_string);

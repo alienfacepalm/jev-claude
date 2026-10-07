@@ -8,7 +8,7 @@ import { AUTO_MODEL } from "../src/config.mjs";
 import { readSavedModel, restoreSavedModel } from "../src/settings.mjs";
 import { LOG_FILE } from "../src/log.mjs";
 import { loadEnv, childEnv } from "../src/env.mjs";
-import { resolveCommand, launchSpec, spawnSpec } from "../src/launch.mjs";
+import { resolveCommand, launchSpec, spawnSpec, isClaudeSubcommand } from "../src/launch.mjs";
 import { SETTINGS_FILE, writePrivate } from "../src/status.mjs";
 import { shouldOffer, shadowsSkill, wasOffered, markOffered, askYesNo } from "../src/first-run.mjs";
 
@@ -76,7 +76,10 @@ function statusLineArgs() {
 loadEnv();
 
 const args = process.argv.slice(2);
-args.push("--add-dir", ROOT);
+// `jev-claude mcp list` and the like manage Claude Code, they do not start a session: they get
+// none of what a session gets (`--add-dir`, which they reject, the proxy, the status line).
+const passthrough = isClaudeSubcommand(args);
+if (!passthrough) args.push("--add-dir", ROOT);
 // The Jev key is jev's alone; Claude Code and every command it runs go without it.
 const env = childEnv();
 
@@ -111,12 +114,12 @@ if (
   // all (the input closed) is not a decision, so nothing is recorded and the offer comes back.
   if (answer === "interrupt") process.exit(130);
   if (answer !== null) markOffered(answer);
-  // `check` keeps it to the report even in the router's own repository, where /jev-calibrate
-  // would otherwise go on to re-tune: the offer promised to change nothing.
+  // `check` asks for the report alone. A bare /jev-calibrate is report-only too (only `retune`
+  // re-tunes), but the offer promised to change nothing, so it says so.
   if (answer === true) args.unshift("/jev-calibrate check");
 }
 
-if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
+if (!passthrough && (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY)) {
   // A host that already proxies Claude Code stays in the chain. Lattis points
   // ANTHROPIC_BASE_URL at its own daemon, which holds its separate Claude sign-in and its
   // accounting; going straight to the API from here would spend that sign-in's credentials
@@ -145,7 +148,7 @@ if (process.env.JEV_API_KEY || process.env.TYPESAFE_API_KEY) {
   if (process.env.JEV_DEBUG && process.stdout.isTTY) {
     process.stderr.write(`[jev] routing decisions -> ${LOG_FILE}\n`);
   }
-} else {
+} else if (!passthrough) {
   process.stderr.write(
     `[jev] no JEV_API_KEY found - starting Claude Code without routing\n` +
       `[jev] set it in ${join(homedir(), ".jev-router.env")} to enable routing\n`,
