@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import datetime
 import os
+from collections.abc import Mapping
 
 from .. import repo
 from ..config import AUTO_MODEL, TIERS, fable_allowed, tier_of
-from ..jsstr import to_string
+from ..jsstr import array_join
 from ..status import read_calibration
 from ._io import write_stdout
 
@@ -16,7 +17,7 @@ def _row(label: str, text: str) -> str:
     return f"{label.ljust(13)}{text}"
 
 
-def _local_time(at) -> str:
+def _local_time(at: float) -> str:
     # `new Date(at).toLocaleString()`: the platform's local date-time format (excluded from
     # byte comparison, SPEC 13).
     try:
@@ -25,10 +26,13 @@ def _local_time(at) -> str:
         return "Invalid Date"
 
 
-def report(env=None, root=repo.ROOT) -> str:
+def report(env: Mapping[str, str] | None = None, root: str | None = repo.ROOT) -> str:
+    """The setup report, one row per line (SPEC 13)."""
     env = os.environ if env is None else env
-    repository = bool(root) and os.path.exists(os.path.join(root, ".git")) and os.path.exists(
-        os.path.join(root, "node", "scripts", "calibrate.mjs")
+    repository = bool(
+        root
+        and os.path.exists(os.path.join(root, ".git"))
+        and os.path.exists(os.path.join(root, "node", "scripts", "calibrate.mjs"))
     )
     routing = env.get("ANTHROPIC_CUSTOM_MODEL_OPTION") == AUTO_MODEL
     calibration = read_calibration()
@@ -60,10 +64,13 @@ def report(env=None, root=repo.ROOT) -> str:
 
     if at is None:
         lines.append(
-            _row("Your account", "not read yet - Claude Code has not loaded the model list. Run /jev-calibrate again shortly.")
+            _row(
+                "Your account",
+                "not read yet - Claude Code has not loaded the model list. Run /jev-calibrate again shortly.",
+            )
         )
     else:
-        listed = ", ".join(to_string(m) for m in models) or "no Claude models listed"
+        listed = array_join(models, ", ") or "no Claude models listed"
         lines.append(_row("Your account", f"{listed} (as of {_local_time(at)})"))
         offered = {tier_of(m) for m in models}
         missing = [t["name"] for t in TIERS if t["name"] not in offered]
@@ -71,7 +78,7 @@ def report(env=None, root=repo.ROOT) -> str:
             lines.append(_row("", f"not offered to this account: {', '.join(missing)} (routing steps around them)"))
         if newer:
             text = (
-                f"{', '.join(to_string(n) for n in newer)} - routing already uses them, but the router was tuned on "
+                f"{array_join(newer, ', ')} - routing already uses them, but the router was tuned on "
                 "the versions before. Update jev-router to get tuning for them."
             )
         else:
@@ -88,6 +95,7 @@ def report(env=None, root=repo.ROOT) -> str:
 
 
 def main() -> int:
+    """Prints the setup report."""
     write_stdout(report())
     return 0
 

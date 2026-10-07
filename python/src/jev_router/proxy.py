@@ -18,8 +18,11 @@ import re
 import select
 import socket
 import socketserver
+import sys
 import threading
 import urllib.parse
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
+from typing import Final, TypedDict
 
 from . import jsjson
 from .config import (
@@ -34,12 +37,14 @@ from .config import (
     tier_of,
     tier_spec,
 )
-from .jsjson import js_keys, js_values, spread
+from .jsjson import js_values, spread
 from .jsstr import (
     JSWS,
     UNDEFINED,
+    JsObject,
+    JsValue,
     array_join,
-    coalesce,
+    coalesce_js,
     is_nullish,
     is_number,
     js_trim,
@@ -52,56 +57,82 @@ from .jsstr import (
     u16_slice,
     utf8,
 )
-from .log import debug
+from .log import debug, log
 from .policy import decide
 from .router import ask_jev, prewarm
-from .status import mark_manual, now_ms, write_calibration, write_decision
-from .status import dump_body
+from .status import dump_body, mark_manual, now_ms, write_calibration, write_decision
 
-ANTHROPIC_BASE_URL = "https://api.anthropic.com"
+ANTHROPIC_BASE_URL: Final = "https://api.anthropic.com"
 
-HOP_BY_HOP = ["content-length", "transfer-encoding", "connection", "keep-alive"]
+HOP_BY_HOP: Final = ["content-length", "transfer-encoding", "connection", "keep-alive"]
 
-MAX_CONVERSATIONS = 50
+MAX_CONVERSATIONS: Final = 50
 
-_REMINDER = re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL)
-_SPACES = re.compile(JSWS + "+")
-_THINKING = re.compile(r"thinking", re.IGNORECASE | re.ASCII)
-_MODELS_PATH = re.compile(r"/v1/models(?:\?|\Z)")
-_SERVED_BY = re.compile(r'"model"' + JSWS + "*:" + JSWS + r'*"([^"]+)"')
+_REMINDER: Final = re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL)
+_SPACES: Final = re.compile(JSWS + "+")
+_THINKING: Final = re.compile(r"thinking", re.IGNORECASE | re.ASCII)
+_MODELS_PATH: Final = re.compile(r"/v1/models(?:\?|\Z)")
+_SERVED_BY: Final = re.compile(r'"model"' + JSWS + "*:" + JSWS + r'*"([^"]+)"')
+
+# Header values as Node's IncomingMessage holds them: a string, or a list for set-cookie.
+type Headers = dict[str, str | list[str]]
+
+
+class Agent(TypedDict):
+    """Which conversation inside a session a request belongs to (SPEC 7.4)."""
+
+    key: str
+    label: str
+    main: bool
+
+
+class RouteRequest(TypedDict):
+    """What the proxy asks its router: the prompt, the current model and the models on offer."""
+
+    prompt: str
+    current: JsValue
+    contextTokens: float
+    models: list[JsObject]
+
+
+# The router: a Jev answer (`choice`, `confidence`, ...) for a request, or None for no answer.
+type Route = Callable[[RouteRequest], object]
 
 
 # --- JavaScript property access over JSON values -----------------------------------------------
 
 
-def _get(obj, key):
+def _get(obj: object, key: str) -> JsValue:
     """`obj?.key`."""
     if isinstance(obj, dict):
-        return obj.get(key, UNDEFINED)
+        value: JsValue = obj.get(key, UNDEFINED)
+        return value
     if isinstance(obj, (str, list)) and key == "length":
         return float(len(obj))
     return UNDEFINED
 
 
-def _prop(obj, key):
+def _prop(obj: object, key: str) -> JsValue:
     """`obj.key`, which throws for null and undefined."""
     if is_nullish(obj):
         raise TypeError(f"Cannot read properties of {to_string(obj)} (reading '{key}')")
     return _get(obj, key)
 
 
-def _first(obj):
+def _first(obj: object) -> JsValue:
     """`obj?.[0]`."""
     if isinstance(obj, list):
-        return obj[0] if obj else UNDEFINED
+        first: JsValue = obj[0] if obj else UNDEFINED
+        return first
     if isinstance(obj, str):
         return obj[0] if obj else UNDEFINED
     if isinstance(obj, dict):
-        return obj.get("0", UNDEFINED)
+        zero: JsValue = obj.get("0", UNDEFINED)
+        return zero
     return UNDEFINED
 
 
-def _iterate(value) -> list:
+def _iterate(value: object) -> list[JsValue]:
     """`for...of` / `[...value]`: arrays and strings iterate, anything else throws."""
     if isinstance(value, list):
         return list(value)
@@ -110,12 +141,12 @@ def _iterate(value) -> list:
     raise TypeError(f"{to_string(value)} is not iterable")
 
 
-def _is_str(value, text) -> bool:
+def _is_str(value: object, text: str) -> bool:
     """`value === text` for a string literal."""
     return isinstance(value, str) and value == text
 
 
-def _has_tools(body) -> bool:
+def _has_tools(body: object) -> bool:
     """`Array.isArray(body?.tools) && body.tools.length > 0`."""
     tools = _get(body, "tools")
     return isinstance(tools, list) and len(tools) > 0
@@ -124,7 +155,7 @@ def _has_tools(body) -> bool:
 # --- Pure functions (SPEC 7.5) -------------------------------------------------------------------
 
 
-def sanitize_schema(node) -> None:
+def sanitize_schema(node: object) -> None:
     """Converts draft-04 boolean exclusive bounds into draft 2020-12 numbers, in place."""
     if isinstance(node, list):
         for item in node:
@@ -143,16 +174,16 @@ def sanitize_schema(node) -> None:
         sanitize_schema(value)
 
 
-def _block_text(block):
+def _block_text(block: object) -> JsValue:
     return _prop(block, "text")
 
 
-def new_turn_prompt(body):
+def new_turn_prompt(body: object) -> str | None:
     """The text of a genuinely new user turn, or None."""
     if not _has_tools(body):
         return None
-    messages = coalesce(_get(body, "messages"), [])
-    last = UNDEFINED
+    messages = coalesce_js(_get(body, "messages"), [])
+    last: JsValue = UNDEFINED
     for message in reversed(_iterate(messages)):
         if not _is_str(_get(message, "role"), "system"):
             last = message
@@ -172,20 +203,23 @@ def new_turn_prompt(body):
     return js_trim(_REMINDER.sub("", text)) or None
 
 
-def apply_tier(body, tier_name, model=UNDEFINED, env=None):
+def apply_tier(
+    body: JsObject, tier_name: object, model: JsValue = UNDEFINED, env: Mapping[str, str] | None = None
+) -> JsObject:
     """Points a request at a tier, removing request fields that tier cannot accept."""
     tier = tier_spec(tier_name)
     if not tier:
         return body
+    name = tier["name"]  # the same string as `tier_name`, now typed as one
     if model is UNDEFINED:
-        model = id_of(tier_name)
+        model = id_of(name)
     body["model"] = model
     if not tier["thinking"]:
         body.pop("thinking", None)
         management = _get(body, "context_management")
         edits = _get(management, "edits")
-        if isinstance(edits, list):
-            kept = [e for e in edits if not _THINKING.search(to_string(coalesce(_get(e, "type"), "")))]
+        if isinstance(management, dict) and isinstance(edits, list):  # a list `edits` implies an object
+            kept = [e for e in edits if not _THINKING.search(to_string(coalesce_js(_get(e, "type"), "")))]
             management["edits"] = kept
             if len(kept) == 0:
                 body.pop("context_management", None)
@@ -201,15 +235,15 @@ def apply_tier(body, tier_name, model=UNDEFINED, env=None):
         if remaining == 0:
             body.pop("output_config", None)
     elif tier["effort"]:
-        effort = forced_effort(tier_name, env)
+        effort = forced_effort(name, env)
         if effort is None:
-            effort = None if truthy(_get(output_config, "effort")) else effort_floor(tier_name, env)
+            effort = None if truthy(_get(output_config, "effort")) else effort_floor(name, env)
         if truthy(effort):
             body["output_config"] = {**spread(output_config), "effort": effort}
     return body
 
 
-def version_of(model) -> list:
+def version_of(model: object) -> list[float]:
     """`[major, minor]` read from a model id, `[0, 0]` when unreadable."""
     model_id = _get(model, "id")
     if model_id is UNDEFINED:
@@ -225,7 +259,7 @@ def version_of(model) -> list:
     return [float(match.group(1)), float(match.group(2) or 0)]
 
 
-def _compare_versions(a, b) -> float:
+def _compare_versions(a: Sequence[float], b: Sequence[float]) -> float:
     return (a[0] - b[0]) or (a[1] - b[1])
 
 
@@ -233,8 +267,8 @@ def _code_units(text: str) -> bytes:
     return text.encode("utf-16-be", "surrogatepass")
 
 
-def _released_order(a, b) -> int:
-    # SPEC 7.5: plain UTF-16 code-unit comparison (Node calls localeCompare; see the README).
+def _released_order(a: Mapping[str, JsValue], b: Mapping[str, JsValue]) -> int:
+    # SPEC 7.5: plain UTF-16 code-unit comparison (Node calls localeCompare; see doc/PYTHON.md).
     left, right = a["releasedAt"], b["releasedAt"]
     if not isinstance(left, str) or not isinstance(right, str):
         raise TypeError("releasedAt.localeCompare is not a function")
@@ -242,7 +276,7 @@ def _released_order(a, b) -> int:
     return (x > y) - (x < y)
 
 
-def _date_part(created_at):
+def _date_part(created_at: object) -> str:
     if isinstance(created_at, str):
         return u16_slice(created_at, 0, 10)
     if isinstance(created_at, list):
@@ -250,33 +284,31 @@ def _date_part(created_at):
     raise TypeError("created_at.slice is not a function")
 
 
-def claude_models(catalog=()) -> list:
+def claude_models(catalog: Iterable[object] = ()) -> list[JsObject]:
     """Exact Claude models from the catalog, newest first; the static ids when there are none."""
-    models = []
+    models: list[JsObject] = []
     for model in catalog:
         model_id = _get(model, "id")
         if not tier_of(model_id):
             continue
-        created_at = model.get("created_at", UNDEFINED)
+        # Only an object has an `id` that names a tier.
+        created_at = _get(model, "created_at")
+        max_input_tokens = _get(model, "max_input_tokens")
         parts = [
-            model.get("display_name", UNDEFINED),
+            _get(model, "display_name"),
             f"released {_date_part(created_at)}" if truthy(created_at) else created_at,
-            (
-                f"{to_string(model['max_input_tokens'])} input tokens"
-                if truthy(model.get("max_input_tokens", UNDEFINED))
-                else model.get("max_input_tokens", UNDEFINED)
-            ),
+            f"{to_string(max_input_tokens)} input tokens" if truthy(max_input_tokens) else max_input_tokens,
         ]
         models.append(
             {
                 "id": model_id,
                 "tier": tier_of(model_id),
-                "releasedAt": coalesce(created_at, ""),
+                "releasedAt": coalesce_js(created_at, ""),
                 "description": array_join([p for p in parts if truthy(p)], "; "),
             }
         )
 
-    def order(a, b):
+    def order(a: JsObject, b: JsObject) -> int:
         by_version = _compare_versions(version_of(b), version_of(a))
         if by_version:
             return -1 if by_version < 0 else 1
@@ -288,8 +320,9 @@ def claude_models(catalog=()) -> list:
     return [{"id": t["id"], "tier": t["name"], "releasedAt": "", "description": t["id"]} for t in TIERS]
 
 
-def newest_per_tier(models) -> list:
-    newest: dict = {}
+def newest_per_tier(models: Iterable[JsObject]) -> list[JsObject]:
+    """The first (newest) model of each tier, in the order given."""
+    newest: dict[object, JsObject] = {}
     for model in models:
         tier = model["tier"]
         if tier not in newest:
@@ -297,14 +330,16 @@ def newest_per_tier(models) -> list:
     return list(newest.values())
 
 
-def model_for_tier(models, tier):
+def model_for_tier(models: Iterable[JsObject], tier: object) -> JsValue:
+    """The id of the first model of `tier`, else the id the tier is calibrated for."""
     for model in models:
         if model["tier"] == tier:
             return model["id"]
     return id_of(tier)
 
 
-def newer_than_calibrated(catalog=()) -> list:
+def newer_than_calibrated(catalog: Iterable[object] = ()) -> list[JsValue]:
+    """The newest model ids per tier that are newer than the ones routing was calibrated for."""
     return [
         model["id"]
         for model in newest_per_tier(claude_models(catalog))
@@ -312,17 +347,17 @@ def newer_than_calibrated(catalog=()) -> list:
     ]
 
 
-def session_of(body):
+def session_of(body: object) -> JsValue:
     """The session id Claude Code embeds in request metadata, or ""."""
     try:
-        user_id = coalesce(_get(_get(body, "metadata"), "user_id"), "{}")
+        user_id = coalesce_js(_get(_get(body, "metadata"), "user_id"), "{}")
         parsed = jsjson.parse(to_string(user_id))
-        return coalesce(_prop(parsed, "session_id"), "")
-    except Exception:
+        return coalesce_js(_prop(parsed, "session_id"), "")
+    except Exception:  # noqa: BLE001 - metadata that is missing or not JSON just means "no session"
         return ""
 
 
-def _first_text(body, separator: str) -> str:
+def _first_text(body: object, separator: str) -> str:
     content = _get(_first(_get(body, "messages")), "content")
     if isinstance(content, str):
         return content
@@ -331,14 +366,15 @@ def _first_text(body, separator: str) -> str:
     return ""
 
 
-def conversation_key(body) -> str:
+def conversation_key(body: object) -> str:
     """First 12 hex digits of SHA-1 over `<session>|<first message text>`."""
     session = session_of(body)
     text = _first_text(body, "")
-    return hashlib.sha1(utf8(f"{to_string(session)}|{text}")).hexdigest()[:12]
+    # SHA-1 is the conversation key SPEC 7.5 fixes, shared with the other ports; not a security use.
+    return hashlib.sha1(utf8(f"{to_string(session)}|{text}"), usedforsecurity=False).hexdigest()[:12]
 
 
-def agent_label(body, max_units=48) -> str:
+def agent_label(body: object, max_units: object = 48) -> str:
     """A short human-readable name for a conversation, from its first message."""
     text = _first_text(body, " ")
     clean = js_trim(_SPACES.sub(" ", _REMINDER.sub("", text)))
@@ -352,32 +388,35 @@ def agent_label(body, max_units=48) -> str:
 class JsMap:
     """A JavaScript `Map`: insertion order and SameValueZero keys (strings, numbers, objects)."""
 
-    def __init__(self):
-        self._items: dict = {}
+    def __init__(self) -> None:
+        self._items: dict[Hashable, tuple[object, object]] = {}
 
     @staticmethod
-    def _key(value):
+    def _key(value: object) -> Hashable:
         if isinstance(value, str):
             return value
         if isinstance(value, bool):
             return ("bool", value)
         if is_number(value):
             x = float(value)
-            return ("nan",) if x != x else ("number", x)
+            return ("nan",) if math.isnan(x) else ("number", x)
         if value is None:
             return ("null",)
         if value is UNDEFINED:
             return ("undefined",)
         return ("object", id(value))
 
-    def has(self, key) -> bool:
+    def has(self, key: object) -> bool:
+        """`map.has(key)`."""
         return self._key(key) in self._items
 
-    def get(self, key):
+    def get(self, key: object) -> object:
+        """`map.get(key)`: UNDEFINED when absent."""
         entry = self._items.get(self._key(key))
         return entry[1] if entry else UNDEFINED
 
-    def set(self, key, value) -> None:
+    def set(self, key: object, value: object) -> None:
+        """`map.set(key, value)`: a new key goes last, an existing one keeps its place."""
         k = self._key(key)
         if k in self._items:
             self._items[k] = (self._items[k][0], value)
@@ -385,20 +424,23 @@ class JsMap:
             self._items[k] = (key, value)
 
     def delete_first(self) -> None:
+        """Deletes the oldest entry."""
         if self._items:
             del self._items[next(iter(self._items))]
 
-    def values(self) -> list:
+    def values(self) -> list[object]:
+        """`[...map.values()]`."""
         return [v for _, v in self._items.values()]
 
-    def entries(self) -> list:
+    def entries(self) -> list[list[object]]:
+        """`[...map.entries()]`."""
         return [[k, v] for k, v in self._items.values()]
 
     def __len__(self) -> int:
         return len(self._items)
 
 
-def agent_of(body, mains: JsMap) -> dict:
+def agent_of(body: object, mains: JsMap) -> Agent:
     """Which agent inside a session a request belongs to, and whether it is the main thread."""
     key = conversation_key(body)
     session = session_of(body)
@@ -413,33 +455,50 @@ def agent_of(body, mains: JsMap) -> dict:
 
 # --- HTTP plumbing -------------------------------------------------------------------------------
 
-_SINGLE = {
-    "content-type", "content-length", "user-agent", "referer", "host", "authorization",
-    "proxy-authorization", "if-modified-since", "if-unmodified-since", "from", "location",
-    "max-forwards", "retry-after", "etag", "last-modified", "server", "age", "expires",
+_SINGLE: Final = {
+    "content-type",
+    "content-length",
+    "user-agent",
+    "referer",
+    "host",
+    "authorization",
+    "proxy-authorization",
+    "if-modified-since",
+    "if-unmodified-since",
+    "from",
+    "location",
+    "max-forwards",
+    "retry-after",
+    "etag",
+    "last-modified",
+    "server",
+    "age",
+    "expires",
 }
 
 
-def node_headers(pairs) -> dict:
+def node_headers(pairs: Iterable[tuple[str, str]]) -> Headers:
     """Header pairs as Node's `IncomingMessage.headers`: lower-case names, duplicates merged."""
-    out: dict = {}
+    out: Headers = {}
     for name, value in pairs:
         key = name.lower()
-        if key not in out:
+        existing = out.get(key)
+        if existing is None:
             out[key] = [value] if key == "set-cookie" else value
-        elif key == "set-cookie":
-            out[key].append(value)
+        elif isinstance(existing, list):  # only set-cookie is kept as a list
+            existing.append(value)
         elif key in _SINGLE:
             continue
         elif key == "cookie":
-            out[key] = f"{out[key]}; {value}"
+            out[key] = f"{existing}; {value}"
         else:
-            out[key] = f"{out[key]}, {value}"
+            out[key] = f"{existing}, {value}"
     return out
 
 
-def upstream_headers(incoming: dict, host: str, body: bytes) -> dict:
-    headers = {**incoming, "host": host}
+def upstream_headers(incoming: Mapping[str, str | list[str]], host: str, body: bytes) -> Headers:
+    """The headers forwarded upstream: `host` replaced, hop-by-hop removed, length recomputed."""
+    headers: Headers = {**incoming, "host": host}
     for name in HOP_BY_HOP:
         headers.pop(name, None)
     if body:
@@ -447,7 +506,7 @@ def upstream_headers(incoming: dict, host: str, body: bytes) -> dict:
     return headers
 
 
-def url_host(parts) -> str:
+def url_host(parts: urllib.parse.SplitResult) -> str:
     """`new URL(...).host`: the host, with the port only when it is not the scheme's default."""
     hostname = parts.hostname or ""
     if ":" in hostname:
@@ -462,15 +521,21 @@ def url_host(parts) -> str:
 class _ClientWatcher:
     """Notices a client that disconnects while the proxy is still working on its request."""
 
-    def __init__(self, sock):
+    def __init__(self, sock: socket.socket) -> None:
         self.sock = sock
-        self.gone = False
-        self.upstream = None
+        self._gone = threading.Event()
+        # The upstream's raw socket, not its HTTPConnection: a connection-close framed response
+        # takes the socket over and sets `connection.sock` to None, but this stays shut-downable.
+        self.upstream_sock: socket.socket | None = None
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, name="jev-client-watch", daemon=True)
         self._thread.start()
 
-    def _run(self):
+    def is_gone(self) -> bool:
+        """Whether the client has disconnected."""
+        return self._gone.is_set()
+
+    def _run(self) -> None:
         while not self._stop.is_set():
             try:
                 readable, _, _ = select.select([self.sock], [], [], 0.05)
@@ -490,23 +555,28 @@ class _ClientWatcher:
                 self._lost()
             return
 
-    def _lost(self):
-        self.gone = True
+    def _lost(self) -> None:
+        self._gone.set()
         self.abort_upstream()
 
-    def abort_upstream(self):
-        connection = self.upstream
-        if connection is not None and connection.sock is not None:
-            try:
-                connection.sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-            try:
-                connection.sock.close()
-            except OSError:
-                pass
+    def abort_upstream(self) -> None:
+        """Ends the upstream exchange, if one has started, by shutting its socket down."""
+        sock = self.upstream_sock  # read once: the handler thread may be replacing it
+        if sock is None:
+            return
+        # shutdown() is what ends the exchange; close() alone is deferred while the response's
+        # file object still references the socket.
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        try:
+            sock.close()
+        except OSError:
+            pass
 
-    def stop(self):
+    def stop(self) -> None:
+        """Stops watching (the request is finished)."""
         self._stop.set()
         self._thread.join(1)
 
@@ -514,13 +584,14 @@ class _ClientWatcher:
 class ProxyState:
     """The per-proxy maps of SPEC 7.4 and the lock that guards them."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = threading.Lock()
-        self.convos: dict = {}
-        self.catalog: dict = {}
+        self.convos: dict[str, JsObject] = {}
+        self.catalog: dict[str, JsValue] = {}
         self.mains = JsMap()
 
-    def state_for(self, key, fallback=None) -> dict:
+    def state_for(self, key: str, fallback: str | None = None) -> JsObject:
+        """A conversation's routing state, made most recent; the oldest non-main one is evicted."""
         state = self.convos.get(key)
         if state is None and fallback and fallback in self.convos:
             state = self.convos.pop(fallback)
@@ -537,18 +608,30 @@ class ProxyState:
         return state
 
 
+def _as_object(value: JsValue) -> JsObject:
+    """The value as an object; a request whose model is the sentinel always is one."""
+    if not isinstance(value, dict):
+        raise TypeError("the request body is not an object")
+    return value
+
+
 class Proxy:
-    def __init__(self, upstream_url=ANTHROPIC_BASE_URL, route=None, calibration_file=None):
+    """The routing proxy's request processing, independent of the HTTP server."""
+
+    def __init__(
+        self, upstream_url: str = ANTHROPIC_BASE_URL, route: Route | None = None, calibration_file: str | None = None
+    ) -> None:
         self.upstream_url = upstream_url
-        self.route = route or _default_route
+        self.route: Route = route or _default_route
         self.calibration_file = calibration_file
         self.state = ProxyState()
 
     # --- body processing (SPEC 7.3) ---
 
     def process(self, raw: bytes) -> bytes:
-        body = UNDEFINED
-        state = None
+        """The request body to forward: rewritten when it names the sentinel model, else as is."""
+        body: JsValue = UNDEFINED
+        state: JsObject | None = None
         try:
             body = jsjson.parse(raw)
             dump_body(body)
@@ -564,29 +647,34 @@ class Proxy:
                 if truthy(_get(_get(body, "tools"), "length")):
                     with self.state.lock:
                         agent = agent_of(body, self.state.mains)
-                    debug(f"{agent['key']} passthrough {'main' if agent['main'] else 'sub'} {to_string(_get(body, 'model'))}")
+                    role = "main" if agent["main"] else "sub"
+                    debug(f"{agent['key']} passthrough {role} {to_string(_get(body, 'model'))}")
                     if truthy(new_turn_prompt(body)):
                         mark_manual(session_of(body), _get(body, "model"), agent)
             else:
+                request = _as_object(body)
                 with self.state.lock:
-                    agent = agent_of(body, self.state.mains)
+                    agent = agent_of(request, self.state.mains)
                     key = agent["key"]
                     fallback = None
-                    if truthy(session_of(body)):
-                        fallback = conversation_key({**body, "metadata": UNDEFINED})
+                    if truthy(session_of(request)):
+                        fallback = conversation_key({**request, "metadata": UNDEFINED})
                     state = self.state.state_for(key, fallback)
-                    current = coalesce(state["tier"], THRESHOLDS["uncertainDefault"])
+                    current = coalesce_js(state["tier"], THRESHOLDS["uncertainDefault"])
                     state_model = state.get("model", UNDEFINED)
                     catalog = list(self.state.catalog.values())
-                prompt = new_turn_prompt(body)
+                prompt = new_turn_prompt(request)
                 explaining = isinstance(prompt, str) and "<jev-explain>" in prompt
-                fresh = None
-                if truthy(prompt) and not explaining:
+                fresh: JsObject | None = None
+                if prompt and not explaining:
                     allowed = available_tiers()
                     models = newest_per_tier([m for m in claude_models(catalog) if m["tier"] in allowed])
                     available = list(dict.fromkeys(m["tier"] for m in models))
-                    current_model = coalesce(state_model, model_for_tier(models, current))
-                    context_tokens = math_round(u16_len(jsjson.stringify(body["messages"])) / 4)
+                    current_model = coalesce_js(state_model, model_for_tier(models, current))
+                    messages = jsjson.stringify(request["messages"])
+                    if not isinstance(messages, str):
+                        raise TypeError("Cannot read properties of undefined (reading 'length')")
+                    context_tokens = math_round(u16_len(messages) / 4)
                     jev = self.route(
                         {"prompt": prompt, "current": current_model, "contextTokens": context_tokens, "models": models}
                     )
@@ -603,7 +691,8 @@ class Proxy:
                         context_tokens=context_tokens if routed_before else 0,
                     )
                     tier, reason = decision["tier"], decision["reason"]
-                    if should_use_exact_model(reason, chosen["tier"] if chosen else UNDEFINED, tier):
+                    model: JsValue
+                    if chosen is not None and should_use_exact_model(reason, chosen["tier"], tier):
                         model = chosen["id"]
                     elif tier == current:
                         model = current_model
@@ -616,10 +705,12 @@ class Proxy:
                     fresh = {
                         "prompt": prompt,
                         "model": model,
-                        "confidence": coalesce(_get(jev, "confidence"), None),
-                        "metrics": coalesce(_get(jev, "metrics"), None),
+                        "confidence": coalesce_js(_get(jev, "confidence"), None),
+                        "metrics": coalesce_js(_get(jev, "metrics"), None),
                         "reason": reason,
-                        "jev": {"request": _get(jev, "request"), "response": _get(jev, "response")} if has_jev else None,
+                        "jev": {"request": _get(jev, "request"), "response": _get(jev, "response")}
+                        if has_jev
+                        else None,
                     }
                     timing = (
                         f"{to_string(_get(jev, 'ms'))}ms p={to_fixed2(to_number(_get(jev, 'confidence')))}"
@@ -632,13 +723,13 @@ class Proxy:
                         f"ctx~{to_string(context_tokens)} | {u16_slice(prompt, 0, 60)}"
                     )
                 with self.state.lock:
-                    tier = coalesce(state["tier"], current)
-                    model = coalesce(state.get("model", UNDEFINED), id_of(tier))
-                debug(f"{key} rewrite {to_string(body['model'])} -> {to_string(model)}")
-                apply_tier(body, tier, model)
+                    tier = coalesce_js(state["tier"], current)
+                    model = coalesce_js(state.get("model", UNDEFINED), id_of(tier))
+                debug(f"{key} rewrite {to_string(request['model'])} -> {to_string(model)}")
+                apply_tier(request, tier, model)
                 if fresh is not None and not explaining:
-                    effort = coalesce(_get(_get(body, "output_config"), "effort"), None)
-                    session = session_of(body)
+                    effort = coalesce_js(_get(_get(request, "output_config"), "effort"), None)
+                    session = session_of(request)
                     write_decision(
                         session if truthy(session) else key,
                         {"tier": tier, **fresh, "effort": effort, "at": now_ms()},
@@ -648,25 +739,26 @@ class Proxy:
         except Exception as error:  # noqa: BLE001 - mirrors Node's catch-all around the body
             debug(f"could not process body: {error}")
             try:
-                if is_auto(_get(body, "model")):
+                if isinstance(body, dict) and is_auto(_get(body, "model")):
                     with self.state.lock:
-                        tier = coalesce(state["tier"] if state else UNDEFINED, THRESHOLDS["uncertainDefault"])
-                        model = coalesce(state.get("model", UNDEFINED) if state else UNDEFINED, id_of(tier))
+                        tier = coalesce_js(state["tier"] if state else UNDEFINED, THRESHOLDS["uncertainDefault"])
+                        model = coalesce_js(state.get("model", UNDEFINED) if state else UNDEFINED, id_of(tier))
                     apply_tier(body, tier, model)
                     return jsjson.dumps_bytes(body)
-            except Exception as again:  # noqa: BLE001
+            except Exception as again:  # noqa: BLE001 - the sentinel is no model the API knows; send the body as is
                 debug(f"could not process body: {again}")
             return raw
 
     # --- /v1/models (SPEC 7.2 step 5) ---
 
     def record_catalog(self, data: bytes) -> None:
+        """Remembers the Claude models a /v1/models reply lists, and records the calibration notice."""
         try:
-            listed = coalesce(_prop(jsjson.parse(data), "data"), [])
+            listed = coalesce_js(_prop(jsjson.parse(data), "data"), [])
             with self.state.lock:
                 for model in _iterate(listed):
                     model_id = _get(model, "id")
-                    if tier_of(model_id):
+                    if isinstance(model_id, str) and tier_of(model_id):
                         self.state.catalog[model_id] = model
                 catalog = list(self.state.catalog.values())
             write_calibration(
@@ -674,17 +766,17 @@ class Proxy:
                 models=[m["id"] for m in newest_per_tier(claude_models(catalog))],
                 file=self.calibration_file,
             )
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:  # noqa: BLE001 - an unreadable model list only loses the calibration notice
             debug(f"could not read Claude model catalog: {error}")
 
 
-def _default_route(args):
+def _default_route(args: RouteRequest) -> JsObject | None:
     return ask_jev(
         prompt=args["prompt"], current=args["current"], context_tokens=args["contextTokens"], models=args["models"]
     )
 
 
-_NO_BODY = {204, 304}
+_NO_BODY: Final = {204, 304}
 
 
 class _Handler(http.server.BaseHTTPRequestHandler):
@@ -693,15 +785,15 @@ class _Handler(http.server.BaseHTTPRequestHandler):
     disable_nagle_algorithm = True
     proxy: Proxy  # set on the subclass made per server
 
-    def log_message(self, format, *args):  # noqa: A002 - signature fixed by the base class
+    def log_message(self, format: str, *args: object) -> None:  # noqa: A002 - signature fixed by the base class
         pass
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Callable[[], None]:
         if name.startswith("do_"):
             return self._serve
         raise AttributeError(name)
 
-    def _send_head(self, status: int, headers: dict, framing: dict) -> None:
+    def _send_head(self, status: int, headers: Mapping[str, str | list[str]], framing: Mapping[str, str]) -> None:
         self.send_response_only(status)
         names = set()
         for name, value in headers.items():
@@ -710,14 +802,14 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             names.add(name.lower())
         if "date" not in names:
             self.send_header("date", self.date_time_string())
-        for name, value in framing.items():
-            self.send_header(name, value)
+        for name, item in framing.items():
+            self.send_header(name, item)
         self.end_headers()
 
     def _read_body(self) -> bytes:
         encoding = (self.headers.get("transfer-encoding") or "").lower()
         if "chunked" in encoding:
-            chunks = []
+            chunks: list[bytes] = []
             while True:
                 line = self.rfile.readline(65537)
                 if not line:
@@ -773,7 +865,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         if target_path.startswith("/v1/messages"):
             out = proxy.process(raw)
 
-        if watcher.gone:
+        if watcher.is_gone():
             self.close_connection = True
             return
 
@@ -785,17 +877,24 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             headers.pop("accept-encoding", None)
         if truthy(os.environ.get("JEV_DEBUG")):
             headers.pop("accept-encoding", None)
-        base_path = target.path[:-1] if target.path.endswith("/") else target.path
+        base_path = target.path.removesuffix("/")
 
         try:
+            host = target.hostname
+            if host is None:
+                raise ValueError("Invalid URL")  # answered with a 502 below, as any upstream failure is
+            connection: http.client.HTTPConnection
             if target.scheme == "http":
-                connection = http.client.HTTPConnection(target.hostname, target.port)
+                connection = http.client.HTTPConnection(host, target.port)
             else:
-                connection = http.client.HTTPSConnection(target.hostname, target.port)
-            watcher.upstream = connection
+                connection = http.client.HTTPSConnection(host, target.port)
             connection.connect()
-            connection.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
-            if watcher.gone:
+            upstream_sock = connection.sock
+            # Publish the socket before checking `gone`, so a client that left during connect is
+            # caught either here or by the watcher.
+            watcher.upstream_sock = upstream_sock
+            upstream_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
+            if watcher.is_gone():
                 watcher.abort_upstream()
                 self.close_connection = True
                 return
@@ -805,8 +904,8 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                     connection.putheader(name, item)
             connection.endheaders(out if out else None)
             response = connection.getresponse()
-        except Exception as error:  # noqa: BLE001 - every upstream failure before headers
-            if watcher.gone:
+        except Exception as error:  # noqa: BLE001 - every upstream failure before headers is answered with a 502
+            if watcher.is_gone():
                 self.close_connection = True
                 return
             debug(f"upstream error: {error}")
@@ -818,23 +917,34 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         try:
             self._relay(proxy, response, is_models, watcher)
         finally:
+            # The response first: a connection-close framed response owns the socket.
+            try:
+                response.close()
+            except OSError:
+                pass
             try:
                 connection.close()
-            except Exception:
+            except OSError:
                 pass
 
-    def _relay(self, proxy: Proxy, response, is_models: bool, watcher: _ClientWatcher) -> None:
+    def _relay(
+        self, proxy: Proxy, response: http.client.HTTPResponse, is_models: bool, watcher: _ClientWatcher
+    ) -> None:
         received = node_headers(response.getheaders())
         status = response.status
 
         if is_models:
             try:
                 data = response.read()
-            except Exception:
+            except Exception:  # noqa: BLE001 - any upstream read failure ends the client, as Node's up.on("error") does
                 self._abandon()
                 return
             proxy.record_catalog(data)
-            headers = {k: v for k, v in received.items() if k not in ("content-length", "transfer-encoding", "connection", "keep-alive")}
+            headers = {
+                k: v
+                for k, v in received.items()
+                if k not in ("content-length", "transfer-encoding", "connection", "keep-alive")
+            }
             self._send_head(status, headers, {"content-length": str(len(data))})
             self.wfile.write(data)
             return
@@ -854,8 +964,8 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         while True:
             try:
                 chunk = response.read1(65536)
-            except Exception as error:  # noqa: BLE001 - upstream dropped mid-stream
-                if not watcher.gone:
+            except Exception as error:  # noqa: BLE001 - upstream dropped mid-stream: fail the client, as Node does
+                if not watcher.is_gone():
                     debug(f"stream ended early: {error}")
                 self._abandon()
                 return
@@ -891,23 +1001,44 @@ class _Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = False
 
+    def handle_error(self, request: object, client_address: object) -> None:
+        """Never print a traceback: in the launcher, stderr is Claude Code's terminal.
+
+        A client that resets or abandons its connection is not an error (Node is silent on
+        ECONNRESET), so it is only logged under JEV_DEBUG; anything else is logged once.
+        """
+        error = sys.exc_info()[1]
+        if isinstance(error, OSError):  # ConnectionError, EPIPE, WinError 10053/10054
+            debug(f"client {client_address!r} dropped the connection: {error}")
+            return
+        log(f"request from {client_address!r} failed: {error!r}")
+
 
 class RunningProxy:
-    def __init__(self, server: _Server, thread: threading.Thread):
+    """A started proxy: its `port`, and `close()`."""
+
+    def __init__(self, server: _Server, thread: threading.Thread) -> None:
         self._server = server
         self._thread = thread
-        self.port = server.server_address[1]
+        self.port: int = server.server_address[1]
 
     def close(self) -> None:
+        """Stops serving and closes the listening socket."""
         self._server.shutdown()
         self._server.server_close()
 
 
-def start_proxy(upstream_url=ANTHROPIC_BASE_URL, route=None, calibration_file=None) -> RunningProxy:
+def start_proxy(
+    upstream_url: str = ANTHROPIC_BASE_URL, route: Route | None = None, calibration_file: str | None = None
+) -> RunningProxy:
     """Starts the proxy on 127.0.0.1 and an ephemeral port; returns `.port` and `.close()`."""
     proxy = Proxy(upstream_url=upstream_url, route=route, calibration_file=calibration_file)
-    handler = type("ProxyHandler", (_Handler,), {"proxy": proxy})
-    server = _Server(("127.0.0.1", 0), handler)
+
+    class ProxyHandler(_Handler):
+        pass
+
+    ProxyHandler.proxy = proxy
+    server = _Server(("127.0.0.1", 0), ProxyHandler)
     if route is None:
         prewarm()
     thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.2}, name="jev-proxy", daemon=True)
@@ -916,7 +1047,21 @@ def start_proxy(upstream_url=ANTHROPIC_BASE_URL, route=None, calibration_file=No
 
 
 __all__ = [
-    "sanitize_schema", "new_turn_prompt", "apply_tier", "version_of", "claude_models", "newest_per_tier",
-    "newer_than_calibrated", "session_of", "conversation_key", "agent_label", "agent_of", "JsMap",
-    "start_proxy", "node_headers", "math", "js_keys",
+    "Agent",
+    "JsMap",
+    "Route",
+    "RouteRequest",
+    "agent_label",
+    "agent_of",
+    "apply_tier",
+    "claude_models",
+    "conversation_key",
+    "new_turn_prompt",
+    "newer_than_calibrated",
+    "newest_per_tier",
+    "node_headers",
+    "sanitize_schema",
+    "session_of",
+    "start_proxy",
+    "version_of",
 ]

@@ -9,6 +9,7 @@ from .config import tier_of
 from .jsstr import (
     JSWS,
     UNDEFINED,
+    JsValue,
     coalesce,
     is_finite_number,
     is_nullish,
@@ -27,26 +28,27 @@ from .reasons import is_no_change, long_reason
 from .status import agent_view, now_ms
 
 
-def _get(obj, key):
+def _get(obj: object, key: str) -> JsValue:
     if isinstance(obj, dict):
-        return obj.get(key, UNDEFINED)
+        value: JsValue = obj.get(key, UNDEFINED)
+        return value
     return UNDEFINED
 
 
-def _prop(obj, key):
+def _prop(obj: object, key: str) -> JsValue:
     if is_nullish(obj):
         raise TypeError(f"Cannot read properties of {obj!r} (reading '{key}')")
     return _get(obj, key)
 
 
-def _upper(value) -> str:
+def _upper(value: object) -> str:
     """`value.toUpperCase()`: only strings have it."""
     if not isinstance(value, str):
         raise TypeError("toUpperCase is not a function")
     return value.upper()
 
 
-def _recommendation_of(status) -> str:
+def _recommendation_of(status: object) -> object:
     answers = _get(_get(_get(status, "jev"), "response"), "answers")
     choice = coalesce(_get(_get(answers, "model"), "choice"), _get(_get(answers, "model_tier"), "choice"))
     if not truthy(choice):
@@ -63,13 +65,13 @@ def _row(text: str = "") -> str:
     return f"│ {u16_pad_end(u16_slice(text, 0, WIDTH - 2), WIDTH - 2)} │"
 
 
-def _metric(value) -> str:
+def _metric(value: object) -> str:
     return to_fixed2(value) if is_finite_number(value) else "n/a"
 
 
-def _wrapped(label: str, value) -> list:
+def _wrapped(label: str, value: object) -> list[str]:
     words = js_trim(_SPACES.sub(" ", f"{label}{to_string(value)}")).split(" ")
-    lines: list = []
+    lines: list[str] = []
     for word in words:
         if not lines or u16_len(f"{lines[-1]} {word}") > WIDTH - 2:
             lines.append(word)
@@ -78,7 +80,7 @@ def _wrapped(label: str, value) -> list:
     return [_row(line) for line in lines]
 
 
-def _decision(reason=UNDEFINED) -> str:
+def _decision(reason: object = UNDEFINED) -> str:
     if reason is UNDEFINED:
         reason = ""
     return f"{'kept this model - ' if is_no_change(reason) else ''}{long_reason(reason)}"
@@ -88,7 +90,7 @@ def _agent_row(text: str = "") -> str:
     return f"│ {u16_pad_end(u16_slice(text, 0, AGENT_WIDTH - 2), AGENT_WIDTH - 2)} │"
 
 
-def _age(at, now) -> str:
+def _age(at: object, now: object) -> str:
     seconds = math_max(0, math_round((to_number(now) - to_number(coalesce(at, now))) / 1000))
     if seconds < 60:
         return f"{to_string(seconds)}s"
@@ -97,15 +99,15 @@ def _age(at, now) -> str:
     return f"{to_string(math_round(seconds / 3600))}h"
 
 
-def _percent(confidence) -> str:
+def _percent(confidence: object) -> str:
     return f"{to_string(math_round(to_number(confidence) * 100))}%"
 
 
-def format_agents(status, now=None) -> str:
+def format_agents(status: object, now: float | None = None) -> str:
     """Every agent routed in this session and the model each one got, or ""."""
     now = now_ms() if now is None else now
     view = agent_view(status, fresh_ms=math.inf, now=now)
-    everyone = [a for a in [view["main"], *view["subagents"]] if truthy(a)]
+    everyone = [a for a in [view["main"], *view["subagents"]] if a is not None and truthy(a)]
     if not everyone:
         return ""
     lines = [
@@ -131,7 +133,8 @@ def format_agents(status, now=None) -> str:
     return "\n".join(lines)
 
 
-def format_explanation(status) -> str:
+def format_explanation(status: object) -> str:
+    """The panel for one routing decision, or a one-line notice when there is none to show."""
     if not truthy(status):
         return "Jev Router: no routing decision has been recorded for this session."
     if truthy(_get(status, "manual")):

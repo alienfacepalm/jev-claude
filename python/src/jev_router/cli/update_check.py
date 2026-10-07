@@ -7,6 +7,7 @@ from ..update import check_for_update, write_state
 
 
 def main() -> int:
+    """Runs one update check and records it (nothing outside a repository checkout)."""
     if not repo.ROOT:
         return 0
     write_state(check_for_update(repo.ROOT))

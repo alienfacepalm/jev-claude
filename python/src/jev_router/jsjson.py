@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping
+from typing import NoReturn
 
-from .jsstr import UNDEFINED, is_number, number_to_string
+from .jsstr import UNDEFINED, JsObject, JsValue, Undefined, is_number, number_to_string
 
 _INDEX_LIMIT = 2**32 - 1
 
@@ -25,7 +27,7 @@ def is_index_key(key: str) -> bool:
     return int(key) < _INDEX_LIMIT
 
 
-def js_keys(obj: dict) -> list:
+def js_keys(obj: Mapping[str, object]) -> list[str]:
     """`Object.keys(obj)` order."""
     keys = list(obj.keys())
     index = sorted((k for k in keys if is_index_key(k)), key=int)
@@ -34,16 +36,17 @@ def js_keys(obj: dict) -> list:
     return index + [k for k in keys if not is_index_key(k)]
 
 
-def js_items(obj: dict) -> list:
+def js_items[V](obj: Mapping[str, V]) -> list[tuple[str, V]]:
     """`Object.entries(obj)` order."""
     return [(k, obj[k]) for k in js_keys(obj)]
 
 
-def js_values(obj: dict) -> list:
+def js_values[V](obj: Mapping[str, V]) -> list[V]:
+    """`Object.values(obj)` order."""
     return [obj[k] for k in js_keys(obj)]
 
 
-def spread(value) -> dict:
+def spread(value: object) -> JsObject:
     """`{...value}` for a JSON value: an object's own keys, a string's or array's indices."""
     if isinstance(value, dict):
         return {k: value[k] for k in js_keys(value)}
@@ -56,12 +59,12 @@ class ParseError(ValueError):
     """Raised where `JSON.parse` throws a SyntaxError."""
 
 
-def _reject_constant(name):
+def _reject_constant(name: str) -> NoReturn:
     raise ParseError(f"Unexpected token {name} in JSON")
 
 
-def _object(pairs):
-    out = {}
+def _object(pairs: list[tuple[str, JsValue]]) -> JsObject:
+    out: JsObject = {}
     for key, value in pairs:
         out[key] = value
     return out
@@ -72,12 +75,12 @@ def decode_bytes(data: bytes) -> str:
     return data.decode("utf-8", "replace")
 
 
-def parse(text):
+def parse(text: str | bytes | bytearray | memoryview) -> JsValue:
     """`JSON.parse`. Accepts `str`, or `bytes` decoded as `Buffer.toString()` does first."""
     if isinstance(text, (bytes, bytearray, memoryview)):
         text = decode_bytes(bytes(text))
     try:
-        return json.loads(
+        value: JsValue = json.loads(
             text,
             parse_int=float,
             parse_float=float,
@@ -88,6 +91,7 @@ def parse(text):
         raise
     except (ValueError, RecursionError) as error:
         raise ParseError(str(error)) from None
+    return value
 
 
 _SHORT = {'"': '\\"', "\\": "\\\\", "\b": "\\b", "\f": "\\f", "\n": "\\n", "\r": "\\r", "\t": "\\t"}
@@ -104,15 +108,15 @@ def quote(text: str) -> str:
         if ch in _SHORT:
             out.append(_SHORT[ch])
         elif code < 0x20:
-            out.append("\\u%04x" % code)
+            out.append(f"\\u{code:04x}")
         elif 0xD800 <= code <= 0xDBFF:
             if i + 1 < n and 0xDC00 <= ord(text[i + 1]) <= 0xDFFF:
                 out.append(chr(0x10000 + ((code - 0xD800) << 10) + (ord(text[i + 1]) - 0xDC00)))
                 i += 1
             else:
-                out.append("\\u%04x" % code)
+                out.append(f"\\u{code:04x}")
         elif 0xDC00 <= code <= 0xDFFF:
-            out.append("\\u%04x" % code)
+            out.append(f"\\u{code:04x}")
         else:
             out.append(ch)
         i += 1
@@ -120,14 +124,14 @@ def quote(text: str) -> str:
     return "".join(out)
 
 
-def _number(value) -> str:
+def _number(value: float) -> str:
     x = float(value)
-    if x != x or math.isinf(x):
+    if math.isnan(x) or math.isinf(x):
         return "null"
     return number_to_string(x)
 
 
-def stringify(value, indent: int | None = None):
+def stringify(value: object, indent: int | None = None) -> str | Undefined:
     """`JSON.stringify(value)` or `JSON.stringify(value, null, indent)`.
 
     Returns `UNDEFINED` where JavaScript returns `undefined` (the value itself is undefined).
@@ -137,7 +141,7 @@ def stringify(value, indent: int | None = None):
     return UNDEFINED if result is None else result
 
 
-def _serialize(value, gap: str, current: str):
+def _serialize(value: object, gap: str, current: str) -> str | None:
     if value is UNDEFINED:
         return None
     if value is None:
@@ -178,7 +182,15 @@ def _serialize(value, gap: str, current: str):
     raise TypeError(f"cannot serialise {type(value).__name__}")
 
 
-def dumps_bytes(value, indent: int | None = None) -> bytes:
+def stringify_object(value: Mapping[str, object], indent: int | None = None) -> str:
+    """`JSON.stringify` of an object, which always has a JSON form (never `undefined`)."""
+    text = stringify(value, indent)
+    if isinstance(text, Undefined):
+        raise TypeError("an object always has a JSON form")
+    return text
+
+
+def dumps_bytes(value: object, indent: int | None = None) -> bytes:
     """`Buffer.from(JSON.stringify(value))`: the UTF-8 bytes Node would send or write.
 
     A lone surrogate never reaches the bytes: `quote` escapes it.

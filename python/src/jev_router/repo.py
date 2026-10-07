@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 
 from . import jsjson
 
 _MARKER = os.path.join(".claude", "skills", "jev-calibrate", "SKILL.md")
 
 
-def find_root(start: str | None = None, env=None) -> str | None:
-    """`JEV_ROOT` when set and non-empty, else the nearest ancestor of `start` (default this
-    package's own file) holding `.claude/skills/jev-calibrate/SKILL.md`, else None."""
+def find_root(start: str | None = None, env: Mapping[str, str] | None = None) -> str | None:
+    """The repository root, or None.
+
+    `JEV_ROOT` when set and non-empty, else the nearest ancestor of `start` (default this
+    package's own file) holding `.claude/skills/jev-calibrate/SKILL.md`.
+    """
     env = os.environ if env is None else env
     value = env.get("JEV_ROOT")
     if value:
@@ -35,7 +39,8 @@ def release_version(root: str | None = ROOT) -> str:
         return "0.0.0"
     try:
         with open(os.path.join(root, "package.json"), "rb") as handle:
-            version = jsjson.parse(handle.read()).get("version")
+            data = jsjson.parse(handle.read())
+        version = data.get("version") if isinstance(data, dict) else None
         return version if isinstance(version, str) else "0.0.0"
-    except Exception:
+    except Exception:  # noqa: BLE001 - any unreadable package.json means "no version", as in Node
         return "0.0.0"

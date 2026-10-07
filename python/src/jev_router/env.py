@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping, MutableMapping
+from typing import Final
 
 from . import osdirs
 from .jsjson import is_index_key
 
-PROJECT_KEYS = {
+PROJECT_KEYS: Final = {
     "JEV_API_KEY",
     "TYPESAFE_API_KEY",
     "JEV_DEBUG",
@@ -23,12 +25,13 @@ PROJECT_KEYS = {
 }
 _EFFORT_KEY = re.compile(r"JEV_(?:[A-Z]+_)?(?:FORCE_)?EFFORT\Z")
 
-PRIVATE_KEYS = ["JEV_API_KEY", "TYPESAFE_API_KEY"]
+PRIVATE_KEYS: Final = ["JEV_API_KEY", "TYPESAFE_API_KEY"]
 
 _NPOS = -1
 
 
 def is_project_key(key: str) -> bool:
+    """Whether a project `.env` may set `key` (SPEC 9.1)."""
     return key in PROJECT_KEYS or bool(_EFFORT_KEY.match(key))
 
 
@@ -66,9 +69,9 @@ def trim_spaces(text: str) -> str:
     return text[pos_start : pos_end + 1]
 
 
-def parse_content(source: str) -> dict:
+def parse_content(source: str) -> dict[str, str]:
     """`Dotenv::ParseContent`: the store as a key -> value map (insertion order)."""
-    store: dict = {}
+    store: dict[str, str] = {}
     lines = source.replace("\r", "")
     content = trim_spaces(lines)
 
@@ -162,7 +165,7 @@ def parse_content(source: str) -> dict:
     return store
 
 
-def parse_env(source) -> dict:
+def parse_env(source: str | bytes) -> dict[str, str]:
     """`util.parseEnv(text)`: the parsed map as a JavaScript object.
 
     Node's store is a `std::map`, so keys come out in byte order; JavaScript then puts canonical
@@ -176,17 +179,22 @@ def parse_env(source) -> dict:
     return {k: store[k] for k in index + [k for k in ordered if not is_index_key(k)]}
 
 
-def _read(file: str) -> dict:
+def _read(file: str) -> dict[str, str]:
     try:
         with open(file, "rb") as handle:
             return parse_env(handle.read())
-    except Exception:
+    except Exception:  # noqa: BLE001 - missing or unreadable; the key may still come from the real environment
         return {}
 
 
-def load_env(cwd=None, home=None, env=None):
-    """Loads jev's settings into `env`: existing variables win, then the project's `.env`
-    (allow-listed keys only), `<home>/.jev-router.env`, then `<home>/.jev-claude.env`."""
+def load_env(
+    cwd: str | None = None, home: str | None = None, env: MutableMapping[str, str] | None = None
+) -> MutableMapping[str, str]:
+    """Loads jev's settings into `env` and returns it.
+
+    Existing variables win, then the project's `.env` (allow-listed keys only),
+    `<home>/.jev-router.env`, then `<home>/.jev-claude.env`.
+    """
     cwd = os.getcwd() if cwd is None else cwd
     home = osdirs.home() if home is None else home
     env = os.environ if env is None else env
@@ -203,7 +211,7 @@ def load_env(cwd=None, home=None, env=None):
     return env
 
 
-def child_env(env=None) -> dict:
+def child_env(env: Mapping[str, str] | None = None) -> dict[str, str]:
     """A copy of `env` without the Jev key."""
     env = os.environ if env is None else env
     out = dict(env)

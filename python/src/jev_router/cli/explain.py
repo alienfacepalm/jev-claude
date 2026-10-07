@@ -10,7 +10,8 @@ from ..status import main_decision, read_status
 from ._io import write_stdout
 
 
-def render(session_id) -> str:
+def render(session_id: object) -> str:
+    """The explanation panel and the agent table for a session."""
     status = read_status(session_id)
     main = main_decision(status)
     agents = format_agents(status)
@@ -22,6 +23,7 @@ def render(session_id) -> str:
 
 
 def main() -> int:
+    """Prints the explanation panel for the session id in argv[1]."""
     write_stdout(render(sys.argv[1] if len(sys.argv) > 1 else UNDEFINED))
     return 0
 

@@ -6,20 +6,21 @@ trims, converts or formats a value lives here, so it exists once and is tested d
 
 from __future__ import annotations
 
+import enum
 import math
 import re
+from collections.abc import Iterable
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Final, TypeGuard, overload
 
 
-class _Undefined:
-    """JavaScript `undefined`: distinct from `None` (`null`), falsy, printed as "undefined"."""
+class Undefined(enum.Enum):
+    """JavaScript `undefined`: distinct from `None` (`null`), falsy, printed as "undefined".
 
-    _instance = None
+    A one-member enum, so `value is UNDEFINED` narrows types the way `value is None` does.
+    """
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    UNDEFINED = "undefined"
 
     def __bool__(self) -> bool:
         return False
@@ -27,27 +28,51 @@ class _Undefined:
     def __repr__(self) -> str:
         return "UNDEFINED"
 
+    __str__ = __repr__
 
-UNDEFINED = _Undefined()
+
+UNDEFINED: Final = Undefined.UNDEFINED
+
+# A JavaScript value as JSON produces it, plus `undefined` (which `JSON.stringify` omits from
+# objects). Every JSON number is a `float`; `int` appears only where Python code builds a value.
+type JsValue = bool | int | float | str | Undefined | list[JsValue] | dict[str, JsValue] | None
+type JsObject = dict[str, JsValue]
 
 # The JavaScript whitespace set `\s` matches without the `u` flag (SPEC 3.1), written out so no
 # engine's own `\s` is ever used. JSWS_CLASS goes inside a regex character class.
 JSWS_CHARS = (
-    "\t\n\x0b\x0c\r   "
+    "\t\n\x0b\x0c\r \u00a0\u1680"
     + "".join(chr(c) for c in range(0x2000, 0x200B))
-    + "    　﻿"
+    + "\u2028\u2029\u202f\u205f\u3000\ufeff"
 )
-JSWS_CLASS = "\t\n\x0b\x0c\r    -     　﻿"
+JSWS_CLASS = "\t\n\x0b\x0c\r \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
 JSWS = "[" + JSWS_CLASS + "]"
 
 
-def is_nullish(value) -> bool:
+def is_nullish(value: object) -> TypeGuard[Undefined | None]:
     """`value == null` in JavaScript: null or undefined."""
     return value is None or value is UNDEFINED
 
 
-def coalesce(*values):
+@overload
+def coalesce[A, B](first: A | Undefined | None, last: B, /) -> A | B: ...
+@overload
+def coalesce[A, B, C](first: A | Undefined | None, second: B | Undefined | None, last: C, /) -> A | B | C: ...
+@overload
+def coalesce(*values: object) -> object: ...
+def coalesce(*values: object) -> object:
     """`a ?? b ?? c`: the first value that is neither null nor undefined (else the last)."""
+    for value in values[:-1]:
+        if not is_nullish(value):
+            return value
+    return values[-1]
+
+
+def coalesce_js(*values: JsValue) -> JsValue:
+    """`coalesce` where every operand is a JavaScript value, typed as one.
+
+    (A type checker joins differing operand types of the generic `coalesce` to `object`.)
+    """
     for value in values[:-1]:
         if not is_nullish(value):
             return value
@@ -114,24 +139,24 @@ def utf8(text: str) -> bytes:
 # --- Numbers (SPEC 3.3 number form, 3.6, 3.7) ------------------------------------------------
 
 
-def _is_number(value) -> bool:
+def _is_number(value: object) -> TypeGuard[float]:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def is_number(value) -> bool:
+def is_number(value: object) -> TypeGuard[float]:
     """`typeof value === "number"`."""
     return _is_number(value)
 
 
-def is_finite_number(value) -> bool:
+def is_finite_number(value: object) -> TypeGuard[float]:
     """`Number.isFinite(value)`: a number, not NaN or an infinity, no coercion."""
     return _is_number(value) and math.isfinite(float(value))
 
 
-def number_to_string(value) -> str:
+def number_to_string(value: float) -> str:
     """`Number.prototype.toString()`: shortest round-trip digits in JavaScript's layout."""
     x = float(value)
-    if x != x:
+    if math.isnan(x):
         return "NaN"
     if x == math.inf:
         return "Infinity"
@@ -170,7 +195,7 @@ def number_to_string(value) -> str:
     return f"{digits[0]}.{digits[1:]}e{sign}{abs(e)}"
 
 
-def to_string(value) -> str:
+def to_string(value: object) -> str:
     """ECMAScript `ToString` for the values JSON produces (and `${value}`)."""
     if isinstance(value, str):
         return value
@@ -189,12 +214,12 @@ def to_string(value) -> str:
     return str(value)
 
 
-def array_join(items, separator: str) -> str:
+def array_join(items: Iterable[object], separator: str) -> str:
     """`Array.prototype.join`: null and undefined elements are empty."""
     return separator.join("" if is_nullish(item) else to_string(item) for item in items)
 
 
-def truthy(value) -> bool:
+def truthy(value: object) -> bool:
     """JavaScript truthiness: `[]` and `{}` are truthy, NaN is falsy."""
     if value is None or value is UNDEFINED:
         return False
@@ -202,14 +227,18 @@ def truthy(value) -> bool:
         return value
     if _is_number(value):
         x = float(value)
-        return not (x == 0 or x != x)
+        return not (x == 0 or math.isnan(x))
     if isinstance(value, str):
         return len(value) > 0
     return True
 
 
 _DECIMAL = re.compile(r"[+-]?(?:\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)", re.ASCII)
-_RADIX = {"x": (16, re.compile(r"[0-9a-fA-F]+", re.ASCII)), "o": (8, re.compile(r"[0-7]+")), "b": (2, re.compile(r"[01]+"))}
+_RADIX: Final[dict[str, tuple[int, re.Pattern[str]]]] = {
+    "x": (16, re.compile(r"[0-9a-fA-F]+", re.ASCII)),
+    "o": (8, re.compile(r"[0-7]+")),
+    "b": (2, re.compile(r"[01]+")),
+}
 
 
 def string_to_number(text: str) -> float:
@@ -231,7 +260,7 @@ def string_to_number(text: str) -> float:
     return math.nan
 
 
-def to_number(value) -> float:
+def to_number(value: object) -> float:
     """ECMAScript `ToNumber` over JSON values (SPEC 3.6)."""
     if isinstance(value, bool):
         return 1.0 if value else 0.0
@@ -248,10 +277,10 @@ def to_number(value) -> float:
     return math.nan
 
 
-def math_round(value) -> float:
+def math_round(value: float) -> float:
     """`Math.round` (SPEC 3.7): halves go up, `-0` kept for -0.5 <= x <= -0."""
     x = float(value)
-    if x != x or math.isinf(x):
+    if math.isnan(x) or math.isinf(x):
         return x
     if x == 0:
         return x
@@ -262,22 +291,22 @@ def math_round(value) -> float:
     return result
 
 
-def math_max(*values) -> float:
+def math_max(*values: float) -> float:
     """`Math.max` over numbers: NaN wins."""
     result = -math.inf
     for value in values:
         x = float(value)
-        if x != x:
+        if math.isnan(x):
             return math.nan
         if x > result or (x == 0 and result == 0 and math.copysign(1, result) < 0):
             result = x
     return result
 
 
-def to_fixed2(value) -> str:
+def to_fixed2(value: float) -> str:
     """`Number.prototype.toFixed(2)` (SPEC 3.7): exact value, ties to the larger magnitude."""
     x = float(value)
-    if x != x:
+    if math.isnan(x):
         return "NaN"
     if abs(x) >= 1e21:
         return number_to_string(x)
@@ -292,7 +321,7 @@ def to_fixed2(value) -> str:
 _PARSE_INT = re.compile(r"[+-]?\d+", re.ASCII)
 
 
-def parse_int(text) -> float:
+def parse_int(text: object) -> float:
     """`Number.parseInt(text, 10)`: leading whitespace, sign, then the longest digit run."""
     t = to_string(text).lstrip(JSWS_CHARS)
     match = _PARSE_INT.match(t)

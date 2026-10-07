@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Mapping
+from typing import Final
 
-SYMBOLS = {
+SYMBOLS: Final[dict[str, str]] = {
     "model": "\u2727\u2726",
     "effort": "\u25d4",
     "agents": "\u2726",
@@ -15,7 +17,7 @@ SYMBOLS = {
     "context": "\u2261",
 }
 
-TEXT = {
+TEXT: Final[dict[str, str]] = {
     "model": "model",
     "effort": "effort",
     "agents": "agents",
@@ -26,7 +28,8 @@ TEXT = {
 }
 
 
-def icons(env=None, platform=None):
+def icons(env: Mapping[str, str] | None = None, platform: str | None = None) -> dict[str, str]:
+    """The status line's labels: symbols, or words where a console cannot draw them (`JEV_ICONS`)."""
     env = os.environ if env is None else env
     platform = sys.platform if platform is None else platform
     choice = (env.get("JEV_ICONS") or "").lower()

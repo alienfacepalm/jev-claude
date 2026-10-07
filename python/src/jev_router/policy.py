@@ -3,11 +3,22 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable, Sequence
+from typing import Final, TypedDict
 
 from .config import OVERRIDE_PATTERNS, THRESHOLDS, TIER_NAMES, rank_of
-from .jsstr import UNDEFINED, coalesce, is_nullish, to_number, to_string
+from .jsstr import UNDEFINED, JsValue, coalesce, coalesce_js, to_number, to_string
 
-_OWN_WORDS = [
+
+class Decision(TypedDict):
+    """The tier to run, why, and whether that changes the conversation's tier."""
+
+    tier: JsValue
+    reason: str
+    changed: bool
+
+
+_OWN_WORDS: Final = [
     re.compile(r"<agent-message.*?</agent-message>", re.DOTALL),
     re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL),
     re.compile(r"```.*?```", re.DOTALL),
@@ -16,7 +27,7 @@ _OWN_WORDS = [
 ]
 
 
-def own_words(prompt) -> str:
+def own_words(prompt: object) -> str:
     """The part of a prompt the user wrote themselves."""
     text = to_string(coalesce(prompt, ""))
     for pattern in _OWN_WORDS:
@@ -24,7 +35,7 @@ def own_words(prompt) -> str:
     return text
 
 
-def detect_override(prompt):
+def detect_override(prompt: object) -> str | None:
     """The tier the user named explicitly in the prompt, or None."""
     text = own_words(prompt)
     for entry in OVERRIDE_PATTERNS:
@@ -33,7 +44,8 @@ def detect_override(prompt):
     return None
 
 
-def clamp_to_available(tier, available):
+def clamp_to_available(tier: JsValue, available: Sequence[object]) -> JsValue:
+    """The tier itself when available, else the nearest available tier (upward first), else None."""
     if tier in available:
         return tier
     rank = rank_of(tier)
@@ -44,14 +56,20 @@ def clamp_to_available(tier, available):
     return down[-1] if down else None
 
 
-def decide(prompt=UNDEFINED, jev=None, current=None, available=(), context_tokens=0):
+def decide(
+    prompt: object = UNDEFINED,
+    jev: object = None,
+    current: JsValue = None,
+    available: Iterable[object] = (),
+    context_tokens: object = 0,
+) -> Decision:
     """`decide({prompt, jev, current, available, contextTokens})` -> `{tier, reason, changed}`."""
     if context_tokens is UNDEFINED:
         context_tokens = 0
-    available = list(available)
+    offered = list(available)
 
-    def settle(tier, reason):
-        final = coalesce(clamp_to_available(tier, available), current)
+    def settle(tier: JsValue, reason: str) -> Decision:
+        final = coalesce_js(clamp_to_available(tier, offered), current)
         why = reason if final == tier else f"{reason}+unavailable"
         return {
             "tier": final,
@@ -78,4 +96,4 @@ def decide(prompt=UNDEFINED, jev=None, current=None, available=(), context_token
     return settle(target, "jev")
 
 
-__all__ = ["decide", "detect_override", "own_words", "clamp_to_available", "is_nullish"]
+__all__ = ["Decision", "clamp_to_available", "decide", "detect_override", "own_words"]
