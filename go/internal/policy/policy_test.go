@@ -99,6 +99,53 @@ func TestPolicy(t *testing.T) {
 		}
 	})
 
+	t.Run("a tier named in a negated instruction is not a request for it", func(t *testing.T) {
+		for _, prompt := range []string{
+			"do not use fable",
+			"never use fable for this",
+			"please don't switch to fable",
+			"we cannot use opus on this account",
+			"Don't ever use Opus here",
+			"do NOT route to sonnet",
+		} {
+			if got := DetectOverride(prompt); got != "" {
+				t.Errorf("%q = %q", prompt, got)
+			}
+		}
+	})
+
+	t.Run("a negated tier does not hide a real instruction beside it", func(t *testing.T) {
+		for prompt, want := range map[string]string{
+			"don't use haiku, use opus":                  "opus",
+			"do not use fable. use sonnet for the tests": "sonnet",
+			"never use haiku for this but use opus":      "opus",
+		} {
+			if got := DetectOverride(prompt); got != want {
+				t.Errorf("%q = %q want %q", prompt, got, want)
+			}
+		}
+	})
+
+	t.Run("a tier named in a question is asking about it, not asking for it", func(t *testing.T) {
+		for prompt, want := range map[string]string{
+			"why does the planner use opus?":                "",
+			"should we switch to haiku for the lint step?":  "",
+			"Use opus for the migration. Is that too slow?": "opus",
+			"what does the router do when I say\nuse opus":  "opus",
+		} {
+			if got := DetectOverride(prompt); got != want {
+				t.Errorf("%q = %q want %q", prompt, got, want)
+			}
+		}
+	})
+
+	t.Run("a negated or questioned tier lets Jev decide", func(t *testing.T) {
+		d := Decide(with(base(sure("opus")), func(i *Input) { i.Prompt = "do not use fable" }))
+		if d.Tier != "opus" || d.Reason != "jev" {
+			t.Errorf("%+v", d)
+		}
+	})
+
 	t.Run("keeps the current model when Jev is unreachable", func(t *testing.T) {
 		d := Decide(base(nil))
 		if d.Tier != "sonnet" || d.Changed || !has(d.Reason, `jev-unavailable`) {

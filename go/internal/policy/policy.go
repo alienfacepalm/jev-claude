@@ -4,9 +4,11 @@ package policy
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/alienfacepalm/jev-claude/go/internal/config"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsjson"
+	"github.com/alienfacepalm/jev-claude/go/internal/jsstr"
 )
 
 var carried = []*regexp.Regexp{
@@ -17,13 +19,47 @@ var carried = []*regexp.Regexp{
 	regexp.MustCompile(`"[^"\n]*"`),
 }
 
-// OwnWords is the part of a prompt the user wrote: carried text replaced with one space.
+// negatedVerb is an instruction verb a negation sits directly in front of ("do not use",
+// "don't switch to", "never use"): the JavaScript `/gi` pattern, written lower-case for text that
+// ASCIILower has folded (SPEC 3.1). U+2019 is the typographic apostrophe.
+var negatedVerb = regexp.MustCompile(
+	`(?:\bnot|\bcannot|n['\x{2019}]t|\bnever|\bno|\bavoid|\bwithout|\bdont)` + jsstr.JSWSClass + `+` +
+		`(?:(?:ever|really|actually|just|simply)` + jsstr.JSWSClass + `+)?` +
+		`(?:use|switch to|switch over to|route to)`)
+
+// question is a sentence that ends in a question mark: from the previous . ! ? or line break up
+// to the mark.
+var question = regexp.MustCompile(`[^.!?\n]*\?`)
+
+// blankMatches replaces every match of the lower-case pattern re with one space. The pattern is
+// matched against an ASCII-lowered copy (same length, same offsets), and the replacement is
+// applied to the original text at those offsets, so only ASCII letters fold, as with a JavaScript
+// non-`u` `i` flag.
+func blankMatches(re *regexp.Regexp, text string) string {
+	locs := re.FindAllStringIndex(jsstr.ASCIILower(text), -1)
+	if locs == nil {
+		return text
+	}
+	var b strings.Builder
+	last := 0
+	for _, loc := range locs {
+		b.WriteString(text[last:loc[0]])
+		b.WriteByte(' ')
+		last = loc[1]
+	}
+	b.WriteString(text[last:])
+	return b.String()
+}
+
+// OwnWords is the part of a prompt the user wrote: carried text, negated instructions and
+// questions replaced with one space.
 func OwnWords(prompt any) string {
 	text := jsjson.JSString(jsjson.Coalesce(prompt, ""))
 	for _, re := range carried {
 		text = re.ReplaceAllLiteralString(text, " ")
 	}
-	return text
+	text = blankMatches(negatedVerb, text)
+	return blankMatches(question, text)
 }
 
 // DetectOverride is the tier the user named explicitly, "" when none.

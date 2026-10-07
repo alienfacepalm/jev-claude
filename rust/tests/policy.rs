@@ -99,6 +99,46 @@ fn detect_override_ignores_ordinary_prose() {
     }
 }
 
+/// "a tier named in a negated instruction is not a request for it"
+#[test]
+fn a_tier_named_in_a_negated_instruction_is_not_a_request_for_it() {
+    for prompt in [
+        "do not use fable",
+        "never use fable for this",
+        "please don't switch to fable",
+        "we cannot use opus on this account",
+        "Don't ever use Opus here",
+        "do NOT route to sonnet",
+    ] {
+        assert_eq!(detect_override_str(prompt), None, "{prompt}");
+    }
+}
+
+/// "a negated tier does not hide a real instruction beside it"
+#[test]
+fn a_negated_tier_does_not_hide_a_real_instruction_beside_it() {
+    assert_eq!(detect_override_str("don't use haiku, use opus"), Some("opus"));
+    assert_eq!(detect_override_str("do not use fable. use sonnet for the tests"), Some("sonnet"));
+    assert_eq!(detect_override_str("never use haiku for this but use opus"), Some("opus"));
+}
+
+/// "a tier named in a question is asking about it, not asking for it"
+#[test]
+fn a_tier_named_in_a_question_is_asking_about_it_not_asking_for_it() {
+    assert_eq!(detect_override_str("why does the planner use opus?"), None);
+    assert_eq!(detect_override_str("should we switch to haiku for the lint step?"), None);
+    assert_eq!(detect_override_str("Use opus for the migration. Is that too slow?"), Some("opus"));
+    assert_eq!(detect_override_str("what does the router do when I say\nuse opus"), Some("opus"));
+}
+
+/// "a negated or questioned tier lets Jev decide"
+#[test]
+fn a_negated_or_questioned_tier_lets_jev_decide() {
+    let out = run("do not use fable", "sonnet", &ALL, Some(&sure("opus")), 0.0);
+    assert_eq!(out.tier, "opus");
+    assert_eq!(out.reason, "jev");
+}
+
 /// "keeps the current model when Jev is unreachable"
 #[test]
 fn keeps_the_current_model_when_jev_is_unreachable() {

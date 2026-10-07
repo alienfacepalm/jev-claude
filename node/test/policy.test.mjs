@@ -66,6 +66,38 @@ test("detectOverride ignores ordinary prose that mentions a tier word", () => {
   }
 });
 
+test("a tier named in a negated instruction is not a request for it", () => {
+  for (const prompt of [
+    "do not use fable",
+    "never use fable for this",
+    "please don't switch to fable",
+    "we cannot use opus on this account",
+    "Don't ever use Opus here",
+    "do NOT route to sonnet",
+  ]) {
+    assert.equal(detectOverride(prompt), null, prompt);
+  }
+});
+
+test("a negated tier does not hide a real instruction beside it", () => {
+  assert.equal(detectOverride("don't use haiku, use opus"), "opus");
+  assert.equal(detectOverride("do not use fable. use sonnet for the tests"), "sonnet");
+  assert.equal(detectOverride("never use haiku for this but use opus"), "opus");
+});
+
+test("a tier named in a question is asking about it, not asking for it", () => {
+  assert.equal(detectOverride("why does the planner use opus?"), null);
+  assert.equal(detectOverride("should we switch to haiku for the lint step?"), null);
+  assert.equal(detectOverride("Use opus for the migration. Is that too slow?"), "opus");
+  assert.equal(detectOverride("what does the router do when I say\nuse opus"), "opus");
+});
+
+test("a negated or questioned tier lets Jev decide", () => {
+  const out = decide({ ...base, prompt: "do not use fable", current: "sonnet", jev: sure("opus") });
+  assert.equal(out.tier, "opus");
+  assert.equal(out.reason, "jev");
+});
+
 test("keeps the current model when Jev is unreachable", () => {
   const out = decide({ ...base, jev: null });
   assert.equal(out.tier, "sonnet");

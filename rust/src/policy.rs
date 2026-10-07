@@ -4,22 +4,34 @@ use crate::config::{
     DOWNGRADE_MAX_CONTEXT_TOKENS, MIN_CONFIDENCE, OVERRIDE_PATTERNS, TIER_NAMES, UNCERTAIN_DEFAULT, rank_of,
 };
 use crate::jsjson::Value;
-use crate::jsstr::{JsStr, find_without_word_after};
+use crate::jsstr::{JSWS, JsStr, find_without_word_after};
 use regex::bytes::Regex;
 use std::sync::LazyLock;
 
-static OWN_WORDS: LazyLock<[Regex; 5]> = LazyLock::new(|| {
+/// A negated instruction verb (SPEC 7.6): `not use`, `don't switch to`, `never ever route to`.
+/// ASCII-only `\b` and case folding (3.1); `\s` is the JSWS class.
+fn negated_verb() -> Regex {
+    let pattern = format!(
+        r"(?:(?-u:\b)(?i-u:not|cannot)|(?i-u:n)['\x{{2019}}](?i-u:t)|(?-u:\b)(?i-u:never|no|avoid|without|dont)){JSWS}+(?:(?i-u:ever|really|actually|just|simply){JSWS}+)?(?i-u:use|switch to|switch over to|route to)"
+    );
+    Regex::new(&pattern).unwrap()
+}
+
+static OWN_WORDS: LazyLock<[Regex; 7]> = LazyLock::new(|| {
     [
         Regex::new(r"<agent-message(?s-u:.)*?</agent-message>").unwrap(),
         Regex::new(r"<system-reminder>(?s-u:.)*?</system-reminder>").unwrap(),
         Regex::new(r"```(?s-u:.)*?```").unwrap(),
         Regex::new(r"`(?-u:[^`\n])*`").unwrap(),
         Regex::new(r#""(?-u:[^"\n])*""#).unwrap(),
+        negated_verb(),
+        // A sentence that ends in a question mark: from the previous `.`, `!`, `?` or line break.
+        Regex::new(r"(?-u:[^.!?\n])*\?").unwrap(),
     ]
 });
 
 /// The part of a prompt the user wrote themselves: `String(prompt ?? "")` with quoted and
-/// injected text replaced by a space.
+/// injected text, negated instruction verbs and questions replaced by a space.
 pub fn own_words(prompt: &Value) -> JsStr {
     let mut text = if prompt.is_nullish() { JsStr::new() } else { prompt.to_js_string() };
     for re in OWN_WORDS.iter() {
