@@ -26,7 +26,7 @@ fn replaces_an_existing_file() {
     fs::write(&temp, "new").unwrap();
     rename_over(&temp, &file).unwrap();
     assert_eq!(fs::read_to_string(&file).unwrap(), "new");
-    assert!(leftovers(&dir).is_empty());
+    assert_eq!(leftovers(&dir), Vec::<String>::new());
 }
 
 #[test]
@@ -61,7 +61,7 @@ mod windows {
         rename_over(&temp, &file).expect("the rename was retried until the file was free");
         releaser.join().unwrap();
         assert_eq!(fs::read_to_string(&file).unwrap(), "new");
-        assert!(leftovers(&dir).is_empty());
+        assert_eq!(leftovers(&dir), Vec::<String>::new());
     }
 
     #[test]

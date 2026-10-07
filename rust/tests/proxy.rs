@@ -737,6 +737,6 @@ fn the_calibration_notice_round_trips_and_reads_empty_when_absent() {
     assert_eq!(read.models, vec![s("claude-opus-6"), s("claude-sonnet-5-5")]);
     assert!(read.at.is_some());
     write_calibration(&[], &[], &file);
-    assert!(read_calibration(&file).newer.is_empty());
+    assert_eq!(read_calibration(&file).newer, vec![]);
     let _ = std::fs::remove_file(file);
 }
