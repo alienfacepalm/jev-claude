@@ -128,7 +128,10 @@ fn release_found_and_applied(shallow: bool) {
     let applied = apply_update(&install, None);
     assert_eq!(applied, json(r#"{"status":"updated","from":"0.1.0","to":"0.2.0"}"#));
     assert_eq!(version(&install), "0.2.0");
-    assert_eq!(std::fs::read_to_string(install.join("new-file.txt")).unwrap(), "hello\n");
+    // Git for Windows checks text out with CRLF (core.autocrlf=true by default): what matters is that
+    // the file arrived with its content, not which line ending the checkout gave it.
+    let arrived = std::fs::read_to_string(install.join("new-file.txt")).unwrap();
+    assert_eq!(arrived.replace("\r\n", "\n"), "hello\n");
     assert_eq!(git(&install, &["status", "--porcelain"]), "", "a clean checkout afterwards");
 
     assert_eq!(check_for_update_now(&install).get("available"), &Value::Bool(false), "nothing further to find");

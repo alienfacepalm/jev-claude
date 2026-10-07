@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   applyUpdate,
@@ -91,7 +91,9 @@ for (const shallow of [false, true]) {
     const applied = await applyUpdate(install);
     assert.deepEqual(applied, { status: "updated", from: "0.1.0", to: "0.2.0" });
     assert.equal(version(install), "0.2.0");
-    assert.equal(readFileSync(join(install, "new-file.txt"), "utf8"), "hello\n");
+    // Git for Windows checks text out with CRLF (core.autocrlf=true by default): what matters is
+    // that the file arrived with its content, not which line ending the checkout gave it.
+    assert.equal(readFileSync(join(install, "new-file.txt"), "utf8").replace(/\r\n/g, "\n"), "hello\n");
     assert.equal(git(install, "status", "--porcelain"), "", "a clean checkout afterwards");
 
     assert.equal((await checkForUpdate(install)).available, false, "nothing further to find");
@@ -183,6 +185,16 @@ test("an unreachable origin is reported, never thrown, and the install is unchan
   assert.match(applied.reason, /could not reach origin/);
   assert.equal(version(install), "0.1.0");
   assert.ok(base);
+});
+
+test("an install reached through another spelling of its path is still a clone of its own", async (t) => {
+  // On Windows the temp folder is itself one (C:\Users\RUNNER~1\...), as git expands it to the long
+  // name; a case-insensitive file system lets every platform check a differently cased spelling.
+  const { cloneTo } = fixture(t);
+  const install = cloneTo("install");
+  const respelled = join(dirname(install), "INSTALL");
+  if (!existsSync(respelled)) return t.skip("the file system is case-sensitive");
+  assert.deepEqual(await applyUpdate(respelled), { status: "current", version: "0.1.0" });
 });
 
 test("folders that are not a clone of their own are refused", async (t) => {

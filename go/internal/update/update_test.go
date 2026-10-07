@@ -55,7 +55,13 @@ type fixture struct {
 
 // newFixture is an origin at 0.1.0 and a working copy that pushes to it.
 func newFixture(t *testing.T) *fixture {
-	base := t.TempDir()
+	// Not t.TempDir(): it is named after the subtest, and with the long titles here the paths git
+	// writes inside origin.git pass Windows' 260 characters ("Filename too long").
+	base, err := os.MkdirTemp("", "jev-update-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(base) })
 	f := &fixture{base: base, origin: filepath.Join(base, "origin.git"), upstream: filepath.Join(base, "upstream"), t: t}
 	sh(t, base, "init", "--bare", "-b", "master", f.origin)
 	sh(t, base, "clone", f.origin, f.upstream)
@@ -146,7 +152,9 @@ func TestUpdate(t *testing.T) {
 			if version(t, install) != "0.2.0" {
 				t.Fatal("not updated")
 			}
-			if data, _ := os.ReadFile(filepath.Join(install, "new-file.txt")); string(data) != "hello\n" {
+			// Git for Windows checks text out with CRLF (core.autocrlf=true by default): what matters is
+			// that the file arrived with its content, not which line ending the checkout gave it.
+			if data, _ := os.ReadFile(filepath.Join(install, "new-file.txt")); strings.ReplaceAll(string(data), "\r\n", "\n") != "hello\n" {
 				t.Fatalf("new file: %q", data)
 			}
 			if sh(t, install, "status", "--porcelain") != "" {

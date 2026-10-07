@@ -92,6 +92,17 @@ export function installedVersion(root) {
 }
 
 /**
+ * A path as the file system spells it, for comparing with what git reports. `.native` matters on
+ * Windows: git gives the long, correctly cased name (C:/Users/runneradmin/...), and only the
+ * native realpath turns an 8.3 short name (C:\Users\RUNNER~1\...) or another letter case into
+ * that same spelling; the JavaScript `realpathSync` resolves symlinks and nothing else.
+ */
+function canonical(path) {
+  const real = realpathSync.native(resolve(path));
+  return process.platform === "win32" ? real.toLowerCase() : real;
+}
+
+/**
  * Whether `root` is a clone this tool may fast-forward, fetching the remote branch it tracks.
  * Resolves to the facts the caller needs, or `{ ok: false, reason }`; it never throws. Only a
  * clean checkout on a branch whose history the remote extends qualifies: anything else is
@@ -101,7 +112,7 @@ export async function inspectClone(root) {
   try {
     const top = await git(root, ["rev-parse", "--show-toplevel"]);
     // An install inside some other repository must not be mistaken for a clone of its own.
-    if (realpathSync(resolve(top)) !== realpathSync(resolve(root))) {
+    if (canonical(top) !== canonical(root)) {
       return { ok: false, reason: "this folder is not a git clone of its own" };
     }
   } catch {
