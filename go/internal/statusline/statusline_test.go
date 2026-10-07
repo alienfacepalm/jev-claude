@@ -127,6 +127,37 @@ func TestStatusLine(t *testing.T) {
 		}
 	})
 
+	t.Run("a path under the home directory starts with ~, and only a whole home directory counts", func(t *testing.T) {
+		shown := func(dir, home string) string {
+			cmd := exec.Command(exe)
+			cmd.Env = append(os.Environ(), "JEV_STATUS_DIR="+status.Dir, "JEV_ICONS=text", "HOME="+home, "USERPROFILE="+home)
+			cmd.Stdin = strings.NewReader(jsjson.Stringify(jsjson.Obj("session_id", id("tilde"), "workspace", jsjson.Obj("current_dir", dir), "context_window", jsjson.Obj("used_percentage", 8.0))))
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatal(err)
+			}
+			m := regexp.MustCompile(`\x1b\[2m\x{B7} (.*)\x1b\[0m\n$`).FindStringSubmatch(string(out))
+			if m == nil {
+				t.Fatalf("no path part in %q", out)
+			}
+			return m[1]
+		}
+		for _, c := range []struct{ dir, home, want string }{
+			{"/Users/me/Projects/GOVPILOT/sdl-mono/sync-client", "/Users/me", "~/Projects/GOVPILOT/sdl-mono/sync-client"},
+			{"/Users/me", "/Users/me", "~"},
+			{"/Users/me/", "/Users/me/", "~/"},
+			{`C:\Users\me\proj`, `C:\Users\me`, `~\proj`},
+			{"/Users/media/proj", "/Users/me", "/Users/media/proj"},
+			{"/srv/Users/me/proj", "/Users/me", "/srv/Users/me/proj"},
+			{"/Users/ME/proj", "/Users/me", "/Users/ME/proj"},
+			{"/srv/app", "/", "/srv/app"},
+		} {
+			if got := shown(c.dir, c.home); got != c.want {
+				t.Errorf("%q under home %q: got %q, want %q", c.dir, c.home, got, c.want)
+			}
+		}
+	})
+
 	t.Run("a Windows path is shown with its backslashes, and its last segment is still the directory name", func(t *testing.T) {
 		path := `C:\Users\me\work\proj`
 		raw := run(t, jsjson.Obj("session_id", id("winpath"), "workspace", jsjson.Obj("current_dir", path), "context_window", jsjson.Obj("used_percentage", 8.0)), "text")

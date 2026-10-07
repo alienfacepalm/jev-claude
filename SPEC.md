@@ -934,8 +934,13 @@ output must be byte-identical on the golden and harness cases.
   `pct = MathRound(ToNumber(context_window.used_percentage ?? 0))`, the calibration notice
   ` <DIM>·<RESET> <yellow>new <newer[0]>[ +<n-1>]: /jev-calibrate<RESET>` when `newer` is
   non-empty, and last the whole working directory, ` <DIM>· <path><RESET>`, where `path` is
-  `workspace.current_dir ?? cwd ?? ""` exactly as Claude Code sent it (no shortening, no clipping,
-  no separator conversion); the part is omitted when `path` is empty. The line cannot be
+  `workspace.current_dir ?? cwd ?? ""` as Claude Code sent it (no clipping, no separator
+  conversion) except that the home directory is written `~`: with `home` = `os.homedir()` (3.8)
+  minus any trailing `/` or `\` (a failed lookup counts as empty), `path` becomes `~` + the rest
+  when it starts with `home` and what follows is empty, `/`, or `\`; a `home` that is empty (so
+  also the filesystem root) or a path that does not start with a whole `home` directory leaves it
+  unchanged (the comparison is case-sensitive and does not resolve symlinks). The directory item
+  and the branch lookup keep using the path as sent. The part is omitted when `path` is empty. The line cannot be
   right-aligned, since Claude Code does not say how wide the terminal is; last is the rightmost
   item, and the first one cut when the line is too long.
 - Icons are bold: `<BOLD><mark><RESET>`. Colours: haiku green `\x1b[32m`, sonnet cyan `\x1b[36m`,

@@ -87,6 +87,25 @@ fn clip(v: &Value) -> String {
     }
 }
 
+/// The path with the home directory written as `~` (SPEC 12): only a whole leading directory counts,
+/// either separator ends it, and a path outside home, or a home that is empty or the filesystem
+/// root, is left as sent.
+fn tilde_path(path: &[u8], home: &[u8]) -> Vec<u8> {
+    let end = home.iter().rposition(|c| *c != b'/' && *c != b'\\').map_or(0, |i| i + 1);
+    let home = &home[..end];
+    if home.is_empty() || !path.starts_with(home) {
+        return path.to_vec();
+    }
+    let rest = &path[home.len()..];
+    if rest.is_empty() || rest[0] == b'/' || rest[0] == b'\\' {
+        let mut out = vec![b'~'];
+        out.extend_from_slice(rest);
+        out
+    } else {
+        path.to_vec()
+    }
+}
+
 /// Renders the status line for Claude Code's stdin JSON, with a branch lookup. Fails where Node
 /// throws: stdin holding the JSON literal `null`, whose `session_id` Node cannot read.
 pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Option<JsStr>) -> Result<String, String> {
@@ -175,7 +194,9 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
     let full_path = if dir_text.is_empty() {
         String::new()
     } else {
-        format!(" {DIM}\u{00B7} {}{RESET}", dir_text.to_string_lossy())
+        let home = crate::osdirs::home_dir();
+        let shown = tilde_path(dir_text.as_bytes(), home.to_string_lossy().as_bytes());
+        format!(" {DIM}\u{00B7} {}{RESET}", JsStr::from_wtf8(shown).to_string_lossy())
     };
 
     Ok(format!(

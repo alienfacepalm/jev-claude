@@ -13,6 +13,7 @@ import (
 	"github.com/alienfacepalm/jev-claude/go/internal/jsjson"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsstr"
 	"github.com/alienfacepalm/jev-claude/go/internal/modelnames"
+	"github.com/alienfacepalm/jev-claude/go/internal/osdirs"
 	"github.com/alienfacepalm/jev-claude/go/internal/reasons"
 	"github.com/alienfacepalm/jev-claude/go/internal/status"
 	"github.com/alienfacepalm/jev-claude/go/internal/worktree"
@@ -89,6 +90,21 @@ func shortOr(model any, fallbacks ...any) string {
 // ErrNullInput is what Node throws for stdin that is the JSON literal null: its first read,
 // `input.session_id`, fails and the process exits 1.
 var ErrNullInput = errors.New("TypeError: Cannot read properties of null (reading 'session_id')")
+
+// tildePath is the path with the home directory written as "~" (SPEC 12): only a whole leading
+// directory counts, either separator ends it, and a path outside home, or a home that is empty or
+// the filesystem root, is left as sent.
+func tildePath(path, home string) string {
+	home = strings.TrimRight(home, `\/`)
+	if home == "" || !strings.HasPrefix(path, home) {
+		return path
+	}
+	rest := path[len(home):]
+	if rest == "" || rest[0] == '/' || rest[0] == '\\' {
+		return "~" + rest
+	}
+	return path
+}
 
 // Render builds the line (with its newline) for the given stdin bytes, reading the status
 // directory, the real clock and git.
@@ -205,7 +221,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 	// The whole path last, dimmed (SPEC 12).
 	fullPath := ""
 	if dirPath != "" {
-		fullPath = " " + dim + dot + " " + dirPath + reset
+		fullPath = " " + dim + dot + " " + tildePath(dirPath, osdirs.HomeFrom(env, runtime.GOOS)) + reset
 	}
 	return routed + agents + dirPart + where + " " + dim + dot + reset + " " + ic(set.Context) + " " + jsjson.NumberToString(pct) + "%" + notice + fullPath + "\n", nil
 }
