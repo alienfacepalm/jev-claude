@@ -63,7 +63,7 @@ function renderRaw(sessionId, input = {}, env = {}) {
   return out.stdout;
 }
 
-test("the whole working directory comes last, dimmed, as Claude Code sent it", () => {
+test("the whole working directory comes last, dimmed, outside the home directory exactly as Claude Code sent it", () => {
   const id = `statusline-fullpath-${process.pid}`;
   const raw = renderRaw(id, { workspace: { current_dir: "/home/me/work/proj" } });
   assert.ok(raw.endsWith("8% \x1b[2m· /home/me/work/proj\x1b[0m\n"), JSON.stringify(raw));

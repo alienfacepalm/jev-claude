@@ -40,6 +40,8 @@ fn render(session: &str, workspace: &str, extra: &str, icons: &str) -> String {
     let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
         .env("JEV_STATUS_DIR", dir)
         .env("JEV_ICONS", icons)
+        .env("HOME", "/home/nobody")
+        .env("USERPROFILE", "/home/nobody")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -58,6 +60,8 @@ fn render_raw(input: &str) -> String {
     let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
         .env("JEV_STATUS_DIR", dir)
         .env("JEV_ICONS", "text")
+        .env("HOME", "/home/nobody")
+        .env("USERPROFILE", "/home/nobody")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -106,9 +110,9 @@ fn shows_the_effort_the_turn_ran_at() {
     );
 }
 
-/// "the whole working directory comes last, dimmed, as Claude Code sent it"
+/// "the whole working directory comes last, dimmed, outside the home directory exactly as Claude Code sent it"
 #[test]
-fn the_whole_working_directory_comes_last_dimmed_as_claude_code_sent_it() {
+fn the_whole_working_directory_comes_last_dimmed_outside_the_home_directory_exactly_as_claude_code_sent_it() {
     let raw = render_raw(&format!(
         r#"{{"session_id":"{}","workspace":{{"current_dir":"/home/me/work/proj"}},"context_window":{{"used_percentage":8}}}}"#,
         sid("statusline-fullpath")

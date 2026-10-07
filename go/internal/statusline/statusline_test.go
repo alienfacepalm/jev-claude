@@ -55,7 +55,8 @@ func render(t *testing.T, sessionID string, workspace, extra *jsjson.Object, ico
 func run(t *testing.T, input *jsjson.Object, icons string) string {
 	t.Helper()
 	cmd := exec.Command(exe)
-	cmd.Env = append(os.Environ(), "JEV_STATUS_DIR="+status.Dir, "JEV_ICONS="+icons)
+	// A home that is none of the paths below, so the machine running the tests cannot change them.
+	cmd.Env = append(os.Environ(), "JEV_STATUS_DIR="+status.Dir, "JEV_ICONS="+icons, "HOME=/home/nobody", "USERPROFILE=/home/nobody")
 	cmd.Stdin = strings.NewReader(jsjson.Stringify(input))
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
@@ -120,7 +121,7 @@ func TestStatusLine(t *testing.T) {
 		}
 	})
 
-	t.Run("the whole working directory comes last, dimmed, as Claude Code sent it", func(t *testing.T) {
+	t.Run("the whole working directory comes last, dimmed, outside the home directory exactly as Claude Code sent it", func(t *testing.T) {
 		raw := run(t, jsjson.Obj("session_id", id("fullpath"), "workspace", jsjson.Obj("current_dir", "/home/me/work/proj"), "context_window", jsjson.Obj("used_percentage", 8.0)), "text")
 		if want := "8% \x1b[2m\xc2\xb7 /home/me/work/proj\x1b[0m\n"; !strings.HasSuffix(raw, want) {
 			t.Errorf("%q does not end with %q", raw, want)
