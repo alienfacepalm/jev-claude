@@ -6,7 +6,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -24,7 +24,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -42,7 +42,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -60,7 +60,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -78,7 +78,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -96,7 +96,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -150,7 +150,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -169,7 +169,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -206,7 +206,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -224,7 +224,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -242,7 +242,7 @@
       "platform": "darwin"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -258,7 +258,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -276,7 +276,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -294,7 +294,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -312,7 +312,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -330,7 +330,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -348,7 +348,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -402,7 +402,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -421,7 +421,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -458,7 +458,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -476,7 +476,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -494,7 +494,7 @@
       "platform": "linux"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -528,7 +528,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -564,7 +564,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -582,7 +582,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -600,7 +600,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -654,7 +654,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",
@@ -673,7 +673,7 @@
       "platform": "win32"
     },
     "expected": {
-      "model": "◆",
+      "model": "✧✦",
       "effort": "◔",
       "agents": "✦",
       "dir": "❐",

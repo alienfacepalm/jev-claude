@@ -88,7 +88,7 @@ test("a routed turn: the Jev request, the rewritten request, the status file, an
   );
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("◆")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${tail}`);
 
   // The fire-and-forget prewarm (SPEC 5.4) reaches Jev's origin.
   const deadline = Date.now() + 3000;
@@ -158,7 +158,7 @@ test("an auxiliary call is not routed, a tool continuation keeps the tier, and a
   );
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("◆")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tail}`);
 });
 
 test("a model the user picked passes through untouched and pauses routing", async (t) => {
@@ -220,7 +220,7 @@ test("a Jev answer naming a model that is not on the menu counts as no answer", 
     { from, to },
   );
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("◆")} ${CYAN}Sonnet 5.5${RESET} ${DIM}(90%)${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET} ${DIM}(90%)${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
 });
 
 test("when Jev fails after its one retry, the turn runs on the default tier", async (t) => {
@@ -251,7 +251,7 @@ test("when Jev fails after its one retry, the turn runs on the default tier", as
     { from, to },
   );
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("◆")} ${CYAN}Sonnet 5.5${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
+  assert.equal(line, `${icon("✧✦")} ${CYAN}Sonnet 5.5${RESET}${SEP}${icon("◔")} high ${DIM}(router offline)${RESET}${tail}`);
 });
 
 test("a token count request is processed like a turn", async (t) => {

@@ -19,7 +19,7 @@ class Legend(unittest.TestCase):
     def test_the_symbols_are_the_same_ones_the_status_line_prints(self):
         """the symbols are the same ones the status line prints"""
         legend = format_legend(icons({"JEV_ICONS": "symbols"}, "darwin"))
-        self.assertRegex(legend, re.compile("^◆ +the model"))
+        self.assertRegex(legend, re.compile("^✧✦ +the model"))
         self.assertRegex(legend, re.compile(" +the git branch"))
 
 

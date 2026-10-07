@@ -2,7 +2,9 @@
 // is the Powerline glyph (U+E0A0) that zsh themes such as agnoster and powerlevel10k use. The rest
 // are plain Unicode that stock fonts (Menlo, SF Mono, Cascadia, Consolas) draw; the Nerd Font
 // glyphs for effort and directory (U+F0E4, U+F07B) show as a "?" box without a patched font.
-const SYMBOLS = { model: "◆", effort: "◔", agents: "✦", dir: "❐", branch: "", worktree: "⌂", context: "≡" };
+// The main model is the sub-agents' star with an outlined one behind it: the same family, and the
+// outline marks the one the sub-agents belong to.
+const SYMBOLS = { model: "✧✦", effort: "◔", agents: "✦", dir: "❐", branch: "", worktree: "⌂", context: "≡" };
 
 // For a console that cannot draw them: the word instead of the glyph.
 const TEXT = { model: "model", effort: "effort", agents: "agents", dir: "dir", branch: "branch", worktree: "worktree", context: "ctx" };

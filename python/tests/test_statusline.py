@@ -37,7 +37,7 @@ class StatusLine(unittest.TestCase):
         sid = f"statusline-symbols-{PID}"
         write_decision(sid, {"tier": "sonnet", "model": "claude-sonnet-5-5", "confidence": 0.94, "effort": "high", "reason": "jev", "at": now_ms()}, MAIN)
         line = render(self, sid, {}, {"worktree": {"name": "login-fix", "branch": "fix/login"}}, "symbols")
-        self.assertEqual(line, "◆ Sonnet 5.5 (94%) · ◔ high · ❐ proj ·  fix/login · ⌂ login-fix · ≡ 8%")
+        self.assertEqual(line, "✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ proj ·  fix/login · ⌂ login-fix · ≡ 8%")
 
     def test_shows_the_effort_the_turn_ran_at_next_to_the_model_and_confidence(self):
         """shows the effort the turn ran at next to the model and confidence"""

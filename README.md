@@ -191,12 +191,12 @@ that name none. To run a tier at one effort whatever Claude Code asks for (inclu
 `jev-claude` adds a status line showing the model the last turn ran on, Jev's confidence, the
 reasoning effort it ran at, and the reason when it was not simply Jev's pick. Haiku takes no
 effort, so none is shown for it. Sub-agents follow `✦`, with their model and version. Every item is
-a bold symbol in the terminal's own text colour, so it contrasts with any background, and its value (`◆` model, `◔` effort, `✦` sub-agents, `❐` directory, `⌂` worktree,
+a bold symbol in the terminal's own text colour, so it contrasts with any background, and its value (`✧✦` model, `◔` effort, `✦` sub-agents, `❐` directory, `⌂` worktree,
 `≡` context):
 
 ```text
-◆ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8%
-◆ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34%
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8%
+✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34%
 ⏸ manual Opus 4.6 · ❐ my-project · ≡ 21%
 ```
 
@@ -210,7 +210,7 @@ draw. The branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnos
 draw, so it needs a Powerline or Nerd Font in your terminal:
 
 ```text
-◆ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8%
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8%
 ```
 
 Run `/jev-legend` for a key to what each symbol means. It is drawn from the same symbols the line

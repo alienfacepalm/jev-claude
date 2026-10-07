@@ -21,7 +21,7 @@ func (s Set) Entries() [][2]string {
 
 // Symbols are single-colour glyphs; the branch is the Powerline glyph U+E0A0.
 var Symbols = Set{
-	Model: "\xe2\x97\x86", Effort: "\xe2\x97\x94", Agents: "\xe2\x9c\xa6", Dir: "\xe2\x9d\x90",
+	Model: "\xe2\x9c\xa7\xe2\x9c\xa6", Effort: "\xe2\x97\x94", Agents: "\xe2\x9c\xa6", Dir: "\xe2\x9d\x90",
 	Branch: "\xee\x82\xa0", Worktree: "\xe2\x8c\x82", Context: "\xe2\x89\xa1",
 }
 
