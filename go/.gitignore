@@ -1,0 +1,2 @@
+# The seven programs built by `go build -o bin/ ./cmd/...` (doc/GO.md).
+/bin/

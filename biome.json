@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "node/**",
+      "conformance/**",
+      "!conformance/cases",
+      "!conformance/fixtures",
+      "!conformance/reference",
+      "!**/package.json"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "off" } } },
+  "linter": { "enabled": true },
+  "overrides": [
+    {
+      "includes": ["conformance/harness/**", "conformance/generate.mjs"],
+      "formatter": { "lineWidth": 200 }
+    },
+    {
+      "includes": ["conformance/generator/**"],
+      "formatter": { "enabled": false }
+    }
+  ]
+}
