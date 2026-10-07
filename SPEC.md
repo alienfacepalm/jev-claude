@@ -1,8 +1,9 @@
 # jev-claude port specification
 
 Status: revision 3. Sections 1-18 passed Fable's second review (its notes applied); sections 19-20
-were added afterwards from building the conformance suite and the ports, and have not been reviewed. Reference implementation: `node/` at commit
-`2f9967f`, run on Node.js 24.21.0.
+were added afterwards from building the conformance suite and the ports, and were checked in a later
+two-model review (Fable and Opus), whose corrections to 19.1 and 20.8 are applied. Reference
+implementation: `node/` at commit `e5a09fb`, run on Node.js 24.21.0.
 
 This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
 Python. It is normative for the ports. Where this document is silent, the Node.js source is the
@@ -113,7 +114,10 @@ from the root `package.json` at run time, or uses `0.0.0` when there is no root.
 Several behaviours need the repository root (the directory holding `.git`, `package.json`, and
 `.claude/skills`). Node derives it from its own file location. Ports resolve it, once at start:
 
-1. `JEV_ROOT`, when set and non-empty (ports only; not a Node setting, not documented to users);
+1. `JEV_ROOT`, when set and non-empty in the process environment (ports only; Node ignores it, so
+   it is documented in the Go, Rust and Python guides as the override for programs installed
+   outside the clone, and not in the root README's Configuration table or `.env.example`; it is
+   never a project `.env` key);
 2. otherwise the nearest ancestor that contains `.claude/skills/jev-calibrate/SKILL.md`, walking up
    from: Go `os.Executable()` and Rust `std::env::current_exe()`, each after
    `filepath.EvalSymlinks` / `canonicalize`; Python the `jev_router` package's `__file__`;
@@ -303,6 +307,26 @@ Node's results:
   `stateFor`, and reading `state.tier`/`state.model`; release it while awaiting the router; take it
   again to write `tier`/`model` **into the same state object obtained before** (no second lookup,
   even if the entry was evicted meanwhile), exactly as Node mutates the object it holds.
+
+### 3.11 Replacing a file
+
+The files other processes read while Jev rewrites them (the session status files and
+`calibration.json`, both through `writePrivate` (8.1), and the update state (14)) are written to a
+temporary file (3.10) and renamed over the target. Windows refuses that rename for a moment while
+another process, such as antivirus, the search indexer or a reader that opened the file without
+delete sharing, has the target open; Node measured about a dozen refusals in 20,000 back-to-back
+renames. So the rename is `renameOver(temp, file)`:
+
+- Try the rename. On success, stop.
+- If it fails with a permission or sharing error (Windows `ERROR_ACCESS_DENIED` 5,
+  `ERROR_SHARING_VIOLATION` 32 or `ERROR_LOCK_VIOLATION` 33; Node's `EPERM`, `EACCES`, `EBUSY`),
+  wait 20 ms and try again, for at most 10 attempts (about 180 ms of waiting).
+- Any other error, or one still present on the 10th attempt: remove `temp` (it can hold prompt
+  text and nothing else ever cleans it up), then return the original error. Callers swallow it as
+  8.1 and 14 already say, so a write that never gets the file is dropped and leaves nothing behind.
+
+Node retries on every platform; the ports retry on Windows only (on other platforms a permission
+error is permanent, and retrying only costs 180 ms). Nothing but that delay differs.
 
 ---
 
@@ -673,7 +697,7 @@ Header names compare case-insensitively everywhere; values pass through unchange
   its errors propagate to the caller, which swallows them. Modes are no-ops on Windows.
 - Session file: `<dir>/<sessionId with every character outside [A-Za-z0-9_-] removed>.json`.
 - `writePrivate(file, text)`: `ensureDir`, write a unique temp file (3.10) with mode 0600, rename
-  over `file`, chmod 0600.
+  over `file` (`renameOver`, 3.11), chmod 0600.
 - `writeStatus(id, status)`: **does nothing when `id` is empty** (falsy). Otherwise
   `writePrivate`, then, once per process after the first successful write, `pruneStale`. Errors
   are swallowed. `writeDecision` and `markManual` call `readStatus(id)` first and end in
@@ -873,9 +897,13 @@ output must be byte-identical on the golden and harness cases.
 - Then the directory (last segment of `workspace.current_dir ?? cwd ?? ""` split on `/` or `\`,
   omitted when empty or equal to the worktree name), the branch (`(detached)` for "", clipped to 28
   units with `…`, blue), the worktree (green), ` <DIM>·<RESET> <context icon> <pct>%` with
-  `pct = MathRound(ToNumber(context_window.used_percentage ?? 0))`, and the calibration notice
+  `pct = MathRound(ToNumber(context_window.used_percentage ?? 0))`, the calibration notice
   ` <DIM>·<RESET> <yellow>new <newer[0]>[ +<n-1>]: /jev-calibrate<RESET>` when `newer` is
-  non-empty.
+  non-empty, and last the whole working directory, ` <DIM>· <path><RESET>`, where `path` is
+  `workspace.current_dir ?? cwd ?? ""` exactly as Claude Code sent it (no shortening, no clipping,
+  no separator conversion); the part is omitted when `path` is empty. The line cannot be
+  right-aligned, since Claude Code does not say how wide the terminal is; last is the rightmost
+  item, and the first one cut when the line is too long.
 - Icons are bold: `<BOLD><mark><RESET>`. Colours: haiku green `\x1b[32m`, sonnet cyan `\x1b[36m`,
   opus magenta `\x1b[35m`, fable yellow `\x1b[33m`.
 
@@ -927,7 +955,7 @@ The table of `match`, `short`, `long` is copied exactly and checked in order by 
 ## 14. Update library (`node/src/update.mjs`)
 
 Ports implement with the same results: `UPDATE_FILE = <home>/.jev-router/update.json`,
-`CHECK_EVERY_MS = 6 h`, `readState`, `writeState` (unique temp file + rename, errors swallowed),
+`CHECK_EVERY_MS = 6 h`, `readState`, `writeState` (unique temp file + `renameOver` (3.11), errors swallowed),
 `isCheckDue` (the last check is due when `checkedAt` is missing, does not parse, is in the future,
 or is at least `everyMs` old; ports parse the `toISOString` form only and treat anything else as
 unparseable), `compareVersions`, `updateNotice` (exact wording), `installedVersion(root)` (root
@@ -1032,8 +1060,8 @@ From the repository root:
 ```
 pnpm test                                          # Node unit tests
 node --test conformance/harness                    # harness against Node
-cd go && go vet ./... && go test ./...
-cd rust && cargo clippy --all-targets -- -D warnings && cargo test
+(cd go && go vet ./... && go test ./...)
+(cd rust && cargo clippy --all-targets -- -D warnings && cargo test)
 python -m unittest discover -s python/tests -t python
 ```
 
@@ -1086,8 +1114,8 @@ These look odd but are deliberate or load-bearing; ports keep them.
 Found while generating the golden cases; each is Node's behaviour, pinned by a case, and normative.
 
 1. `claudeModels` breaks `releasedAt` ties with `localeCompare`; ports use code-unit order, and the
-   cases only contain ISO dates where the two agree. A non-string `created_at` makes Node throw
-   (no calibration write; later routed turns take the error path); ports throw the same way.
+   cases only contain ISO dates where the two agree. (This item's former sentence on non-string
+   `created_at` is superseded by 20.8.)
 2. `isCheckDue` cases use only the `toISOString` form or strings no date parser accepts.
 3. The harness runs with `node --test conformance/harness` through `conformance/harness/index.js`,
    which imports every `*.test.mjs`; `node --test "conformance/harness/*.test.mjs"` also works.
@@ -1133,8 +1161,15 @@ Raised by the Go, Rust, and Python agents; each is Node's behaviour and normativ
 7. **Status line on `null` (12):** stdin holding the JSON literal `null` makes Node throw reading
    `null.session_id`: nothing is written to stdout and the exit code is 1. (Malformed or empty input
    is still `{}`.)
-8. **`created_at` (19.1):** an array `created_at` does not throw at `.slice`; Node throws only if a
-   version tie reaches `localeCompare`. Strings and arrays slice; numbers and other values throw.
+8. **`created_at` (7.5, 19.1):** `null` or absent becomes `releasedAt: ""`. A falsy value (`""`,
+   `0`, `false`) adds no `released` item to `description` and is kept as-is in `releasedAt`. A
+   truthy value that is neither a string nor an array throws `model.created_at.slice is not a
+   function` whatever the catalog order (no calibration write; later routed turns take the error
+   path). Strings and arrays slice (`["2025-01-02"]` gives `released 2025-01-02`). A non-string
+   `releasedAt` (`0`, `false`, an array) throws `b.releasedAt.localeCompare is not a function` only
+   when a version tie compares it as `b`; as `a` it is coerced to a string. Which operand Node sees
+   as `b` follows V8's sort, so ports may throw whenever either operand of a tie comparison is a
+   non-string `releasedAt`. No golden case contains a non-string `created_at`.
 9. **TLS in Rust (2.2):** `rustls` is built with the `ring` provider, because the default
    `aws-lc-rs` needs CMake and NASM on Windows.
 10. **Untested path (7.2 step 3):** a client that disconnects while Jev is being asked, before the

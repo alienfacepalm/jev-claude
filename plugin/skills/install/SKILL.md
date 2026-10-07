@@ -21,8 +21,8 @@ Stop and say what is wrong at the first step that fails; do not work around a fa
 
 Run `node --version` and `git --version`.
 
-- Node.js 22 or later is required. If it is missing or older, stop and point the user to
-  https://github.com/alienfacepalm/jev-claude#installing-nodejs. Do not install Node yourself.
+- Node.js 22.16 or later is required (24 LTS recommended). If it is missing or older, stop and
+  point the user to https://github.com/alienfacepalm/jev-claude#installing-nodejs. Do not install Node yourself.
 - Git is required. If it is missing, stop and point the user to https://git-scm.com/downloads.
 
 ## 2. Get the code
@@ -60,6 +60,6 @@ Say this, in your own words, and then stop:
 2. **Open a new terminal** if the installer said to (it adds a folder to the PATH the first time).
 3. **Exit this session and start `jev-claude`** from any project, instead of `claude`. Plain
    `claude` is unchanged and keeps working.
-4. **Updates.** Each time `jev-claude` starts it looks for a newer version in the background and,
-   when there is one, prints a line saying so. `jev-claude --update` applies it. Nothing updates
-   by itself.
+4. **Updates.** Run the installer again to update; it fast-forwards the clone and reinstalls the
+   `jev-claude` command. Nothing updates by itself, and there is no update notice or `--update`
+   flag yet.
