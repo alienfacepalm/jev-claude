@@ -128,7 +128,7 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
             .map(|a| {
                 let tier = a.get("tier").or(&status_tier_of(a.get("model"))).clone();
                 let c = color(&tier);
-                let paused = if a.get("manual").truthy() { "\u{23F8}" } else { "" };
+                let paused = if a.get("manual").truthy() { "\u{23F8} " } else { "" };
                 let name = short_of(a.get("model"))
                     .unwrap_or_else(|| s(a.get("tier").or(a.get("model")).or(&Value::from("?"))));
                 format!("{c}{paused}{name}{RESET}")

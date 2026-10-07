@@ -91,7 +91,7 @@ def render(input_bytes: bytes) -> str:
         names = []
         for a in first:
             color = _color(coalesce(a.get("tier", UNDEFINED), _status_tier_of(a.get("model", UNDEFINED))))
-            pause = "\u23f8" if truthy(a.get("manual", UNDEFINED)) else ""
+            pause = "\u23f8 " if truthy(a.get("manual", UNDEFINED)) else ""
             name = coalesce(short_name(a.get("model", UNDEFINED)), a.get("tier", UNDEFINED), a.get("model", UNDEFINED), "?")
             names.append(f"{color}{pause}{to_string(name)}{RESET}")
         more = f"{DIM}+{len(subagents) - len(first)}{RESET}" if len(subagents) > len(first) else ""

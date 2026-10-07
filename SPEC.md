@@ -867,7 +867,8 @@ output must be byte-identical on the golden and harness cases.
   when `shortReason(reason)` is non-null.
 - **Sub-agents**: from `agentView(status)` (90 s freshness), the first three: the colour of
   `tier ?? statusTierOf(model)` (`statusTierOf` is the status line's own
-  `/claude-([a-z]+)-/` capture, not config's `tierOf`), `⏸` when manual,
+  `/claude-([a-z]+)-/` capture, not config's `tierOf`), `⏸ ` (with its trailing space, so the wide
+  emoji glyph does not cover the name's first letter) when manual,
   `shortName(model) ?? tier ?? model ?? "?"`, reset; `<DIM>+N<RESET>` for the rest; joined with
   `<DIM>,<RESET>`, after ` <DIM>·<RESET> <agents icon> `.
 - Then the directory (last segment of `workspace.current_dir ?? cwd ?? ""` split on `/` or `\`,

@@ -75,7 +75,9 @@ if (subagents.length) {
   const shown = subagents.slice(0, 3);
   const names = shown.map((a) => {
     const color = COLOR[a.tier ?? tierOf(a.model)] ?? "";
-    return `${color}${a.manual ? "⏸" : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
+    // The space after ⏸: terminals draw it as a double-width emoji in a single cell, which would
+    // otherwise cover the first letter of the name.
+    return `${color}${a.manual ? "⏸ " : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
   agents = ` ${DIM}·${RESET} ${I.agents} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;

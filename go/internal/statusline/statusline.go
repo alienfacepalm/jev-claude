@@ -161,7 +161,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 			tier := jsjson.Coalesce(a.Value("tier"), statusTierOf(a.Value("model")))
 			mark := ""
 			if jsjson.Truthy(a.Value("manual")) {
-				mark = pause
+				mark = pause + " " // the space keeps the wide emoji glyph off the name
 			}
 			name := shortOr(a.Value("model"), a.Value("tier"), a.Value("model"), "?")
 			names = append(names, colorOf(tier)+mark+name+reset)
