@@ -14,7 +14,7 @@ export function formatLegend(set = icons()) {
     [set.branch, "the git branch, cut with … when long; (detached) when none is checked out"],
     [set.worktree, "the linked git worktree you are working in"],
     [set.context, "how much of the context window is used"],
-    ["⏸", "you picked the model with /model, so Jev leaves it alone"],
+    ["☞", "you picked the model with /model, so Jev leaves it alone"],
     ["(why)", "a reason in brackets after the effort, only when the pick is not the obvious one"],
     ["new …", "a newer model than the router was tuned for: run /jev-calibrate"],
   ];

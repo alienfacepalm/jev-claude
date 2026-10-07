@@ -191,7 +191,7 @@ test("a model the user picked passes through untouched and pauses routing", asyn
   assert.equal(jev.posts().length, 0);
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session, { model: { display_name: "Opus 5.5" } }));
-  assert.equal(line, `${DIM}⏸ manual${RESET} Opus 5.5${tail}`);
+  assert.equal(line, `${DIM}☞ manual${RESET} Opus 5.5${tail}`);
 });
 
 test("a Jev answer naming a model that is not on the menu counts as no answer", async (t) => {

@@ -857,7 +857,7 @@ composition, ANSI codes, separators, and fallbacks are those of `node/bin/jev-st
 output must be byte-identical on the golden and harness cases.
 
 - **Routed part**: when `main?.manual || (!main && status?.manual)`:
-  `<DIM>⏸ manual<RESET> <input.model.display_name ?? main.model ?? "">`, trailing spaces trimmed
+  `<DIM>☞ manual<RESET> <input.model.display_name ?? main.model ?? "">`, trailing spaces trimmed
   (a non-manual main entry wins over a manual flat flag). Else the main agent's line; else, when a
   status exists, the flat status's line (sessions before agent tracking); else
   `<DIM>jev: waiting for first prompt<RESET>`.
@@ -867,8 +867,7 @@ output must be byte-identical on the golden and harness cases.
   when `shortReason(reason)` is non-null.
 - **Sub-agents**: from `agentView(status)` (90 s freshness), the first three: the colour of
   `tier ?? statusTierOf(model)` (`statusTierOf` is the status line's own
-  `/claude-([a-z]+)-/` capture, not config's `tierOf`), `⏸ ` (with its trailing space, so the wide
-  emoji glyph does not cover the name's first letter) when manual,
+  `/claude-([a-z]+)-/` capture, not config's `tierOf`), `☞ ` (with its trailing space) when manual,
   `shortName(model) ?? tier ?? model ?? "?"`, reset; `<DIM>+N<RESET>` for the rest; joined with
   `<DIM>,<RESET>`, after ` <DIM>·<RESET> <agents icon> `.
 - Then the directory (last segment of `workspace.current_dir ?? cwd ?? ""` split on `/` or `\`,
@@ -1074,7 +1073,7 @@ These look odd but are deliberate or load-bearing; ports keep them.
 - The decision is filed under the conversation key when there is no session id.
 - `<jev-explain>` turns are never routed and never recorded.
 - A main agent once marked manual keeps `agents[key].manual = true` after routing resumes, so the
-  status line keeps showing `⏸ manual` for it.
+  status line keeps showing `☞ manual` for it.
 - `/v1/messages/count_tokens` requests are processed like turns.
 - A `/v1/models` error response still rewrites `calibration.json` from the catalog it has.
 - `JEV_STATUS_DIR` set only in an env file is ignored by the launcher's proxy but inherited by

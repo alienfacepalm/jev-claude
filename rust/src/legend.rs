@@ -12,7 +12,7 @@ pub fn format_legend(set: &Icons) -> String {
         (set.branch, "the git branch, cut with \u{2026} when long; (detached) when none is checked out"),
         (set.worktree, "the linked git worktree you are working in"),
         (set.context, "how much of the context window is used"),
-        ("\u{23F8}", "you picked the model with /model, so Jev leaves it alone"),
+        ("\u{261E}", "you picked the model with /model, so Jev leaves it alone"),
         ("(why)", "a reason in brackets after the effort, only when the pick is not the obvious one"),
         ("new \u{2026}", "a newer model than the router was tuned for: run /jev-calibrate"),
     ];

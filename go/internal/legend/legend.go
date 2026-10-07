@@ -20,7 +20,7 @@ func Format(set icons.Set) string {
 		{set.Branch, "the git branch, cut with " + ellipsis + " when long; (detached) when none is checked out"},
 		{set.Worktree, "the linked git worktree you are working in"},
 		{set.Context, "how much of the context window is used"},
-		{"\xe2\x8f\xb8", "you picked the model with /model, so Jev leaves it alone"},
+		{"\xe2\x98\x9e", "you picked the model with /model, so Jev leaves it alone"},
 		{"(why)", "a reason in brackets after the effort, only when the pick is not the obvious one"},
 		{"new " + ellipsis, "a newer model than the router was tuned for: run /jev-calibrate"},
 	}
