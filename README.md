@@ -197,8 +197,11 @@ a bold symbol in the terminal's own text colour, so it contrasts with any backgr
 ```text
 ✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8%
 ✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34%
-⏸ manual Opus 4.6 · ❐ my-project · ≡ 21%
+☞ manual Opus 4.6 · ❐ my-project · ≡ 21%
 ```
+
+`☞` marks a model you picked by hand with `/model`, which Jev leaves alone: in front of `manual` when it
+is the main model, and in front of a sub-agent's name when that sub-agent is pinned to its own model.
 
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the

@@ -109,7 +109,7 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
     let routed = if main.get("manual").truthy() || (!main.truthy() && status.get("manual").truthy()) {
         let empty = Value::from("");
         let shown = input.get("model").get("display_name").or(main.get("model")).or(&empty);
-        let mut line = JsStr::from(format!("{DIM}\u{23F8} manual{RESET} "));
+        let mut line = JsStr::from(format!("{DIM}\u{261E} manual{RESET} "));
         line.push_js(&shown.to_js_string());
         line.trim_end().to_string_lossy()
     } else if main.truthy() {
@@ -128,10 +128,11 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
             .map(|a| {
                 let tier = a.get("tier").or(&status_tier_of(a.get("model"))).clone();
                 let c = color(&tier);
-                let paused = if a.get("manual").truthy() { "\u{23F8} " } else { "" };
+                // U+261E, not the emoji U+23F8, which terminals draw double-width in one cell.
+                let picked = if a.get("manual").truthy() { "\u{261E} " } else { "" };
                 let name = short_of(a.get("model"))
                     .unwrap_or_else(|| s(a.get("tier").or(a.get("model")).or(&Value::from("?"))));
-                format!("{c}{paused}{name}{RESET}")
+                format!("{c}{picked}{name}{RESET}")
             })
             .collect();
         if view.subagents.len() > shown.len() {

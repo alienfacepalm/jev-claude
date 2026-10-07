@@ -16,7 +16,7 @@ def format_legend(marks=None) -> str:
         [marks["branch"], "the git branch, cut with \u2026 when long; (detached) when none is checked out"],
         [marks["worktree"], "the linked git worktree you are working in"],
         [marks["context"], "how much of the context window is used"],
-        ["\u23f8", "you picked the model with /model, so Jev leaves it alone"],
+        ["\u261e", "you picked the model with /model, so Jev leaves it alone"],
         ["(why)", "a reason in brackets after the effort, only when the pick is not the obvious one"],
         ["new \u2026", "a newer model than the router was tuned for: run /jev-calibrate"],
     ]

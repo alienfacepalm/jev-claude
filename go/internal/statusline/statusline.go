@@ -23,7 +23,7 @@ const (
 	bold      = "\x1b[1m"
 	reset     = "\x1b[0m"
 	dot       = "\xc2\xb7"
-	pause     = "\xe2\x8f\xb8"
+	picked    = "\xe2\x98\x9e" // U+261E; U+23F8 is an emoji, drawn double-width in one cell
 	ellipsis  = "\xe2\x80\xa6"
 	maxBranch = 28
 )
@@ -143,7 +143,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 	switch {
 	case jsjson.Truthy(jsjson.Prop(mainEntry, "manual")) || (view.Main == nil && jsjson.Truthy(jsjson.Prop(st, "manual"))):
 		shown := jsjson.Coalesce(jsjson.Coalesce(jsjson.Path(input, "model", "display_name"), jsjson.Prop(mainEntry, "model")), "")
-		routed = trimTail(dim + pause + " manual" + reset + " " + jsjson.JSString(shown))
+		routed = trimTail(dim + picked + " manual" + reset + " " + jsjson.JSString(shown))
 	case view.Main != nil:
 		routed = mainLine(view.Main)
 	case st != nil:
@@ -161,7 +161,7 @@ func Render(stdin []byte, env config.Getenv) (string, error) {
 			tier := jsjson.Coalesce(a.Value("tier"), statusTierOf(a.Value("model")))
 			mark := ""
 			if jsjson.Truthy(a.Value("manual")) {
-				mark = pause + " " // the space keeps the wide emoji glyph off the name
+				mark = picked + " "
 			}
 			name := shortOr(a.Value("model"), a.Value("tier"), a.Value("model"), "?")
 			names = append(names, colorOf(tier)+mark+name+reset)

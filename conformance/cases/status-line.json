@@ -339,7 +339,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m⏸ manual\u001b[0m Opus 4.6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m Opus 4.6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -364,7 +364,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m⏸ manual\u001b[0m claude-opus-4-6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m claude-opus-4-6 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -387,7 +387,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m⏸ manual\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -403,7 +403,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[2m⏸ manual\u001b[0m Sonnet 5 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[2m☞ manual\u001b[0m Sonnet 5 \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {
@@ -614,7 +614,7 @@
       "statusFile": "sl-a.json"
     },
     "expected": {
-      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m⏸ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
+      "stdout": "\u001b[1m✧✦\u001b[0m \u001b[36mSonnet 5.5\u001b[0m \u001b[2m(94%)\u001b[0m \u001b[2m·\u001b[0m \u001b[1m◔\u001b[0m high \u001b[2m·\u001b[0m \u001b[1m✦\u001b[0m \u001b[35m☞ Opus 4.6\u001b[0m\u001b[2m,\u001b[0m\u001b[32mHaiku 4.5\u001b[0m\u001b[2m,\u001b[0m?\u001b[0m\u001b[2m,\u001b[0m\u001b[2m+2\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8%\n"
     }
   },
   {

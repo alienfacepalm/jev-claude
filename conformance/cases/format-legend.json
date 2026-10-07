@@ -12,7 +12,7 @@
         "context": "≡"
       }
     },
-    "expected": "✧✦     the model the last turn ran on, then Jev's confidence in that pick\n◔      the reasoning effort it ran at (Haiku takes none, so none is shown)\n✦      the models sub-agents are running on, with +N for any more\n❐      the directory; left out when the worktree has the same name\n      the git branch, cut with … when long; (detached) when none is checked out\n⌂      the linked git worktree you are working in\n≡      how much of the context window is used\n⏸      you picked the model with /model, so Jev leaves it alone\n(why)  a reason in brackets after the effort, only when the pick is not the obvious one\nnew …  a newer model than the router was tuned for: run /jev-calibrate"
+    "expected": "✧✦     the model the last turn ran on, then Jev's confidence in that pick\n◔      the reasoning effort it ran at (Haiku takes none, so none is shown)\n✦      the models sub-agents are running on, with +N for any more\n❐      the directory; left out when the worktree has the same name\n      the git branch, cut with … when long; (detached) when none is checked out\n⌂      the linked git worktree you are working in\n≡      how much of the context window is used\n☞      you picked the model with /model, so Jev leaves it alone\n(why)  a reason in brackets after the effort, only when the pick is not the obvious one\nnew …  a newer model than the router was tuned for: run /jev-calibrate"
   },
   {
     "name": "text",
@@ -27,7 +27,7 @@
         "context": "ctx"
       }
     },
-    "expected": "model     the model the last turn ran on, then Jev's confidence in that pick\neffort    the reasoning effort it ran at (Haiku takes none, so none is shown)\nagents    the models sub-agents are running on, with +N for any more\ndir       the directory; left out when the worktree has the same name\nbranch    the git branch, cut with … when long; (detached) when none is checked out\nworktree  the linked git worktree you are working in\nctx       how much of the context window is used\n⏸         you picked the model with /model, so Jev leaves it alone\n(why)     a reason in brackets after the effort, only when the pick is not the obvious one\nnew …     a newer model than the router was tuned for: run /jev-calibrate"
+    "expected": "model     the model the last turn ran on, then Jev's confidence in that pick\neffort    the reasoning effort it ran at (Haiku takes none, so none is shown)\nagents    the models sub-agents are running on, with +N for any more\ndir       the directory; left out when the worktree has the same name\nbranch    the git branch, cut with … when long; (detached) when none is checked out\nworktree  the linked git worktree you are working in\nctx       how much of the context window is used\n☞         you picked the model with /model, so Jev leaves it alone\n(why)     a reason in brackets after the effort, only when the pick is not the obvious one\nnew …     a newer model than the router was tuned for: run /jev-calibrate"
   },
   {
     "name": "astral marks count as one",
@@ -42,7 +42,7 @@
         "context": "ctx"
       }
     },
-    "expected": "🚀      the model the last turn ran on, then Jev's confidence in that pick\ne      the reasoning effort it ran at (Haiku takes none, so none is shown)\n🤖🤖     the models sub-agents are running on, with +N for any more\ndir    the directory; left out when the worktree has the same name\nbr     the git branch, cut with … when long; (detached) when none is checked out\nwt     the linked git worktree you are working in\nctx    how much of the context window is used\n⏸      you picked the model with /model, so Jev leaves it alone\n(why)  a reason in brackets after the effort, only when the pick is not the obvious one\nnew …  a newer model than the router was tuned for: run /jev-calibrate"
+    "expected": "🚀      the model the last turn ran on, then Jev's confidence in that pick\ne      the reasoning effort it ran at (Haiku takes none, so none is shown)\n🤖🤖     the models sub-agents are running on, with +N for any more\ndir    the directory; left out when the worktree has the same name\nbr     the git branch, cut with … when long; (detached) when none is checked out\nwt     the linked git worktree you are working in\nctx    how much of the context window is used\n☞      you picked the model with /model, so Jev leaves it alone\n(why)  a reason in brackets after the effort, only when the pick is not the obvious one\nnew …  a newer model than the router was tuned for: run /jev-calibrate"
   },
   {
     "name": "long word",
@@ -57,6 +57,6 @@
         "context": "c"
       }
     },
-    "expected": "the-model-mark  the model the last turn ran on, then Jev's confidence in that pick\nx               the reasoning effort it ran at (Haiku takes none, so none is shown)\ny               the models sub-agents are running on, with +N for any more\nz               the directory; left out when the worktree has the same name\nb               the git branch, cut with … when long; (detached) when none is checked out\nw               the linked git worktree you are working in\nc               how much of the context window is used\n⏸               you picked the model with /model, so Jev leaves it alone\n(why)           a reason in brackets after the effort, only when the pick is not the obvious one\nnew …           a newer model than the router was tuned for: run /jev-calibrate"
+    "expected": "the-model-mark  the model the last turn ran on, then Jev's confidence in that pick\nx               the reasoning effort it ran at (Haiku takes none, so none is shown)\ny               the models sub-agents are running on, with +N for any more\nz               the directory; left out when the worktree has the same name\nb               the git branch, cut with … when long; (detached) when none is checked out\nw               the linked git worktree you are working in\nc               how much of the context window is used\n☞               you picked the model with /model, so Jev leaves it alone\n(why)           a reason in brackets after the effort, only when the pick is not the obvious one\nnew …           a newer model than the router was tuned for: run /jev-calibrate"
   }
 ]

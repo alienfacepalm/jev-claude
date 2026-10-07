@@ -58,7 +58,7 @@ function mainLine(entry) {
 let routed = `${DIM}jev: waiting for first prompt${RESET}`;
 if (main?.manual || (!main && status?.manual)) {
   // The user picked this model with /model, so show their choice rather than a tier.
-  routed = `${DIM}⏸ manual${RESET} ${input.model?.display_name ?? main?.model ?? ""}`.trimEnd();
+  routed = `${DIM}☞ manual${RESET} ${input.model?.display_name ?? main?.model ?? ""}`.trimEnd();
 } else if (main) {
   routed = mainLine(main);
 } else if (status) {
@@ -75,9 +75,9 @@ if (subagents.length) {
   const shown = subagents.slice(0, 3);
   const names = shown.map((a) => {
     const color = COLOR[a.tier ?? tierOf(a.model)] ?? "";
-    // The space after ⏸: terminals draw it as a double-width emoji in a single cell, which would
-    // otherwise cover the first letter of the name.
-    return `${color}${a.manual ? "⏸ " : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
+    // ☞ (hand-picked), not ☞: U+23F8 is an emoji, so terminals draw it double-width in a
+    // single cell and it would cover the next character.
+    return `${color}${a.manual ? "☞ " : ""}${shortName(a.model) ?? a.tier ?? a.model ?? "?"}${RESET}`;
   });
   const more = subagents.length > shown.length ? `${DIM}+${subagents.length - shown.length}${RESET}` : "";
   agents = ` ${DIM}·${RESET} ${I.agents} ${[...names, more].filter(Boolean).join(`${DIM},${RESET}`)}`;

@@ -79,7 +79,7 @@ def render(input_bytes: bytes) -> str:
     routed = f"{DIM}jev: waiting for first prompt{RESET}"
     if truthy(_get(main, "manual")) or (not truthy(main) and truthy(_get(status, "manual"))):
         shown = coalesce(_get(_get(data, "model"), "display_name"), _get(main, "model"), "")
-        routed = f"{DIM}\u23f8 manual{RESET} {to_string(shown)}".rstrip(_TRIM_END)
+        routed = f"{DIM}\u261e manual{RESET} {to_string(shown)}".rstrip(_TRIM_END)
     elif truthy(main):
         routed = main_line(main)
     elif truthy(status):
@@ -91,9 +91,10 @@ def render(input_bytes: bytes) -> str:
         names = []
         for a in first:
             color = _color(coalesce(a.get("tier", UNDEFINED), _status_tier_of(a.get("model", UNDEFINED))))
-            pause = "\u23f8 " if truthy(a.get("manual", UNDEFINED)) else ""
+            # U+261E, not the emoji U+23F8, which terminals draw double-width in one cell.
+            picked = "\u261e " if truthy(a.get("manual", UNDEFINED)) else ""
             name = coalesce(short_name(a.get("model", UNDEFINED)), a.get("tier", UNDEFINED), a.get("model", UNDEFINED), "?")
-            names.append(f"{color}{pause}{to_string(name)}{RESET}")
+            names.append(f"{color}{picked}{to_string(name)}{RESET}")
         more = f"{DIM}+{len(subagents) - len(first)}{RESET}" if len(subagents) > len(first) else ""
         agents = f" {DIM}\u00b7{RESET} {marks['agents']} " + f"{DIM},{RESET}".join(n for n in [*names, more] if n)
 
