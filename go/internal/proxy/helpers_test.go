@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -93,7 +94,7 @@ func recordingUpstream(t *testing.T, reply func(w http.ResponseWriter, r *http.R
 			return
 		}
 		w.Header().Set("content-type", "application/json")
-		io.WriteString(w, `{"id":"msg_1","type":"message"}`)
+		writeBody(w, `{"id":"msg_1","type":"message"}`)
 	}))
 	t.Cleanup(srv.Close)
 	return rec, srv.URL
@@ -112,7 +113,10 @@ func startProxy(t *testing.T, opts Options) string {
 // post sends body as JSON and returns the response text.
 func post(t *testing.T, url string, body any, headers map[string]string) (int, string) {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(jsjson.Stringify(body))))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader([]byte(jsjson.Stringify(body))))
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Set("content-type", "application/json")
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -126,7 +130,51 @@ func post(t *testing.T, url string, body any, headers map[string]string) (int, s
 	return res.StatusCode, string(data)
 }
 
+// get sends a GET and returns the status and body text.
+func get(t *testing.T, url string, headers map[string]string) (int, string) {
+	t.Helper()
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return res.StatusCode, string(data)
+}
+
+// writeBody writes a fake upstream's reply. A failed write surfaces as the client's error, so
+// the handler has nothing to do with it.
+func writeBody(w io.Writer, s string) { _, _ = io.WriteString(w, s) }
+
+// mustWrite writes a test file and fails the test if it cannot: a setup step that silently
+// fails would let a negative assertion pass without testing anything.
+func mustWrite(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// mustMkdirAll creates a test directory with the given mode or fails the test.
+func mustMkdirAll(t *testing.T, path string, perm os.FileMode) {
+	t.Helper()
+	if err := os.MkdirAll(path, perm); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func fixture(t *testing.T) *jsjson.Object {
+	t.Helper()
 	data, err := os.ReadFile(filepath.Join("..", "..", "..", "conformance", "fixtures", "claude-code-print-request.json"))
 	if err != nil {
 		t.Fatal(err)

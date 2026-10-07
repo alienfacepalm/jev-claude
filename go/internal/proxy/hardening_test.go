@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -39,7 +40,10 @@ var (
 )
 
 func TestHardeningRouting(t *testing.T) {
-	bash := func() any { return parse(t, `[{"name":"Bash"}]`) }
+	bash := func(t *testing.T) any {
+		t.Helper()
+		return parse(t, `[{"name":"Bash"}]`)
+	}
 
 	t.Run("the main thread keeps its tier after a session has run 50 sub-agents", func(t *testing.T) {
 		rec, url := recordingUpstream(t, nil)
@@ -47,7 +51,7 @@ func TestHardeningRouting(t *testing.T) {
 		session := fmt.Sprintf("lru-%d", os.Getpid())
 		opening := parse(t, `{"role":"user","content":"rename the config loader"}`)
 		send := func(messages []any) {
-			post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(), "metadata", metadata(session), "messages", messages), nil)
+			post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(t), "metadata", metadata(session), "messages", messages), nil)
 		}
 		send([]any{opening})
 		for i := 0; i < 51; i++ {
@@ -66,7 +70,7 @@ func TestHardeningRouting(t *testing.T) {
 		base := startProxy(t, Options{UpstreamURL: url, Route: sure(haiku)})
 		// A resumed session: a long history, but nothing cached on any model by this process.
 		history := strings.Repeat("x", 120000)
-		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(), "messages", []any{
+		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(t), "messages", []any{
 			jsjson.Obj("role", "user", "content", history), parse(t, toolUse), parse(t, toolResult), parse(t, `{"role":"user","content":"fix the typo"}`),
 		}), nil)
 		if modelOf(rec.all()[0]) != haiku {
@@ -79,7 +83,7 @@ func TestHardeningRouting(t *testing.T) {
 		base := startProxy(t, Options{UpstreamURL: url, Route: func(router.Args) (*jsjson.Object, error) {
 			return nil, errors.New("router blew up")
 		}})
-		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(), "messages", parse(t, `[{"role":"user","content":"hello"}]`)), nil)
+		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(t), "messages", parse(t, `[{"role":"user","content":"hello"}]`)), nil)
 		if modelOf(rec.all()[0]) != sonnet {
 			t.Errorf("a failure lands on the default tier, never the sentinel: %v", modelOf(rec.all()[0]))
 		}
@@ -90,8 +94,8 @@ func TestHardeningRouting(t *testing.T) {
 		base := startProxy(t, Options{UpstreamURL: url, Route: sure(haiku)})
 		opening := jsjson.Obj("role", "user", "content", fmt.Sprintf("print-mode %d", os.Getpid()))
 		// `claude -p` sends its first request without metadata.
-		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(), "messages", []any{opening}), nil)
-		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(), "metadata", metadata(fmt.Sprintf("late-%d", os.Getpid())),
+		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(t), "messages", []any{opening}), nil)
+		post(t, base+"/v1/messages", jsjson.Obj("model", "jev-router", "tools", bash(t), "metadata", metadata(fmt.Sprintf("late-%d", os.Getpid())),
 			"messages", []any{opening, parse(t, toolUse), parse(t, toolResult)}), nil)
 		all := rec.all()
 		if modelOf(all[0]) != haiku || modelOf(all[1]) != haiku {
@@ -102,9 +106,11 @@ func TestHardeningRouting(t *testing.T) {
 	t.Run("a client that leaves stops the upstream response", func(t *testing.T) {
 		gaveUp := make(chan bool, 1)
 		upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			io.ReadAll(r.Body)
+			if _, err := io.ReadAll(r.Body); err != nil {
+				t.Errorf("upstream read: %v", err)
+			}
 			w.Header().Set("content-type", "text/event-stream")
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 			sent := 0
 			ticker := time.NewTicker(20 * time.Millisecond)
 			defer ticker.Stop()
@@ -132,13 +138,18 @@ func TestHardeningRouting(t *testing.T) {
 			t.Fatal(err)
 		}
 		body := `{"model":"jev-router","tools":[{"name":"Bash"}],"messages":[{"role":"user","content":"go"}]}`
-		fmt.Fprintf(conn, "POST /v1/messages HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-		res, err := http.ReadResponse(bufio.NewReader(conn), nil)
+		if _, err := fmt.Fprintf(conn, "POST /v1/messages HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", len(body), body); err != nil {
+			t.Fatal(err)
+		}
+		// Closing the connection is the point of the test; Body.Close would first drain the stream.
+		res, err := http.ReadResponse(bufio.NewReader(conn), nil) //nolint:bodyclose // the client leaves by closing conn below
 		if err != nil {
 			t.Fatal(err)
 		}
 		buf := make([]byte, 1)
-		res.Body.Read(buf) // the first data arrives
+		if _, err := res.Body.Read(buf); err != nil { // the first data arrives
+			t.Fatal(err)
+		}
 		conn.Close()
 
 		select {
@@ -170,10 +181,14 @@ func TestHardeningRouting(t *testing.T) {
 						c.Close()
 						return
 					}
-					io.ReadAll(req.Body)
-					io.WriteString(c, "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nTransfer-Encoding: chunked\r\n\r\n")
+					if _, err := io.ReadAll(req.Body); err != nil {
+						c.Close()
+						return
+					}
+					// Write errors show up as the client's failure, which the test asserts on.
+					writeBody(c, "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nTransfer-Encoding: chunked\r\n\r\n")
 					chunk := "data: {\"n\":0}\n\n"
-					fmt.Fprintf(c, "%x\r\n%s\r\n", len(chunk), chunk)
+					writeBody(c, fmt.Sprintf("%x\r\n%s\r\n", len(chunk), chunk))
 					time.Sleep(50 * time.Millisecond)
 					c.Close()
 				}(c)
@@ -183,7 +198,14 @@ func TestHardeningRouting(t *testing.T) {
 
 		done := make(chan error, 1)
 		go func() {
-			res, err := http.Post(base+"/v1/messages", "application/json", strings.NewReader(`{"model":"jev-router","tools":[{"name":"Bash"}],"messages":[{"role":"user","content":"go"}]}`))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, base+"/v1/messages",
+				strings.NewReader(`{"model":"jev-router","tools":[{"name":"Bash"}],"messages":[{"role":"user","content":"go"}]}`))
+			if err != nil {
+				done <- err
+				return
+			}
+			req.Header.Set("Content-Type", "application/json")
+			res, err := http.DefaultClient.Do(req)
 			if err != nil {
 				done <- err
 				return
@@ -206,7 +228,7 @@ func TestHardeningRouting(t *testing.T) {
 func TestHardeningEnv(t *testing.T) {
 	t.Run("a project's .env may only set jev's own keys", func(t *testing.T) {
 		cwd, home := t.TempDir(), t.TempDir()
-		os.WriteFile(filepath.Join(cwd, ".env"), []byte(strings.Join([]string{
+		mustWrite(t, filepath.Join(cwd, ".env"), []byte(strings.Join([]string{
 			"JEV_API_KEY=from-project",
 			"JEV_OPUS_EFFORT=low",
 			"JEV_FORCE_EFFORT=max",
@@ -216,8 +238,8 @@ func TestHardeningEnv(t *testing.T) {
 			"NODE_OPTIONS=--require /tmp/evil.js",
 			"JEV_DUMP=/tmp/loot",
 			"JEV_DEBUG=project",
-		}, "\n")), 0o644)
-		os.WriteFile(filepath.Join(home, ".jev-router.env"), []byte("JEV_DEBUG=home\nTYPESAFE_BASE_URL=https://jev.example\n"), 0o644)
+		}, "\n")))
+		mustWrite(t, filepath.Join(home, ".jev-router.env"), []byte("JEV_DEBUG=home\nTYPESAFE_BASE_URL=https://jev.example\n"))
 
 		e := env.Map{"JEV_ALLOW_FABLE": "1"}
 		env.Load(cwd, home, e)
@@ -250,8 +272,8 @@ func TestHardeningEnv(t *testing.T) {
 	t.Run("a Claude API key in the user's own file reaches Claude Code, but never from a project's .env", func(t *testing.T) {
 		cwd, home := t.TempDir(), t.TempDir()
 		// A repository's .env must not be able to send your prompts to someone else's account.
-		os.WriteFile(filepath.Join(cwd, ".env"), []byte("ANTHROPIC_API_KEY=sk-ant-someone-else\n"), 0o644)
-		os.WriteFile(filepath.Join(home, ".jev-router.env"), []byte("JEV_API_KEY=jev\nANTHROPIC_API_KEY=sk-ant-mine\n"), 0o644)
+		mustWrite(t, filepath.Join(cwd, ".env"), []byte("ANTHROPIC_API_KEY=sk-ant-someone-else\n"))
+		mustWrite(t, filepath.Join(home, ".jev-router.env"), []byte("JEV_API_KEY=jev\nANTHROPIC_API_KEY=sk-ant-mine\n"))
 		e := env.Map{}
 		env.Load(cwd, home, e)
 		if e["ANTHROPIC_API_KEY"] != "sk-ant-mine" {
@@ -274,8 +296,8 @@ func TestHardeningEnv(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		os.WriteFile(filepath.Join(cwd, ".env"), example, 0o644)
-		os.WriteFile(filepath.Join(home, ".jev-router.env"), []byte("JEV_API_KEY=from-home\n"), 0o644)
+		mustWrite(t, filepath.Join(cwd, ".env"), example)
+		mustWrite(t, filepath.Join(home, ".jev-router.env"), []byte("JEV_API_KEY=from-home\n"))
 		e := env.Map{}
 		env.Load(cwd, home, e)
 		if e["JEV_API_KEY"] != "from-home" {
@@ -289,16 +311,17 @@ func TestHardeningEnv(t *testing.T) {
 
 // shimDir is a directory holding an npm-style name.cmd shim, its script, and a .ps1 beside it.
 func shimDir(t *testing.T, name string, withScript bool) (string, string) {
+	t.Helper()
 	dir := t.TempDir()
 	script := filepath.Join(dir, "node_modules", "pkg", "cli.js")
-	os.MkdirAll(filepath.Dir(script), 0o755)
-	os.WriteFile(script, []byte("process.stdout.write(JSON.stringify(process.argv.slice(2)));\n"), 0o644)
+	mustMkdirAll(t, filepath.Dir(script), 0o755)
+	mustWrite(t, script, []byte("process.stdout.write(JSON.stringify(process.argv.slice(2)));\n"))
 	target := `"%dp0%\node_modules\pkg\cli.js"`
 	if !withScript {
 		target = `"` + script + `"`
 	}
-	os.WriteFile(filepath.Join(dir, name+".cmd"), []byte("@ECHO off\r\n\"node\"  "+target+" %*\r\n"), 0o644)
-	os.WriteFile(filepath.Join(dir, name+".ps1"), []byte("#!/usr/bin/env pwsh\n"), 0o644)
+	mustWrite(t, filepath.Join(dir, name+".cmd"), []byte("@ECHO off\r\n\"node\"  "+target+" %*\r\n"))
+	mustWrite(t, filepath.Join(dir, name+".ps1"), []byte("#!/usr/bin/env pwsh\n"))
 	return dir, script
 }
 
@@ -337,7 +360,7 @@ func TestHardeningLaunch(t *testing.T) {
 		if launch.ShimScript(file) != script {
 			t.Fatalf("shim script %q", launch.ShimScript(file))
 		}
-		spec := launch.LaunchSpec(file)
+		spec := launch.SpecFor(file)
 		if spec.Shim != "" || len(spec.Prefix) != 1 || spec.Prefix[0] != script || !regexp.MustCompile(`(?i)node(\.exe)?$`).MatchString(spec.Command) {
 			t.Fatalf("%+v", spec)
 		}
@@ -347,7 +370,7 @@ func TestHardeningLaunch(t *testing.T) {
 	})
 
 	t.Run("a PowerShell shim is run past the default execution policy", func(t *testing.T) {
-		spec := launch.LaunchSpec(`C:\bin\claude.ps1`)
+		spec := launch.SpecFor(`C:\bin\claude.ps1`)
 		if strings.Join(spec.Prefix[:4], " ") != "-NoProfile -ExecutionPolicy Bypass -File" {
 			t.Fatalf("%+v", spec)
 		}
@@ -358,7 +381,7 @@ func TestHardeningLaunch(t *testing.T) {
 			t.Skip("cmd.exe shims exist only on Windows")
 		}
 		dir, _ := shimDir(t, "opaque", false)
-		spec := launch.LaunchSpec(filepath.Join(dir, "opaque.cmd"))
+		spec := launch.SpecFor(filepath.Join(dir, "opaque.cmd"))
 		if spec.Shim == "" {
 			t.Fatal("falls back to cmd.exe")
 		}
@@ -386,7 +409,10 @@ func TestHardeningDump(t *testing.T) {
 		if !strings.HasPrefix(first, status.Dir) || first == second {
 			t.Fatalf("%s %s", first, second)
 		}
-		data, _ := os.ReadFile(second)
+		data, err := os.ReadFile(second)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if v, _ := jsjson.ParseBytes(data); jsjson.Stringify(v) != `{"a":2}` {
 			t.Fatalf("%s", data)
 		}

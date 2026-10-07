@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/alienfacepalm/jev-claude/go/internal/fsx"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsjson"
 	"github.com/alienfacepalm/jev-claude/go/internal/jsstr"
 	"github.com/alienfacepalm/jev-claude/go/internal/osdirs"
@@ -39,6 +40,10 @@ func git(root string, timeout time.Duration, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", append([]string{"-C", root}, args...)...)
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	hideWindow(cmd)
+	// Node's execFile destroys the stdio pipes before killing git. Without WaitDelay, Wait would
+	// block until git-remote-http (which inherits stderr) exits too, so a hung remote would defeat
+	// the timeout (SPEC 14). With it, Run returns at most a second after the deadline.
+	cmd.WaitDelay = time.Second
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {
@@ -64,7 +69,7 @@ func ReadState(file string) any {
 	return nil
 }
 
-// WriteState writes the state through a unique temporary file and a rename.
+// WriteState writes the state through a unique temporary file and a rename (SPEC 3.11).
 func WriteState(state any, file string) {
 	if os.MkdirAll(filepath.Dir(file), 0o777) != nil {
 		return
@@ -73,9 +78,7 @@ func WriteState(state any, file string) {
 	if os.WriteFile(temp, []byte(jsjson.Stringify(state)), 0o666) != nil {
 		return
 	}
-	if os.Rename(temp, file) != nil {
-		os.Remove(temp)
-	}
+	_ = fsx.RenameOver(temp, file)
 }
 
 // parseISO reads only Date.prototype.toISOString() output (SPEC 14).
@@ -150,8 +153,8 @@ func CompareVersions(a, b any) float64 {
 	return 0
 }
 
-// UpdateNotice is the launch notice, or "" when there is none.
-func UpdateNotice(state, currentVersion any) (string, bool) {
+// Notice is the launch notice (Node's updateNotice), or "" when there is none.
+func Notice(state, currentVersion any) (string, bool) {
 	latest := jsjson.Prop(state, "latest")
 	if !jsjson.Truthy(jsjson.Prop(state, "available")) || !jsjson.Truthy(latest) || !jsjson.Truthy(currentVersion) {
 		return "", false
@@ -189,8 +192,8 @@ func canonical(p string) string {
 	if abs, err := filepath.Abs(p); err == nil {
 		p = abs
 	}
-	if real, err := filepath.EvalSymlinks(p); err == nil {
-		p = real
+	if resolved, err := filepath.EvalSymlinks(p); err == nil {
+		p = resolved
 	}
 	return filepath.Clean(filepath.FromSlash(p))
 }

@@ -241,12 +241,12 @@ func Prewarm() {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u.Scheme+"://"+u.Host, nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u.Scheme+"://"+u.Host, http.NoBody)
 		if err != nil {
 			return
 		}
 		if res, err := Transport.RoundTrip(req); err == nil {
-			io.Copy(io.Discard, res.Body)
+			_, _ = io.Copy(io.Discard, res.Body) // fire and forget: every outcome is ignored
 			res.Body.Close()
 		}
 	}()

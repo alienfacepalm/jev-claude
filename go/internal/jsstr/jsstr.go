@@ -28,7 +28,7 @@ func IsJSWS(r rune) bool {
 // to its surrogate code point; any other invalid byte decodes as U+FFFD with width 1.
 func Decode(s string, i int) (rune, int) {
 	if i+2 < len(s) && s[i] == 0xED && s[i+1] >= 0xA0 && s[i+1] <= 0xBF && s[i+2] >= 0x80 && s[i+2] <= 0xBF {
-		return rune(0xD000 | rune(s[i+1]&0x3F)<<6 | rune(s[i+2]&0x3F)), 3
+		return 0xD000 | rune(s[i+1]&0x3F)<<6 | rune(s[i+2]&0x3F), 3
 	}
 	r, n := utf8.DecodeRuneInString(s[i:])
 	return r, n
@@ -197,7 +197,8 @@ func DecodeBytes(p []byte) string {
 			i++
 			continue
 		}
-		need, lo, hi := 0, byte(0x80), byte(0xBF)
+		var need int
+		lo, hi := byte(0x80), byte(0xBF)
 		switch {
 		case c >= 0xC2 && c <= 0xDF:
 			need = 1

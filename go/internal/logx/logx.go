@@ -38,11 +38,12 @@ func Log(line string) {
 	if err != nil {
 		return
 	}
-	f.WriteString(ISOTime(time.Now()) + " " + text)
+	// Logging never fails the caller: write and chmod errors are swallowed, as in Node.
+	_, _ = f.WriteString(ISOTime(time.Now()) + " " + text)
 	f.Close()
 	if !tightened {
 		tightened = true
-		os.Chmod(File, 0o600)
+		_ = os.Chmod(File, 0o600)
 	}
 }
 

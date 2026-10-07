@@ -113,7 +113,8 @@ func Start(opts Options) (*Proxy, error) {
 	}
 	srv := &http.Server{Handler: p, ErrorLog: nil}
 	srv.SetKeepAlivesEnabled(true)
-	go srv.Serve(ln)
+	// Serve returns http.ErrServerClosed once Close is called; nothing else stops it.
+	go func() { _ = srv.Serve(ln) }()
 	return &Proxy{Port: ln.Addr().(*net.TCPAddr).Port, server: srv}, nil
 }
 
@@ -194,7 +195,7 @@ func modelForTier(models []CatalogModel, tier string) string {
 
 // process rewrites a /v1/messages body (SPEC 7.3) and returns the bytes to forward.
 func (p *proxy) process(raw []byte) []byte {
-	var body any = jsjson.Undefined
+	body := jsjson.Undefined
 	var state *convState
 	out, err := func() ([]byte, error) {
 		v, err := jsjson.ParseBytes(raw)
@@ -295,7 +296,12 @@ func (p *proxy) routed(body *jsjson.Object, statep **convState) ([]byte, error) 
 	}
 	state := p.stateFor(key, fallback)
 	*statep = state
+	// One snapshot of the state, read in the same critical section as stateFor (SPEC 3.10):
+	// another request for this conversation may route while this one awaits Jev, and Node
+	// reads tier, model and "routed before" together, with no await between them.
 	current := state.tier
+	currentModel := state.model
+	routedBefore := state.tier != ""
 	if current == "" {
 		current = config.UncertainDefault
 	}
@@ -336,10 +342,6 @@ func (p *proxy) routed(body *jsjson.Object, statep **convState) ([]byte, error) 
 				available = append(available, m.Tier)
 			}
 		}
-		p.mu.Lock()
-		currentModel := state.model
-		routedBefore := state.tier != ""
-		p.mu.Unlock()
 		if currentModel == "" {
 			currentModel = modelForTier(models, current)
 		}
@@ -517,7 +519,8 @@ func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		debugf(func() string { return "upstream error: " + err.Error() })
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadGateway)
-		io.WriteString(w, jsjson.Stringify(jsjson.Obj("type", "error", "error", jsjson.Obj("message", err.Error()))))
+		// A failed write means the client has gone; there is no one left to tell.
+		_, _ = io.WriteString(w, jsjson.Stringify(jsjson.Obj("type", "error", "error", jsjson.Obj("message", err.Error()))))
 		return
 	}
 	defer res.Body.Close()
@@ -530,7 +533,7 @@ func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		p.readCatalog(data)
 		copyHeaders(w.Header(), res.Header, true)
 		w.WriteHeader(res.StatusCode)
-		w.Write(data)
+		_, _ = w.Write(data) // a failed write means the client has gone
 		return
 	}
 

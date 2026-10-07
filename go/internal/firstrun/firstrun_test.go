@@ -64,7 +64,8 @@ func TestFirstRun(t *testing.T) {
 		}
 	})
 
-	ask := func(input io.Reader) Answer {
+	ask := func(t *testing.T, input io.Reader) Answer {
+		t.Helper()
 		done := make(chan Answer, 1)
 		go func() { done <- AskYesNo("? ", input, io.Discard, nil) }()
 		select {
@@ -79,19 +80,19 @@ func TestFirstRun(t *testing.T) {
 	t.Run("a closed or failing input settles with no answer instead of hanging", func(t *testing.T) {
 		closedR, closedW := io.Pipe()
 		closedW.Close()
-		if ask(closedR) != None {
+		if ask(t, closedR) != None {
 			t.Error("closed input")
 		}
 		brokenR, brokenW := io.Pipe()
 		brokenW.CloseWithError(errors.New("EIO"))
-		if ask(brokenR) != None {
+		if ask(t, brokenR) != None {
 			t.Error("failing input")
 		}
 	})
 
 	t.Run("an empty answer or yes accepts, and no declines", func(t *testing.T) {
 		for text, want := range map[string]Answer{"\n": Yes, "y\n": Yes, "Yes\n": Yes, "n\n": No, "NO\n": No} {
-			if got := ask(strings.NewReader(text)); got != want {
+			if got := ask(t, strings.NewReader(text)); got != want {
 				t.Errorf("%q = %v, want %v", text, got, want)
 			}
 		}

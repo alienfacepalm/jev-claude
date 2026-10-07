@@ -107,7 +107,7 @@ func NewTurnPrompt(body any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var last any = jsjson.Undefined
+	last := jsjson.Undefined
 	for i := len(messages) - 1; i >= 0; i-- {
 		if jsjson.Prop(messages[i], "role") != "system" {
 			last = messages[i]
@@ -256,7 +256,8 @@ type CatalogModel struct {
 }
 
 // ClaudeModels lists the catalog's Claude models newest first, falling back to the four
-// static tiers when there are none. It fails where Node throws (a non-string created_at).
+// static tiers when there are none. It fails where Node throws (a created_at that is neither a
+// string nor an array, or an array that reaches a version tie; SPEC 20.8).
 func ClaudeModels(catalog []any) ([]CatalogModel, error) {
 	var models []CatalogModel
 	for _, m := range catalog {
@@ -271,11 +272,17 @@ func ClaudeModels(catalog []any) ([]CatalogModel, error) {
 			parts = append(parts, jsjson.JSString(d))
 		}
 		if jsjson.Truthy(created) {
-			s, ok := created.(string)
-			if !ok {
+			var date string
+			switch x := created.(type) {
+			case string:
+				date = jsstr.Slice16(x, 0, 10)
+			case []any:
+				// Array.prototype.slice(0, 10), then String() as the template literal applies (SPEC 20.8).
+				date = jsjson.JSString(x[:min(len(x), 10)])
+			default:
 				return nil, typeError("model.created_at.slice is not a function")
 			}
-			parts = append(parts, "released "+jsstr.Slice16(s, 0, 10))
+			parts = append(parts, "released "+date)
 		}
 		if t := jsjson.Prop(m, "max_input_tokens"); jsjson.Truthy(t) {
 			parts = append(parts, jsjson.JSString(t)+" input tokens")
@@ -395,7 +402,7 @@ func SessionOf(body any) any {
 
 // firstContent is `body?.messages?.[0]?.content`.
 func firstContent(body any) any {
-	var first any = jsjson.Undefined
+	first := jsjson.Undefined
 	switch m := jsjson.Prop(body, "messages").(type) {
 	case []any:
 		if len(m) > 0 {
@@ -431,14 +438,14 @@ func ConversationKey(body any) (string, error) {
 var wsRun = regexp.MustCompile(jsstr.JSWSClass + `+`)
 
 // AgentLabel is a short readable name for a conversation, from its first message.
-func AgentLabel(body any, max int) (string, error) {
+func AgentLabel(body any, limit int) (string, error) {
 	text, err := contentText(body, " ")
 	if err != nil {
 		return "", err
 	}
 	clean := jsstr.Trim(wsRun.ReplaceAllLiteralString(reminder.ReplaceAllLiteralString(text, ""), " "))
-	if jsstr.Len16(clean) > max {
-		return jsstr.Slice16(clean, 0, max-1) + "\xe2\x80\xa6", nil
+	if jsstr.Len16(clean) > limit {
+		return jsstr.Slice16(clean, 0, limit-1) + "\xe2\x80\xa6", nil
 	}
 	return clean, nil
 }

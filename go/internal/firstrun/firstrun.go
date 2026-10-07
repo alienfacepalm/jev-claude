@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/alienfacepalm/jev-claude/go/internal/jsjson"
@@ -79,12 +80,8 @@ func AskYesNo(question string, in io.Reader, out io.Writer, interrupts <-chan os
 			lines <- None
 			return
 		}
-		if len(line) > 0 && line[len(line)-1] == '\n' {
-			line = line[:len(line)-1]
-		}
-		if len(line) > 0 && line[len(line)-1] == '\r' {
-			line = line[:len(line)-1]
-		}
+		line = strings.TrimSuffix(line, "\n")
+		line = strings.TrimSuffix(line, "\r")
 		if no.MatchString(jsstr.ASCIILower(jsstr.Trim(line))) {
 			lines <- No
 		} else {

@@ -122,7 +122,7 @@ func toNumberOr(v any, dflt float64) float64 {
 }
 
 func viewObject(v status.View) *jsjson.Object {
-	var main any = nil
+	var main any
 	if v.Main != nil {
 		main = v.Main
 	}
@@ -163,11 +163,11 @@ var runners = map[string]run{
 		return v
 	},
 	"agent-label.json": func(t *testing.T, c Case) any {
-		max := 48
+		limit := 48
 		if m, ok := in(c, "max").(float64); ok {
-			max = int(m)
+			limit = int(m)
 		}
-		v, err := proxy.AgentLabel(in(c, "body"), max)
+		v, err := proxy.AgentLabel(in(c, "body"), limit)
 		if err != nil {
 			return Throws
 		}
@@ -276,7 +276,7 @@ var runners = map[string]run{
 		asked := []any{}
 		branch := in(c, "branch")
 		loc := worktree.LocationInfo(in(c, "input"), func(dir any) any { asked = append(asked, dir); return branch })
-		var result any = nil
+		var result any
 		if loc != nil {
 			result = jsjson.Obj("branch", loc.Branch, "worktree", loc.Worktree)
 		}
@@ -284,7 +284,7 @@ var runners = map[string]run{
 	},
 	"compare-versions.json": func(t *testing.T, c Case) any { return update.CompareVersions(in(c, "a"), in(c, "b")) },
 	"update-notice.json": func(t *testing.T, c Case) any {
-		return orNull(update.UpdateNotice(in(c, "state"), in(c, "currentVersion")))
+		return orNull(update.Notice(in(c, "state"), in(c, "currentVersion")))
 	},
 	"is-check-due.json": func(t *testing.T, c Case) any {
 		return update.IsCheckDue(in(c, "state"), jsjson.ToNumber(in(c, "now")), toNumberOr(in(c, "everyMs"), update.CheckEveryMs))
@@ -397,7 +397,7 @@ func TestGoldenJevRequest(t *testing.T) {
 				data, _ := io.ReadAll(r.Body)
 				method, path, body = r.Method, r.URL.Path, jsstr.DecodeBytes(data)
 				w.Header().Set("content-type", "application/json")
-				io.WriteString(w, in(c, "response").(string))
+				_, _ = io.WriteString(w, in(c, "response").(string)) // a failed write fails the client side
 			}))
 			defer srv.Close()
 			t.Setenv("TYPESAFE_BASE_URL", srv.URL)
@@ -430,7 +430,7 @@ func TestGoldenJevRequest(t *testing.T) {
 					t.Errorf("body\n got  %v\n want %v", body, jsjson.Prop(want, "body"))
 				}
 			}
-			var got any = nil
+			var got any
 			if result != nil {
 				if _, ok := result.Value("ms").(float64); !ok {
 					t.Errorf("result has no integer ms")
@@ -491,22 +491,29 @@ func TestGoldenStatusLine(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			statusDir, work, scratch := t.TempDir(), t.TempDir(), t.TempDir()
-			write := func(file string, value, text any) {
+			write := func(t *testing.T, file string, value, text any) {
+				t.Helper()
+				var data []byte
 				if s, ok := text.(string); ok {
-					os.WriteFile(filepath.Join(statusDir, file), []byte(s), 0o600)
+					data = []byte(s)
 				} else if value != jsjson.Undefined {
-					os.WriteFile(filepath.Join(statusDir, file), []byte(jsjson.Stringify(value)), 0o600)
+					data = []byte(jsjson.Stringify(value))
+				} else {
+					return
+				}
+				if err := os.WriteFile(filepath.Join(statusDir, file), data, 0o600); err != nil {
+					t.Fatal(err)
 				}
 			}
 			if f, ok := in(c, "statusFile").(string); ok {
-				write(f, in(c, "status"), in(c, "statusText"))
+				write(t, f, in(c, "status"), in(c, "statusText"))
 			}
-			write("calibration.json", in(c, "calibration"), in(c, "calibrationText"))
+			write(t, "calibration.json", in(c, "calibration"), in(c, "calibrationText"))
 			cmd := exec.Command(exe)
 			cmd.Dir = work
 			cmd.Env = append(cleanEnv(), "JEV_STATUS_DIR="+statusDir, "HOME="+scratch, "USERPROFILE="+scratch, "TEMP="+scratch, "TMP="+scratch, "TMPDIR="+scratch)
-			if icons, ok := in(c, "icons").(string); ok {
-				cmd.Env = append(cmd.Env, "JEV_ICONS="+icons)
+			if set, ok := in(c, "icons").(string); ok {
+				cmd.Env = append(cmd.Env, "JEV_ICONS="+set)
 			}
 			cmd.Stdin = strings.NewReader(in(c, "stdin").(string))
 			var stderr strings.Builder

@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +26,18 @@ func ids(models []CatalogModel) string {
 	return strings.Join(out, ",")
 }
 
-func catalog(t *testing.T, s string) []any { return parse(t, s).([]any) }
+func catalog(t *testing.T, s string) []any {
+	t.Helper()
+	return parse(t, s).([]any)
+}
+
+// writeDecision records a decision in the status store or fails the test.
+func writeDecision(t *testing.T, sid, decision string, agent *status.Agent) {
+	t.Helper()
+	if err := status.WriteDecision(sid, obj(t, decision), agent); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func prompt(t *testing.T, body string) any {
 	t.Helper()
@@ -86,13 +96,15 @@ func TestStatusStore(t *testing.T) {
 	})
 
 	t.Run("stale status files are pruned and fresh ones kept", func(t *testing.T) {
-		os.MkdirAll(status.Dir, 0o700)
+		mustMkdirAll(t, status.Dir, 0o700)
 		stale := filepath.Join(status.Dir, fmt.Sprintf("stale-%d.json", os.Getpid()))
 		fresh := filepath.Join(status.Dir, fmt.Sprintf("fresh-%d.json", os.Getpid()))
-		os.WriteFile(stale, []byte("{}"), 0o600)
-		os.WriteFile(fresh, []byte("{}"), 0o600)
+		mustWrite(t, stale, []byte("{}"))
+		mustWrite(t, fresh, []byte("{}"))
 		old := time.Now().Add(-8 * 24 * time.Hour)
-		os.Chtimes(stale, old, old)
+		if err := os.Chtimes(stale, old, old); err != nil {
+			t.Fatal(err)
+		}
 		if status.PruneStale(status.StaleAfterMs, status.NowMs()) < 1 {
 			t.Error("nothing pruned")
 		}
@@ -106,8 +118,8 @@ func TestStatusStore(t *testing.T) {
 
 	t.Run("routing status retains the exact recent Jev exchanges", func(t *testing.T) {
 		sid := fmt.Sprintf("history-%d", os.Getpid())
-		status.WriteDecision(sid, obj(t, `{"prompt":"first","jev":{"request":{"id":1},"response":{"confidence":0.6}}}`), nil)
-		status.WriteDecision(sid, obj(t, `{"prompt":"second","jev":{"request":{"id":2},"response":{"confidence":0.8}}}`), nil)
+		writeDecision(t, sid, `{"prompt":"first","jev":{"request":{"id":1},"response":{"confidence":0.6}}}`, nil)
+		writeDecision(t, sid, `{"prompt":"second","jev":{"request":{"id":2},"response":{"confidence":0.8}}}`, nil)
 		st := status.ReadStatus(sid)
 		history := jsjson.Prop(st, "history").([]any)
 		if jsjson.Prop(st, "prompt") != "second" || len(history) != 2 || jsjson.Prop(history[0], "prompt") != "first" ||
@@ -136,7 +148,32 @@ func TestModelCatalog(t *testing.T) {
 		}
 	})
 
-	newest := func(s string) string {
+	// Outputs checked against node/src/proxy.mjs claudeModels on the same catalogs (SPEC 20.8).
+	t.Run("an array created_at is sliced and joined as Node's template literal does", func(t *testing.T) {
+		for list, want := range map[string]string{
+			`[{"id":"claude-opus-9-9","created_at":["2026-01-01T00:00:00Z"],"display_name":"Opus"}]`:                         "Opus; released 2026-01-01T00:00:00Z",
+			`[{"id":"claude-opus-9-9","created_at":[1,null,[2,3],{},"abcdefghijk",6,7,8,9,10,11,12],"display_name":"Opus"}]`: "Opus; released 1,,2,3,[object Object],abcdefghijk,6,7,8,9,10",
+			`[{"id":"claude-opus-9-9","created_at":[],"display_name":"Opus"}]`:                                               "Opus; released ",
+		} {
+			m, err := ClaudeModels(catalog(t, list))
+			if err != nil || len(m) != 1 || m[0].Description != want {
+				t.Errorf("%s: %+v %v", list, m, err)
+			}
+		}
+	})
+	t.Run("a created_at that is neither string nor array throws, and so does an array at a version tie", func(t *testing.T) {
+		if _, err := ClaudeModels(catalog(t, `[{"id":"claude-opus-9-9","created_at":12345,"display_name":"Opus"}]`)); err == nil ||
+			err.Error() != "model.created_at.slice is not a function" {
+			t.Errorf("number: %v", err)
+		}
+		if _, err := ClaudeModels(catalog(t, `[{"id":"claude-opus-9-9","created_at":["2026-01-01"]},{"id":"claude-opus-9-9-x","created_at":["2026-01-02"]}]`)); err == nil ||
+			err.Error() != "b.releasedAt.localeCompare is not a function" {
+			t.Errorf("tie: %v", err)
+		}
+	})
+
+	newest := func(t *testing.T, s string) string {
+		t.Helper()
 		m, err := ClaudeModels(catalog(t, s))
 		if err != nil {
 			t.Fatal(err)
@@ -145,20 +182,20 @@ func TestModelCatalog(t *testing.T) {
 	}
 
 	t.Run("a new major version is picked as the newest of its tier, dated or not", func(t *testing.T) {
-		if got := newest(`[{"id":"claude-opus-5-5"},{"id":"claude-opus-6"},{"id":"claude-opus-4-8"}]`); got != "claude-opus-6" {
+		if got := newest(t, `[{"id":"claude-opus-5-5"},{"id":"claude-opus-6"},{"id":"claude-opus-4-8"}]`); got != "claude-opus-6" {
 			t.Error(got)
 		}
-		if got := newest(`[{"id":"claude-sonnet-5-5"},{"id":"claude-sonnet-5-10"}]`); got != "claude-sonnet-5-10" {
+		if got := newest(t, `[{"id":"claude-sonnet-5-5"},{"id":"claude-sonnet-5-10"}]`); got != "claude-sonnet-5-10" {
 			t.Error(got)
 		}
-		if got := newest(`[{"id":"claude-haiku-4-5-20251001"},{"id":"claude-haiku-4-6"}]`); got != "claude-haiku-4-6" {
+		if got := newest(t, `[{"id":"claude-haiku-4-5-20251001"},{"id":"claude-haiku-4-6"}]`); got != "claude-haiku-4-6" {
 			t.Error("a date suffix is not a minor version: " + got)
 		}
 	})
 
 	t.Run("an id in the old version-first naming never outranks a current model", func(t *testing.T) {
 		list := `[{"id":"claude-3-7-sonnet-20250219"},{"id":"claude-sonnet-5-5"},{"id":"claude-3-5-haiku-20241022"},{"id":"claude-haiku-4-5-20251001"}]`
-		if got := newest(list); got != "claude-sonnet-5-5,claude-haiku-4-5-20251001" {
+		if got := newest(t, list); got != "claude-sonnet-5-5,claude-haiku-4-5-20251001" {
 			t.Error(got)
 		}
 		if newer, _ := NewerThanCalibrated(catalog(t, list)); len(newer) != 0 {
@@ -167,7 +204,7 @@ func TestModelCatalog(t *testing.T) {
 	})
 
 	t.Run("a provider prefix does not hide the version", func(t *testing.T) {
-		if got := newest(`[{"id":"anthropic.claude-opus-5-5"},{"id":"anthropic.claude-opus-6"}]`); got != "anthropic.claude-opus-6" {
+		if got := newest(t, `[{"id":"anthropic.claude-opus-5-5"},{"id":"anthropic.claude-opus-6"}]`); got != "anthropic.claude-opus-6" {
 			t.Error(got)
 		}
 	})
@@ -211,23 +248,17 @@ func TestProxyEndToEnd(t *testing.T) {
 		rec, url := recordingUpstream(t, func(w http.ResponseWriter, r *http.Request, _ any) {
 			w.Header().Set("content-type", "application/json")
 			if strings.HasPrefix(r.RequestURI, "/v1/models") {
-				io.WriteString(w, `{"data":[]}`)
+				writeBody(w, `{"data":[]}`)
 			} else {
-				io.WriteString(w, `{"id":"msg_1","type":"message"}`)
+				writeBody(w, `{"id":"msg_1","type":"message"}`)
 			}
 		})
 		cal := filepath.Join(status.Dir, fmt.Sprintf("calibration-key-test-%d.json", os.Getpid()))
 		t.Cleanup(func() { os.Remove(cal) })
 		base := startProxy(t, Options{UpstreamURL: url, Route: answer("claude-sonnet-5-5", 0.9), CalibrationFile: cal})
 
-		req, _ := http.NewRequest(http.MethodGet, base+"/v1/models", nil)
-		req.Header.Set("x-api-key", "sk-ant-api03-test")
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		res.Body.Close()
 		key := map[string]string{"x-api-key": "sk-ant-api03-test"}
+		get(t, base+"/v1/models", key)
 		for _, model := range []string{"jev-router", "claude-opus-5-5"} {
 			post(t, base+"/v1/messages", jsjson.Obj("model", model, "tools", parse(t, `[{"name":"Bash"}]`), "messages", parse(t, `[{"role":"user","content":"hi"}]`)), key)
 		}
@@ -251,10 +282,10 @@ func TestProxyEndToEnd(t *testing.T) {
 		rec, url := recordingUpstream(t, func(w http.ResponseWriter, r *http.Request, _ any) {
 			w.Header().Set("content-type", "application/json")
 			if strings.HasPrefix(r.RequestURI, "/v1/models") {
-				io.WriteString(w, `{"data":[{"id":"claude-opus-4-8","display_name":"Claude Opus 4.8","created_at":"2026-01-05"},{"id":"claude-opus-5-5","display_name":"Claude Opus 5.5","created_at":"2026-09-02"},{"id":"claude-sonnet-5-5","display_name":"Claude Sonnet 5.5","created_at":"2026-08-11"}]}`)
+				writeBody(w, `{"data":[{"id":"claude-opus-4-8","display_name":"Claude Opus 4.8","created_at":"2026-01-05"},{"id":"claude-opus-5-5","display_name":"Claude Opus 5.5","created_at":"2026-09-02"},{"id":"claude-sonnet-5-5","display_name":"Claude Sonnet 5.5","created_at":"2026-08-11"}]}`)
 				return
 			}
-			io.WriteString(w, `{"id":"msg_1","type":"message","model":"claude-opus-5-5"}`)
+			writeBody(w, `{"id":"msg_1","type":"message","model":"claude-opus-5-5"}`)
 		})
 		cal := filepath.Join(status.Dir, fmt.Sprintf("calibration-proxy-test-%d.json", os.Getpid()))
 		t.Cleanup(func() { os.Remove(cal) })
@@ -267,12 +298,7 @@ func TestProxyEndToEnd(t *testing.T) {
 			menu = strings.Join(list, ",")
 			return jsjson.Obj("choice", "claude-opus-5-5", "confidence", 0.91, "ms", 1.0), nil
 		}})
-		res, err := http.Get(base + "/v1/models")
-		if err != nil {
-			t.Fatal(err)
-		}
-		io.ReadAll(res.Body)
-		res.Body.Close()
+		get(t, base+"/v1/models", nil)
 		recorded := status.ReadCalibration(cal)
 		if jsjson.Stringify(recorded.Models) != `["claude-opus-5-5","claude-sonnet-5-5"]` || len(recorded.Newer) != 0 {
 			t.Errorf("the account's newest per tier, nothing newer than the tuning: %+v", recorded)
@@ -320,34 +346,35 @@ func TestProxyEndToEnd(t *testing.T) {
 }
 
 func TestBodyRewriting(t *testing.T) {
-	sanitized := func(schema string) string {
+	sanitized := func(t *testing.T, schema string) string {
+		t.Helper()
 		node := parse(t, schema)
 		SanitizeSchema(node)
 		return jsjson.Stringify(node)
 	}
 	t.Run("converts a draft-04 boolean exclusiveMinimum into a draft 2020-12 number", func(t *testing.T) {
-		if got := sanitized(`{"type":"object","properties":{"topN":{"minimum":0,"exclusiveMinimum":true}}}`); got != `{"type":"object","properties":{"topN":{"exclusiveMinimum":0}}}` {
+		if got := sanitized(t, `{"type":"object","properties":{"topN":{"minimum":0,"exclusiveMinimum":true}}}`); got != `{"type":"object","properties":{"topN":{"exclusiveMinimum":0}}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("drops a false exclusiveMaximum and keeps the bound", func(t *testing.T) {
-		if got := sanitized(`{"properties":{"n":{"maximum":10,"exclusiveMaximum":false}}}`); got != `{"properties":{"n":{"maximum":10}}}` {
+		if got := sanitized(t, `{"properties":{"n":{"maximum":10,"exclusiveMaximum":false}}}`); got != `{"properties":{"n":{"maximum":10}}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("leaves an already-valid numeric bound alone", func(t *testing.T) {
-		if got := sanitized(`{"properties":{"n":{"exclusiveMinimum":5}}}`); got != `{"properties":{"n":{"exclusiveMinimum":5}}}` {
+		if got := sanitized(t, `{"properties":{"n":{"exclusiveMinimum":5}}}`); got != `{"properties":{"n":{"exclusiveMinimum":5}}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("reaches schemas nested in arrays and sub-objects", func(t *testing.T) {
-		if got := sanitized(`{"anyOf":[{"items":{"minimum":1,"exclusiveMinimum":true}}]}`); got != `{"anyOf":[{"items":{"exclusiveMinimum":1}}]}` {
+		if got := sanitized(t, `{"anyOf":[{"items":{"minimum":1,"exclusiveMinimum":true}}]}`); got != `{"anyOf":[{"items":{"exclusiveMinimum":1}}]}` {
 			t.Error(got)
 		}
 	})
 	t.Run("survives null and primitive nodes", func(t *testing.T) {
 		SanitizeSchema(nil)
-		if got := sanitized(`{"a":null,"b":3,"c":"x"}`); got != `{"a":null,"b":3,"c":"x"}` {
+		if got := sanitized(t, `{"a":null,"b":3,"c":"x"}`); got != `{"a":null,"b":3,"c":"x"}` {
 			t.Error(got)
 		}
 	})
@@ -407,37 +434,38 @@ func TestBodyRewriting(t *testing.T) {
 	})
 
 	none := config.MapEnv(nil)
-	apply := func(body, tier string, env config.Getenv) string {
+	apply := func(t *testing.T, body, tier string, env config.Getenv) string {
+		t.Helper()
 		return jsjson.Stringify(ApplyTier(obj(t, body), tier, "", env))
 	}
 	t.Run("routing to haiku strips fields haiku cannot accept", func(t *testing.T) {
-		got := apply(`{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"},"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]}}`, "haiku", none)
+		got := apply(t, `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"},"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]}}`, "haiku", none)
 		if got != `{"model":"claude-haiku-4-5-20251001"}` {
 			t.Error(got)
 		}
 	})
 	t.Run("routing to haiku keeps context-management strategies unrelated to thinking", func(t *testing.T) {
-		got := apply(`{"model":"claude-sonnet-4-6","context_management":{"edits":[{"type":"clear_tool_uses_20250919"},{"type":"clear_thinking_20251015"}]}}`, "haiku", none)
+		got := apply(t, `{"model":"claude-sonnet-4-6","context_management":{"edits":[{"type":"clear_tool_uses_20250919"},{"type":"clear_thinking_20251015"}]}}`, "haiku", none)
 		if got != `{"model":"claude-haiku-4-5-20251001","context_management":{"edits":[{"type":"clear_tool_uses_20250919"}]}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("routing to opus leaves thinking and effort intact", func(t *testing.T) {
-		got := apply(`{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"}}`, "opus", none)
+		got := apply(t, `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"}}`, "opus", none)
 		if got != `{"model":"claude-opus-5-5","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("an unknown tier leaves the request untouched", func(t *testing.T) {
-		if got := apply(`{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"}}`, "nonsense", none); got != `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"}}` {
+		if got := apply(t, `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"}}`, "nonsense", none); got != `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"}}` {
 			t.Error(got)
 		}
 	})
 	t.Run("names each tier's own effort when the request does not", func(t *testing.T) {
-		if got := apply(`{"model":"jev-router","thinking":{"type":"adaptive"}}`, "opus", none); !strings.HasSuffix(got, `"output_config":{"effort":"medium"}}`) {
+		if got := apply(t, `{"model":"jev-router","thinking":{"type":"adaptive"}}`, "opus", none); !strings.HasSuffix(got, `"output_config":{"effort":"medium"}}`) {
 			t.Error(got)
 		}
-		if got := apply(`{"model":"jev-router","thinking":{"type":"adaptive"}}`, "sonnet", none); !strings.HasSuffix(got, `"output_config":{"effort":"high"}}`) {
+		if got := apply(t, `{"model":"jev-router","thinking":{"type":"adaptive"}}`, "sonnet", none); !strings.HasSuffix(got, `"output_config":{"effort":"high"}}`) {
 			t.Error(got)
 		}
 	})
@@ -452,38 +480,41 @@ func TestBodyRewriting(t *testing.T) {
 		}
 	})
 	t.Run("keeps an effort the request already carries", func(t *testing.T) {
-		if got := apply(`{"model":"jev-router","thinking":{"type":"adaptive"},"output_config":{"effort":"low"}}`, "opus", none); !strings.HasSuffix(got, `"output_config":{"effort":"low"}}`) {
+		if got := apply(t, `{"model":"jev-router","thinking":{"type":"adaptive"},"output_config":{"effort":"low"}}`, "opus", none); !strings.HasSuffix(got, `"output_config":{"effort":"low"}}`) {
 			t.Error("the user's own choice outranks the floor: " + got)
 		}
 	})
 	t.Run("never names an effort for a tier that cannot take one", func(t *testing.T) {
-		if got := apply(`{"model":"jev-router","output_config":{"effort":"high"}}`, "haiku", none); got != `{"model":"claude-haiku-4-5-20251001"}` {
+		if got := apply(t, `{"model":"jev-router","output_config":{"effort":"high"}}`, "haiku", none); got != `{"model":"claude-haiku-4-5-20251001"}` {
 			t.Error(got)
 		}
 	})
 
 	// A request captured from the real Claude Code CLI: it sends effort `high` and adaptive thinking.
-	captured := func() *jsjson.Object { return clone(t, fixture(t).Value("body")).(*jsjson.Object) }
+	captured := func(t *testing.T) *jsjson.Object {
+		t.Helper()
+		return clone(t, fixture(t).Value("body")).(*jsjson.Object)
+	}
 	effortOf := func(b *jsjson.Object) any { return jsjson.Prop(b.Value("output_config"), "effort") }
 	t.Run("JEV_FORCE_EFFORT replaces the effort Claude Code sent, and a per-tier one wins over it", func(t *testing.T) {
-		if effortOf(captured()) != "high" {
+		if effortOf(captured(t)) != "high" {
 			t.Fatal("the capture really carries an effort")
 		}
-		if e := effortOf(ApplyTier(captured(), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "low"}))); e != "low" {
+		if e := effortOf(ApplyTier(captured(t), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "low"}))); e != "low" {
 			t.Error("outranks the effort Claude Code sent")
 		}
-		if e := effortOf(ApplyTier(captured(), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "low", "JEV_OPUS_FORCE_EFFORT": "xhigh"}))); e != "xhigh" {
+		if e := effortOf(ApplyTier(captured(t), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "low", "JEV_OPUS_FORCE_EFFORT": "xhigh"}))); e != "xhigh" {
 			t.Error("the tier setting beats the global one")
 		}
-		if e := effortOf(ApplyTier(captured(), "sonnet", "", config.MapEnv(map[string]string{"JEV_OPUS_FORCE_EFFORT": "xhigh"}))); e != "high" {
+		if e := effortOf(ApplyTier(captured(t), "sonnet", "", config.MapEnv(map[string]string{"JEV_OPUS_FORCE_EFFORT": "xhigh"}))); e != "high" {
 			t.Error("another tier keeps the effort Claude Code sent")
 		}
 	})
 	t.Run("a forced effort is ignored when unrecognised and never reaches Haiku", func(t *testing.T) {
-		if e := effortOf(ApplyTier(captured(), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "turbo"}))); e != "high" {
+		if e := effortOf(ApplyTier(captured(t), "opus", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "turbo"}))); e != "high" {
 			t.Error("a bad value leaves the request alone")
 		}
-		if ApplyTier(captured(), "haiku", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "max"})).Has("output_config") {
+		if ApplyTier(captured(t), "haiku", "", config.MapEnv(map[string]string{"JEV_FORCE_EFFORT": "max"})).Has("output_config") {
 			t.Error("Haiku takes no effort, forced or not")
 		}
 		if config.ForcedEffort("haiku", config.MapEnv(map[string]string{"JEV_HAIKU_FORCE_EFFORT": "max"})) != "" ||
@@ -494,7 +525,8 @@ func TestBodyRewriting(t *testing.T) {
 }
 
 func TestConversations(t *testing.T) {
-	key := func(s string) string {
+	key := func(t *testing.T, s string) string {
+		t.Helper()
 		k, err := ConversationKey(parse(t, s))
 		if err != nil {
 			t.Fatal(err)
@@ -502,16 +534,16 @@ func TestConversations(t *testing.T) {
 		return k
 	}
 	t.Run("a conversation keeps one key as it grows, and differs from a sub-agent", func(t *testing.T) {
-		main := key(`{"messages":[{"role":"user","content":"main task"}]}`)
-		grown := key(`{"messages":[{"role":"user","content":"main task"},{"role":"assistant","content":"ok"}]}`)
-		sub := key(`{"messages":[{"role":"user","content":"sub-agent task"}]}`)
+		main := key(t, `{"messages":[{"role":"user","content":"main task"}]}`)
+		grown := key(t, `{"messages":[{"role":"user","content":"main task"},{"role":"assistant","content":"ok"}]}`)
+		sub := key(t, `{"messages":[{"role":"user","content":"sub-agent task"}]}`)
 		if main != grown || main == sub {
 			t.Error(main, grown, sub)
 		}
 	})
 	t.Run("the key ignores the cache_control breakpoint Claude Code moves between requests", func(t *testing.T) {
-		first := key(`{"messages":[{"role":"user","content":[{"type":"text","text":"<system-reminder>x</system-reminder>"},{"type":"text","text":"do the thing","cache_control":{"type":"ephemeral","ttl":"1h"}}]}]}`)
-		later := key(`{"messages":[{"role":"user","content":[{"type":"text","text":"<system-reminder>x</system-reminder>"},{"type":"text","text":"do the thing"}]},{"role":"assistant","content":"working"}]}`)
+		first := key(t, `{"messages":[{"role":"user","content":[{"type":"text","text":"<system-reminder>x</system-reminder>"},{"type":"text","text":"do the thing","cache_control":{"type":"ephemeral","ttl":"1h"}}]}]}`)
+		later := key(t, `{"messages":[{"role":"user","content":[{"type":"text","text":"<system-reminder>x</system-reminder>"},{"type":"text","text":"do the thing"}]},{"role":"assistant","content":"working"}]}`)
 		if first != later {
 			t.Error(first, later)
 		}
@@ -567,8 +599,8 @@ func TestConversations(t *testing.T) {
 
 	t.Run("each agent's model is recorded separately within one session", func(t *testing.T) {
 		sid := fmt.Sprintf("agents-%d", os.Getpid())
-		status.WriteDecision(sid, obj(t, `{"tier":"opus","model":"claude-opus-5-5","confidence":0.94,"at":1000}`), &status.Agent{Key: "k-main", Label: "fix the race", Main: true})
-		status.WriteDecision(sid, obj(t, `{"tier":"haiku","model":"claude-haiku-4-5","confidence":0.81,"at":2000}`), &status.Agent{Key: "k-sub", Label: "grep for callers"})
+		writeDecision(t, sid, `{"tier":"opus","model":"claude-opus-5-5","confidence":0.94,"at":1000}`, &status.Agent{Key: "k-main", Label: "fix the race", Main: true})
+		writeDecision(t, sid, `{"tier":"haiku","model":"claude-haiku-4-5","confidence":0.81,"at":2000}`, &status.Agent{Key: "k-sub", Label: "grep for callers"})
 		st := status.ReadStatus(sid)
 		v := status.AgentView(st, 90000, 2000)
 		if v.Main.Value("tier") != "opus" || v.Main.Value("label") != "fix the race" || len(v.Subagents) != 1 || v.Subagents[0].Value("tier") != "haiku" {
@@ -580,8 +612,8 @@ func TestConversations(t *testing.T) {
 	})
 	t.Run("stale sub-agents drop out of the live view but the main thread stays", func(t *testing.T) {
 		sid := fmt.Sprintf("stale-agents-%d", os.Getpid())
-		status.WriteDecision(sid, obj(t, `{"tier":"opus","at":0}`), &status.Agent{Key: "m", Label: "main", Main: true})
-		status.WriteDecision(sid, obj(t, `{"tier":"haiku","at":0}`), &status.Agent{Key: "s", Label: "old sub"})
+		writeDecision(t, sid, `{"tier":"opus","at":0}`, &status.Agent{Key: "m", Label: "main", Main: true})
+		writeDecision(t, sid, `{"tier":"haiku","at":0}`, &status.Agent{Key: "s", Label: "old sub"})
 		v := status.AgentView(status.ReadStatus(sid), 90000, 10*60000)
 		if v.Main.Value("tier") != "opus" || len(v.Subagents) != 0 {
 			t.Error("a sub-agent that has not been routed recently is not live")
@@ -589,7 +621,7 @@ func TestConversations(t *testing.T) {
 	})
 	t.Run("a sub-agent pinned to its own model does not pause the session", func(t *testing.T) {
 		sid := fmt.Sprintf("manual-agents-%d", os.Getpid())
-		status.WriteDecision(sid, obj(t, `{"tier":"opus","model":"claude-opus-5-5","at":1000}`), &status.Agent{Key: "m", Label: "main", Main: true})
+		writeDecision(t, sid, `{"tier":"opus","model":"claude-opus-5-5","at":1000}`, &status.Agent{Key: "m", Label: "main", Main: true})
 		status.MarkManual(sid, "claude-haiku-4-5", &status.Agent{Key: "s", Label: "pinned sub"})
 		st := status.ReadStatus(sid)
 		v := status.AgentView(st, 90000, status.NowMs())
