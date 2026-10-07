@@ -3,8 +3,9 @@
 Status: revision 3. Sections 1-18 passed Fable's second review (its notes applied); sections 19-20
 were added afterwards from building the conformance suite and the ports, and were checked in a later
 two-model review (Fable and Opus), whose corrections to 19.1 and 20.8 are applied. Added since
-those reviews and not reviewed by either: section 3.11 (replacing a file) and the trailing working
-directory in section 12. Reference implementation: `node/` at commit `e5a09fb`, run on Node.js
+those reviews and not reviewed by either: section 3.11 (replacing a file), the trailing working
+directory in section 12, the negated-verb and question strips in 7.6, and section 10.3 (Claude
+subcommands). Reference implementation: `node/` at commit `e5a09fb`, run on Node.js
 24.21.0.
 
 This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
