@@ -202,13 +202,15 @@ a bold symbol in the terminal's own text colour, so it contrasts with any backgr
 `≡` context):
 
 ```text
-✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8% · /home/me/work/my-project
-✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34% · /home/me/work/my-project
-☞ manual Opus 4.6 · ❐ my-project · ≡ 21% · /home/me/work/my-project
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8% · ~/work/my-project
+✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34% · ~/work/my-project
+☞ manual Opus 4.6 · ❐ my-project · ≡ 21% · ~/work/my-project
 ```
 
-The last item, dimmed, is the full path of the current directory, for quick reference. It is exactly
-the path Claude Code reports (a Windows path keeps its backslashes), and it sits last because that is
+The last item, dimmed, is the full path of the current directory, for quick reference. It is the path
+Claude Code reports (a Windows path keeps its backslashes) except that your home directory is written
+`~`, so a deep path under it leaves more room. Only a whole leading directory is shortened. It sits
+last because that is
 the rightmost place a status line can put it: Claude Code does not say how wide the terminal is, so
 the line cannot be right-aligned, and a line that is too long loses its end first, which is this path
 and not the model. It is left out when Claude Code reports no directory.
@@ -226,7 +228,7 @@ draw. The branch uses the Powerline glyph (U+E0A0) that zsh themes such as agnos
 draw, so it needs a Powerline or Nerd Font in your terminal:
 
 ```text
-✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8% · /home/me/work/my-project
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project ·  fix/login · ⌂ login-fix · ≡ 8% · ~/work/my-project
 ```
 
 Run `/jev-legend` for a key to what each symbol means. It is drawn from the same symbols the line

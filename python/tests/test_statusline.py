@@ -15,6 +15,8 @@ from . import SRC, force_rmtree
 
 MAIN = {"key": "main", "label": "main", "main": True}
 PID = os.getpid()
+# A home that is none of the paths below, so the machine running the tests cannot change them.
+HOME = {"HOME": "/home/nobody", "USERPROFILE": "/home/nobody"}
 
 
 def render(
@@ -31,7 +33,7 @@ def render(
         "context_window": {"used_percentage": 8},
         **(extra or {}),
     }
-    env = {**os.environ, "JEV_ICONS": icons, "PYTHONPATH": SRC}
+    env = {**os.environ, **HOME, "JEV_ICONS": icons, "PYTHONPATH": SRC}
     out = subprocess.run(
         [sys.executable, "-m", "jev_router.cli.statusline"],
         input=json.dumps(payload).encode("utf-8"),
@@ -51,7 +53,7 @@ def render_raw(test: unittest.TestCase, session_id: str, extra: Mapping[str, obj
         [sys.executable, "-m", "jev_router.cli.statusline"],
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
-        env={**os.environ, "JEV_ICONS": "text", "PYTHONPATH": SRC},
+        env={**os.environ, **HOME, "JEV_ICONS": "text", "PYTHONPATH": SRC},
         timeout=60,
         check=False,  # the exit code is asserted below, with stderr as the message
     )
@@ -95,7 +97,7 @@ class StatusLine(unittest.TestCase):
         )
         self.assertEqual(render(self, sid), "model Sonnet 5.5 (94%) · effort high · dir proj · ctx 8% · /work/proj")
 
-    def test_the_whole_working_directory_comes_last_dimmed_as_claude_code_sent_it(self) -> None:
+    def test_the_whole_working_directory_comes_last_dimmed_outside_the_home_directory_exactly_as_claude_code_sent_it(self) -> None:
         raw = render_raw(self, f"statusline-fullpath-{PID}", {"workspace": {"current_dir": "/home/me/work/proj"}})
         self.assertTrue(raw.endswith("8% \x1b[2m· /home/me/work/proj\x1b[0m\n"), repr(raw))
 

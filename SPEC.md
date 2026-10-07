@@ -940,9 +940,9 @@ output must be byte-identical on the golden and harness cases.
   when it starts with `home` and what follows is empty, `/`, or `\`; a `home` that is empty (so
   also the filesystem root) or a path that does not start with a whole `home` directory leaves it
   unchanged (the comparison is case-sensitive and does not resolve symlinks). The directory item
-  and the branch lookup keep using the path as sent. The part is omitted when `path` is empty. The line cannot be
-  right-aligned, since Claude Code does not say how wide the terminal is; last is the rightmost
-  item, and the first one cut when the line is too long.
+  and the branch lookup keep using the path as sent. The part is omitted when `path` is empty. The
+  line cannot be right-aligned, since Claude Code does not say how wide the terminal is; last is
+  the rightmost item, and the first one cut when the line is too long.
 - Icons are bold: `<BOLD><mark><RESET>`. Colours: haiku green `\x1b[32m`, sonnet cyan `\x1b[36m`,
   opus magenta `\x1b[35m`, fable yellow `\x1b[33m`.
 
