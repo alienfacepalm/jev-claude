@@ -202,6 +202,8 @@ Then it starts the proxy on a loopback port and points Claude Code at it with
 already have one or set `JEV_NO_STATUSLINE`), and waits for Claude Code to exit, then exits with
 Claude Code's exit code.
 
+A first argument that is a Claude Code subcommand (`jev-claude mcp list`, `plugin`, `doctor`, `update`, `auth`, and the rest of `claude --help`'s commands) is passed straight through: no proxy, no `--add-dir`, no status line, since those commands manage Claude Code and reject the extra flags.
+
 You can also run the helper programs directly, for example
 `jev-explain <session id>`, `jev-legend` or `jev-check`.
 

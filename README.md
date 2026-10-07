@@ -169,7 +169,10 @@ so a new release such as Opus 6 is used as soon as your account has it.
 Then these rules apply ([`node/src/policy.mjs`](node/src/policy.mjs)):
 
 - **You can ask.** A prompt such as `use opus` or `switch to the strong model` wins. A tier word in
-  ordinary prose ("replace this with long polling") is not a request.
+  ordinary prose ("replace this with long polling") is not a request, and neither is one you rule
+  out ("do not use fable", "never use haiku for this") or ask about ("why does the planner use
+  opus?"): a negated instruction is ignored, so "don't use haiku, use opus" means opus, and a
+  sentence ending in `?` is a question, not an order.
 - **Unsure answers step down one tier.** When Jev is less than 60% sure, the turn runs one tier
   below its pick (an unsure Fable pick runs on Opus), never below Sonnet or the model already in
   use. Jev is told to pick the stronger model when it is unsure a cheaper one would succeed, since
@@ -264,7 +267,8 @@ It changes nothing. On the first plain launch, `jev-claude` offers to run it for
 answer is kept in `~/.jev-router/first-run.json`; delete that file to be asked again. The offer is
 skipped in a project that defines its own `jev-calibrate` skill.
 
-Run inside this repository itself, `/jev-calibrate` goes further and re-tunes the router; see
+`/jev-calibrate` only ever reports, so it is safe in an installed copy (the installer makes a git
+clone). To re-tune the router, run `/jev-calibrate retune` in a clone you develop in; see
 [Calibrating for new models](#calibrating-for-new-models).
 
 ## Why a model was chosen
@@ -413,14 +417,15 @@ the intended tier, and where each turn finally ran (an unsure pick running one t
 `step`). Run it before and after any change to the guidance, costs, effort, or thresholds in
 `node/src/config.mjs`, and keep a change only when the pick score holds.
 
-When a new Claude model ships, run `/jev-calibrate` in a `jev-claude` session started in this
-repository. It checks Anthropic's model notes and published per-task measurements, updates
+When a new Claude model ships, run `/jev-calibrate retune` in a `jev-claude` session started in a
+clone of this repository. It checks Anthropic's model notes and published per-task measurements, updates
 `node/src/config.mjs`, and measures each change with the script above, on a branch.
 
 ### Versions and commit messages
 
-Every push to `master` also runs [a release workflow](.github/workflows/version-bump.yml) that
-runs the Node tests (`pnpm test`: the unit tests and the harness against Node, on Ubuntu), bumps the version in the root `package.json`, commits it as `chore(release): vX.Y.Z`, and tags it.
+Every push to `master` runs [CI](.github/workflows/ci.yml) (lint, format and tests for all four
+implementations on Windows and Linux). Only when every job passes does its final `release` job bump
+the version in the root `package.json`, commit it as `chore(release): vX.Y.Z`, and tag it.
 Pull after pushing to pick up that commit. The size of the bump comes from the
 [Conventional Commits](https://www.conventionalcommits.org) prefixes of the commits pushed:
 
