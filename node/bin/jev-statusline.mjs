@@ -5,6 +5,7 @@ import { readStatus, agentView, readCalibration } from "../src/status.mjs";
 import { shortReason } from "../src/reasons.mjs";
 import { shortName } from "../src/model-names.mjs";
 import { locationInfo } from "../src/worktree.mjs";
+import { homedir } from "node:os";
 import { icons } from "../src/icons.mjs";
 
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
@@ -13,6 +14,23 @@ const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
 // Longest branch name shown whole; a longer one is cut with an ellipsis so the rest of the line fits.
 const MAX_BRANCH = 28;
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+/**
+ * The path with the user's home directory written as `~`, so a long path under it fits. Only a whole
+ * leading directory counts (`/home/me` is not the start of `/home/media`), either separator ends it,
+ * and a path outside home, or a home that cannot be told or is the filesystem root, is left as sent.
+ */
+function tildePath(path) {
+  let home = "";
+  try {
+    home = homedir().replace(/[\\/]+$/, "");
+  } catch {
+    // No home directory to find: the path is shown whole.
+  }
+  if (!home || !path.startsWith(home)) return path;
+  const rest = path.slice(home.length);
+  return rest === "" || rest[0] === "/" || rest[0] === "\\" ? `~${rest}` : path;
+}
 
 const DIM = "\x1b[2m";
 const BOLD = "\x1b[1m";
@@ -106,6 +124,7 @@ const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${I.dir} ${dir
 
 // The whole path last, dimmed: the line cannot be right-aligned (Claude Code does not say how wide
 // the terminal is), but last is the rightmost item, and the first one cut when the line is too long.
-const fullPath = fullDir ? ` ${DIM}· ${fullDir}${RESET}` : "";
+// Under the home directory it starts with ~, which leaves room for more of a deep path.
+const fullPath = fullDir ? ` ${DIM}· ${tildePath(fullDir)}${RESET}` : "";
 
 process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${notice}${fullPath}\n`);

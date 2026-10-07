@@ -116,6 +116,46 @@ fn the_whole_working_directory_comes_last_dimmed_as_claude_code_sent_it() {
     assert!(raw.ends_with("8% \x1b[2m\u{00B7} /home/me/work/proj\x1b[0m\n"), "{raw:?}");
 }
 
+/// "a path under the home directory starts with ~, and only a whole home directory counts"
+#[test]
+fn a_path_under_the_home_directory_starts_with_tilde_and_only_a_whole_home_directory_counts() {
+    let shown = |dir: &str, home: &str| -> String {
+        let dir_json = dir.replace('\\', "\\\\");
+        let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
+            .env("JEV_STATUS_DIR", isolate_status())
+            .env("JEV_ICONS", "text")
+            .env("HOME", home)
+            .env("USERPROFILE", home)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let input = format!(
+            r#"{{"session_id":"{}","workspace":{{"current_dir":"{dir_json}"}},"context_window":{{"used_percentage":8}}}}"#,
+            sid("statusline-tilde")
+        );
+        child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        let raw = String::from_utf8(out.stdout).unwrap();
+        let (_, tail) = raw.rsplit_once("\x1b[2m\u{00B7} ").unwrap();
+        tail.strip_suffix("\x1b[0m\n").unwrap().to_string()
+    };
+    for (dir, home, want) in [
+        ("/Users/me/Projects/GOVPILOT/sdl-mono/sync-client", "/Users/me", "~/Projects/GOVPILOT/sdl-mono/sync-client"),
+        ("/Users/me", "/Users/me", "~"),
+        ("/Users/me/", "/Users/me/", "~/"),
+        ("C:\\Users\\me\\proj", "C:\\Users\\me", "~\\proj"),
+        ("/Users/media/proj", "/Users/me", "/Users/media/proj"),
+        ("/srv/Users/me/proj", "/Users/me", "/srv/Users/me/proj"),
+        ("/Users/ME/proj", "/Users/me", "/Users/ME/proj"),
+        ("/srv/app", "/", "/srv/app"),
+    ] {
+        assert_eq!(shown(dir, home), want, "{dir} under home {home}");
+    }
+}
+
 /// "a Windows path is shown with its backslashes, and its last segment is still the directory name"
 #[test]
 fn a_windows_path_is_shown_with_its_backslashes_and_its_last_segment_is_still_the_directory_name() {

@@ -21,6 +21,7 @@ from ..jsstr import (
     u16_slice,
 )
 from ..model_names import short_name
+from ..osdirs import home
 from ..reasons import short_reason
 from ..status import agent_view, read_calibration, read_status
 from ..worktree import location_info
@@ -137,10 +138,21 @@ def render(input_bytes: bytes) -> str:
     dir_part = f" {DIM}\u00b7{RESET} {marks['dir']} {directory}" if directory and directory != worktree else ""
 
     # The whole path last, dimmed (SPEC 12).
-    path_part = f" {DIM}\u00b7 {full_path}{RESET}" if full_path else ""
+    path_part = f" {DIM}\u00b7 {_tilde_path(full_path)}{RESET}" if full_path else ""
 
     context_part = f" {DIM}\u00b7{RESET} {marks['context']} {to_string(pct)}%"
     return f"{routed}{agents}{dir_part}{where}{context_part}{notice}{path_part}\n"
+
+
+def _tilde_path(path: str) -> str:
+    """The path with the home directory written as `~` (SPEC 12): only a whole leading directory
+    counts, either separator ends it, and a path outside home, or a home that is empty or the
+    filesystem root, is left as sent."""
+    base = home().rstrip("/\\")
+    if not base or not path.startswith(base):
+        return path
+    rest = path[len(base) :]
+    return "~" + rest if rest == "" or rest[0] in "/\\" else path
 
 
 def main() -> int:

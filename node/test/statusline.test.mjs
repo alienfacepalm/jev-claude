@@ -10,6 +10,8 @@ import { writeDecision } from "../src/status.mjs";
 
 const SCRIPT = fileURLToPath(new URL("../bin/jev-statusline.mjs", import.meta.url));
 const MAIN = { key: "main", label: "main", main: true };
+// A home that is none of the paths below, so the machine running the tests cannot change them.
+const HOME = { HOME: "/home/nobody", USERPROFILE: "/home/nobody" };
 
 /** Runs the real status line the way Claude Code does, and returns its text without colours. */
 function render(sessionId, workspace = {}, extra = {}, icons = "text") {
@@ -22,7 +24,7 @@ function render(sessionId, workspace = {}, extra = {}, icons = "text") {
   const out = spawnSync(process.execPath, [SCRIPT], {
     input,
     encoding: "utf8",
-    env: { ...process.env, JEV_ICONS: icons },
+    env: { ...process.env, ...HOME, JEV_ICONS: icons },
   });
   assert.equal(out.status, 0, out.stderr);
   // biome-ignore lint/suspicious/noControlCharactersInRegex: strips the ANSI colour codes the status line emits
@@ -51,11 +53,11 @@ test("shows the effort the turn ran at next to the model and confidence", () => 
 });
 
 /** The raw status line text for a session, colours included. */
-function renderRaw(sessionId, input = {}) {
+function renderRaw(sessionId, input = {}, env = {}) {
   const out = spawnSync(process.execPath, [SCRIPT], {
     input: JSON.stringify({ session_id: sessionId, context_window: { used_percentage: 8 }, ...input }),
     encoding: "utf8",
-    env: { ...process.env, JEV_ICONS: "text" },
+    env: { ...process.env, ...HOME, JEV_ICONS: "text", ...env },
   });
   assert.equal(out.status, 0, out.stderr);
   return out.stdout;
@@ -73,6 +75,34 @@ test("a Windows path is shown with its backslashes, and its last segment is stil
   assert.ok(raw.endsWith(`\x1b[2m· ${dirPath}\x1b[0m\n`), JSON.stringify(raw));
   const plain = render(`statusline-winpath-plain-${process.pid}`, { current_dir: dirPath });
   assert.equal(plain.includes(" · dir proj · "), true, "the directory item still carries only the last segment");
+});
+
+/** The path part of the line for a working directory, with the given home. */
+function pathPart(id, dir, home) {
+  const raw = renderRaw(id, { workspace: { current_dir: dir } }, { HOME: home, USERPROFILE: home });
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: matches the ANSI codes the status line emits
+  return /\x1b\[2m· (.*)\x1b\[0m\n$/.exec(raw)?.[1];
+}
+
+test("a path under the home directory starts with ~, and the directory item is unchanged", () => {
+  const id = `statusline-tilde-${process.pid}`;
+  assert.equal(
+    pathPart(id, "/Users/me/Projects/GOVPILOT/sdl-mono/sync-client", "/Users/me"),
+    "~/Projects/GOVPILOT/sdl-mono/sync-client",
+  );
+  assert.equal(pathPart(id, "/Users/me", "/Users/me"), "~");
+  assert.equal(pathPart(id, "/Users/me/", "/Users/me/"), "~/");
+  assert.equal(pathPart(id, "C:\\Users\\me\\proj", "C:\\Users\\me"), "~\\proj");
+  assert.ok(render(id, { current_dir: "/Users/me/a/proj" }).includes(" · dir proj · "));
+});
+
+test("only a whole home directory is shortened", () => {
+  const id = `statusline-tilde-whole-${process.pid}`;
+  assert.equal(pathPart(id, "/Users/media/proj", "/Users/me"), "/Users/media/proj");
+  assert.equal(pathPart(id, "/srv/app", "/Users/me"), "/srv/app");
+  assert.equal(pathPart(id, "/srv/Users/me/proj", "/Users/me"), "/srv/Users/me/proj");
+  assert.equal(pathPart(id, "/Users/ME/proj", "/Users/me"), "/Users/ME/proj");
+  assert.equal(pathPart(id, "/srv/app", "/"), "/srv/app", "a root home would turn every path into ~/...");
 });
 
 test("cwd is the fallback for the path when the workspace has no directory", () => {

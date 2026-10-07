@@ -99,6 +99,39 @@ class StatusLine(unittest.TestCase):
         raw = render_raw(self, f"statusline-fullpath-{PID}", {"workspace": {"current_dir": "/home/me/work/proj"}})
         self.assertTrue(raw.endswith("8% \x1b[2m· /home/me/work/proj\x1b[0m\n"), repr(raw))
 
+    def test_a_path_under_the_home_directory_starts_with_tilde_and_only_a_whole_home_directory_counts(self) -> None:
+        def shown(directory: str, home: str) -> str:
+            payload = {
+                "session_id": f"statusline-tilde-{PID}",
+                "workspace": {"current_dir": directory},
+                "context_window": {"used_percentage": 8},
+            }
+            out = subprocess.run(
+                [sys.executable, "-m", "jev_router.cli.statusline"],
+                input=json.dumps(payload).encode("utf-8"),
+                capture_output=True,
+                env={**os.environ, "JEV_ICONS": "text", "PYTHONPATH": SRC, "HOME": home, "USERPROFILE": home},
+                timeout=60,
+                check=False,  # the exit code is asserted below, with stderr as the message
+            )
+            self.assertEqual(out.returncode, 0, out.stderr.decode("utf-8", "replace"))
+            found = re.search(r"\x1b\[2m· (.*)\x1b\[0m\n$", out.stdout.decode("utf-8"))
+            self.assertIsNotNone(found)
+            return found.group(1) if found else ""
+
+        for directory, home, want in [
+            ("/Users/me/Projects/GOVPILOT/sdl-mono/sync-client", "/Users/me", "~/Projects/GOVPILOT/sdl-mono/sync-client"),
+            ("/Users/me", "/Users/me", "~"),
+            ("/Users/me/", "/Users/me/", "~/"),
+            ("C:\\Users\\me\\proj", "C:\\Users\\me", "~\\proj"),
+            ("/Users/media/proj", "/Users/me", "/Users/media/proj"),
+            ("/srv/Users/me/proj", "/Users/me", "/srv/Users/me/proj"),
+            ("/Users/ME/proj", "/Users/me", "/Users/ME/proj"),
+            ("/srv/app", "/", "/srv/app"),
+        ]:
+            with self.subTest(directory=directory, home=home):
+                self.assertEqual(shown(directory, home), want)
+
     def test_a_windows_path_is_shown_with_its_backslashes_and_its_last_segment_is_still_the_directory_name(
         self,
     ) -> None:
