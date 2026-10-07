@@ -97,7 +97,9 @@ class StatusLine(unittest.TestCase):
         )
         self.assertEqual(render(self, sid), "model Sonnet 5.5 (94%) · effort high · dir proj · ctx 8% · /work/proj")
 
-    def test_the_whole_working_directory_comes_last_dimmed_outside_the_home_directory_exactly_as_claude_code_sent_it(self) -> None:
+    def test_the_whole_working_directory_comes_last_dimmed_outside_the_home_directory_exactly_as_claude_code_sent_it(
+        self,
+    ) -> None:
         raw = render_raw(self, f"statusline-fullpath-{PID}", {"workspace": {"current_dir": "/home/me/work/proj"}})
         self.assertTrue(raw.endswith("8% \x1b[2m· /home/me/work/proj\x1b[0m\n"), repr(raw))
 
@@ -122,7 +124,11 @@ class StatusLine(unittest.TestCase):
             return found.group(1) if found else ""
 
         for directory, home, want in [
-            ("/Users/me/Projects/GOVPILOT/sdl-mono/sync-client", "/Users/me", "~/Projects/GOVPILOT/sdl-mono/sync-client"),
+            (
+                "/Users/me/Projects/GOVPILOT/sdl-mono/sync-client",
+                "/Users/me",
+                "~/Projects/GOVPILOT/sdl-mono/sync-client",
+            ),
             ("/Users/me", "/Users/me", "~"),
             ("/Users/me/", "/Users/me/", "~/"),
             ("C:\\Users\\me\\proj", "C:\\Users\\me", "~\\proj"),
