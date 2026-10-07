@@ -145,9 +145,11 @@ def render(input_bytes: bytes) -> str:
 
 
 def _tilde_path(path: str) -> str:
-    """The path with the home directory written as `~` (SPEC 12): only a whole leading directory
-    counts, either separator ends it, and a path outside home, or a home that is empty or the
-    filesystem root, is left as sent."""
+    """The path with the home directory written as `~` (SPEC 12).
+
+    Only a whole leading directory counts, either separator ends it, and a path outside home, or a
+    home that is empty or the filesystem root, is left as sent.
+    """
     base = home().rstrip("/\\")
     if not base or not path.startswith(base):
         return path
