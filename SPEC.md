@@ -2,8 +2,10 @@
 
 Status: revision 3. Sections 1-18 passed Fable's second review (its notes applied); sections 19-20
 were added afterwards from building the conformance suite and the ports, and were checked in a later
-two-model review (Fable and Opus), whose corrections to 19.1 and 20.8 are applied. Reference
-implementation: `node/` at commit `e5a09fb`, run on Node.js 24.21.0.
+two-model review (Fable and Opus), whose corrections to 19.1 and 20.8 are applied. Added since
+those reviews and not reviewed by either: section 3.11 (replacing a file) and the trailing working
+directory in section 12. Reference implementation: `node/` at commit `e5a09fb`, run on Node.js
+24.21.0.
 
 This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
 Python. It is normative for the ports. Where this document is silent, the Node.js source is the
