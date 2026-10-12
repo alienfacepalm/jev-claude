@@ -14,7 +14,7 @@ export default async function networkCases({ root, proxy, router, calibration })
     { id: "claude-opus-6", display_name: "Claude Opus 6", created_at: "2026-11-01T00:00:00Z", max_input_tokens: 1000000 },
     { id: "claude-opus-5-5", display_name: "Claude Opus 5.5", created_at: "2026-09-02T00:00:00Z" },
     { id: "claude-sonnet-5-5", display_name: "Claude Sonnet 5.5", created_at: "2026-08-11T00:00:00Z", max_input_tokens: 1000000 },
-    { id: "claude-haiku-4-5-20251001", display_name: "Claude Haiku 4.5", created_at: "2025-10-01T00:00:00Z", max_input_tokens: 200000 },
+    { id: "claude-haiku-5-5", display_name: "Claude Haiku 5.5", created_at: "2026-08-11T00:00:00Z", max_input_tokens: 200000 },
   ]));
   const noFable = statics.filter((m) => m.tier !== "fable");
 
@@ -25,7 +25,7 @@ export default async function networkCases({ root, proxy, router, calibration })
     tool_complexity: { type: "score", score: scores[2], confidence: 0.9, legend: {}, probabilities: {} },
   });
   const reply = (body) => JSON.stringify({ model: "jev-1", usage: { input_tokens: 812, output_tokens: 9 }, ...body });
-  const good = reply({ answers: answers("claude-haiku-4-5-20251001", 0.92) });
+  const good = reply({ answers: answers("claude-haiku-5-5", 0.92) });
 
   const inputs = [
     ["captured prompt, static menu", { prompt, current: "claude-sonnet-5-5", contextTokens, models: statics, response: good }],

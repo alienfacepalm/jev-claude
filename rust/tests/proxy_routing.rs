@@ -92,14 +92,14 @@ async fn harness(route: impl Fn(&str) -> &'static str + Send + Sync + 'static, c
 /// "a real print-mode request is routed on the user's prompt"
 #[tokio::test]
 async fn a_real_print_mode_request_is_routed_on_the_users_prompt() {
-    let h = harness(|_| "claude-haiku-4-5-20251001", 0.92).await;
+    let h = harness(|_| "claude-haiku-5-5", 0.92).await;
     let res = h.post(&real_request()).await;
     assert_eq!(res.status, 200);
     assert_eq!(*h.prompts.lock().unwrap(), vec!["rename the variable x to count in utils.js"], "reminders stripped");
     let seen = h.seen.lock().unwrap()[0].clone();
     assert_eq!(seen.url, "/v1/messages?beta=true");
     let sent = seen.json();
-    assert_eq!(sent.get("model"), &s("claude-haiku-4-5-20251001"));
+    assert_eq!(sent.get("model"), &s("claude-haiku-5-5"));
     // Haiku takes neither adaptive thinking nor effort; sending them as captured would be rejected.
     assert_eq!(sent.get("thinking"), &Value::Undefined);
     assert_eq!(sent.get("context_management"), &Value::Undefined);
@@ -113,11 +113,11 @@ async fn an_unwritable_jev_dump_path_does_not_stop_the_turn_being_routed() {
     // A real misconfiguration: the dump directory does not exist, so the dump cannot be written.
     let missing = std::env::temp_dir().join("jev-no-such-dir").join("nested").join("dump");
     jev_router::envx::set("JEV_DUMP", &missing.to_string_lossy());
-    let h = harness(|_| "claude-haiku-4-5-20251001", 0.92).await;
+    let h = harness(|_| "claude-haiku-5-5", 0.92).await;
     let res = h.post(&real_request()).await;
     jev_router::envx::unset_overlay("JEV_DUMP");
     assert_eq!(res.status, 200, "the API would reject the sentinel with a 400");
-    assert_eq!(h.bodies()[0].get("model"), &s("claude-haiku-4-5-20251001"), "routed as usual, dump or no dump");
+    assert_eq!(h.bodies()[0].get("model"), &s("claude-haiku-5-5"), "routed as usual, dump or no dump");
 }
 
 /// "tool-call continuations keep the tier the turn was routed to"
@@ -138,7 +138,7 @@ async fn tool_call_continuations_keep_the_tier_the_turn_was_routed_to() {
 async fn the_main_thread_keeps_its_tier_after_more_than_50_sub_agents_start() {
     let h = harness(
         |prompt| {
-            if prompt.starts_with("Search the codebase") { "claude-haiku-4-5-20251001" } else { "claude-sonnet-5-5" }
+            if prompt.starts_with("Search the codebase") { "claude-haiku-5-5" } else { "claude-sonnet-5-5" }
         },
         0.9,
     )

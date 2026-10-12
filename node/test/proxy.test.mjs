@@ -359,7 +359,7 @@ test("routing to haiku strips fields haiku cannot accept", () => {
     context_management: { edits: [{ type: "clear_thinking_20251015", keep: "all" }] },
   };
   applyTier(body, "haiku");
-  assert.equal(body.model, "claude-haiku-4-5-20251001");
+  assert.equal(body.model, "claude-haiku-5-5");
   assert.equal(body.thinking, undefined);
   assert.equal(body.output_config, undefined);
   assert.equal(body.context_management, undefined);

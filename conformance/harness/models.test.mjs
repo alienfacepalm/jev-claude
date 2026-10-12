@@ -27,7 +27,7 @@ const CATALOG = {
     { type: "model", id: "claude-opus-5-5", display_name: "Claude Opus 5.5", created_at: "2026-09-02T00:00:00Z", max_input_tokens: 1000000 },
     { type: "model", id: "claude-opus-6", display_name: "Claude Opus 6", created_at: "2026-11-01T00:00:00Z", max_input_tokens: 1000000 },
     { type: "model", id: "claude-sonnet-5-5", display_name: "Claude Sonnet 5.5", created_at: "2026-08-11T00:00:00Z" },
-    { type: "model", id: "claude-haiku-4-5-20251001", display_name: "Claude Haiku 4.5", created_at: "2025-10-01T00:00:00Z", max_input_tokens: 200000 },
+    { type: "model", id: "claude-haiku-5-5", display_name: "Claude Haiku 5.5", created_at: "2026-08-11T00:00:00Z", max_input_tokens: 200000 },
     { type: "model", id: "claude-3-7-sonnet-20250219", display_name: "Claude Sonnet 3.7", created_at: "2025-02-19T00:00:00Z" },
   ],
   has_more: false,
@@ -71,7 +71,7 @@ test("a 200 catalog is relayed, recorded for calibration, and becomes the Jev me
   const menu = node.proxy.newestPerTier(node.proxy.claudeModels(CATALOG.data));
   assert.deepEqual(
     menu.map((m) => m.id),
-    ["claude-opus-6", "claude-sonnet-5-5", "claude-haiku-4-5-20251001"],
+    ["claude-opus-6", "claude-sonnet-5-5", "claude-haiku-5-5"],
   );
   assertStatusFile(calibrationOf(proxy), { newer: ["claude-opus-6"], models: menu.map((m) => m.id), at: 0 }, { from, to: afterModels });
 
@@ -96,7 +96,7 @@ test("a 401 is relayed as sent and calibration falls back to the configured mode
   assert.equal(res.body.toString(), error);
   assertRelayedHeaders(MODELS_HEADERS, res.headers);
   assertForwardedHeaders(res.sent, upstream.requests[0], { host: upstream.url.slice("http://".length), body: Buffer.alloc(0), acceptEncodingRemoved: true });
-  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to });
+  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to });
 });
 
 test("a catalog whose data cannot be iterated, or that is not JSON, writes no calibration file", async (t) => {
@@ -118,5 +118,5 @@ test("a catalog whose data cannot be iterated, or that is not JSON, writes no ca
   }
   const from = Date.now();
   await send(proxy.port, { method: "GET", path: "/v1/models", headers: modelsHeaders });
-  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to: Date.now() });
+  assertStatusFile(calibrationOf(proxy), { newer: [], models: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"], at: 0 }, { from, to: Date.now() });
 });

@@ -92,13 +92,13 @@ class ProxyRouting(unittest.TestCase):
 
     def test_a_real_print_mode_request_is_routed_on_the_users_prompt(self) -> None:
         """a real print-mode request is routed on the user's prompt"""
-        upstream, prompts, send = self.harness(answer("claude-haiku-4-5-20251001"))
+        upstream, prompts, send = self.harness(answer("claude-haiku-5-5"))
         status, _, _ = send(real_request())
         self.assertEqual(status, 200)
         self.assertEqual(prompts, ["rename the variable x to count in utils.js"], "reminders stripped, prompt intact")
         sent = upstream.bodies()[0]
         self.assertEqual(upstream.requests[0]["url"], "/v1/messages?beta=true")
-        self.assertEqual(sent["model"], "claude-haiku-4-5-20251001")
+        self.assertEqual(sent["model"], "claude-haiku-5-5")
         self.assertNotIn("thinking", sent)
         self.assertNotIn("context_management", sent)
         self.assertNotIn("effort", sent.get("output_config", {}))
@@ -112,10 +112,10 @@ class ProxyRouting(unittest.TestCase):
         dump = mock.patch.dict(os.environ, {"JEV_DUMP": unwritable})
         dump.start()
         self.addCleanup(dump.stop)
-        upstream, _, send = self.harness(answer("claude-haiku-4-5-20251001"))
+        upstream, _, send = self.harness(answer("claude-haiku-5-5"))
         status, _, _ = send(real_request())
         self.assertEqual(status, 200, "the API would reject the sentinel with a 400")
-        self.assertEqual(upstream.bodies()[0]["model"], "claude-haiku-4-5-20251001", "routed as usual, dump or no dump")
+        self.assertEqual(upstream.bodies()[0]["model"], "claude-haiku-5-5", "routed as usual, dump or no dump")
 
     def test_tool_call_continuations_keep_the_tier_the_turn_was_routed_to(self) -> None:
         """tool-call continuations keep the tier the turn was routed to"""
@@ -133,7 +133,7 @@ class ProxyRouting(unittest.TestCase):
         def route(args: RouteRequest) -> JsObject:
             sub_agent = args["prompt"].startswith("Search the codebase")
             return {
-                "choice": "claude-haiku-4-5-20251001" if sub_agent else "claude-sonnet-5-5",
+                "choice": "claude-haiku-5-5" if sub_agent else "claude-sonnet-5-5",
                 "confidence": 0.9,
                 "ms": 1,
             }

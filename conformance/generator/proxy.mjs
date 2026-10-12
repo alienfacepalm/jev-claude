@@ -189,6 +189,7 @@ export default function proxyCases({ root, config, proxy, modelNames }) {
   const ids = [
     "claude-opus-5-5",
     "claude-sonnet-5-5",
+    "claude-haiku-5-5",
     "claude-haiku-4-5-20251001",
     "claude-fable-5-1",
     "claude-fable-5-1[1m]",
@@ -247,7 +248,7 @@ export default function proxyCases({ root, config, proxy, modelNames }) {
     ]],
     ["new major undated", [{ id: "claude-opus-5-5" }, { id: "claude-opus-6" }, { id: "claude-opus-4-8" }]],
     ["minor 10", [{ id: "claude-sonnet-5-5" }, { id: "claude-sonnet-5-10" }]],
-    ["date is not a minor", [{ id: "claude-haiku-4-5-20251001" }, { id: "claude-haiku-4-6" }]],
+    ["date is not a minor", [{ id: "claude-haiku-5-5-20261001" }, { id: "claude-haiku-5-6" }]],
     ["old naming", [{ id: "claude-3-7-sonnet-20250219" }, { id: "claude-sonnet-5-5" }, { id: "claude-3-5-haiku-20241022" }, { id: "claude-haiku-4-5-20251001" }]],
     ["provider prefix", [{ id: "anthropic.claude-opus-5-5" }, { id: "anthropic.claude-opus-6" }]],
     ["dated majors", [{ id: "claude-opus-4-20250514" }, { id: "claude-sonnet-4-20250514" }, { id: "claude-opus-4-1" }]],
@@ -271,7 +272,7 @@ export default function proxyCases({ root, config, proxy, modelNames }) {
       { id: "claude-sonnet-5-5", display_name: "" },
     ]],
     ["non-claude and junk entries", [null, {}, { id: 42 }, { id: "gpt-5" }, { id: "jev-router" }, { id: "claude-sonnet-5-5" }]],
-    ["every tier newer", [{ id: "claude-haiku-5" }, { id: "claude-sonnet-6" }, { id: "claude-opus-6-1" }, { id: "claude-fable-5-2" }]],
+    ["every tier newer", [{ id: "claude-haiku-5-6" }, { id: "claude-sonnet-6" }, { id: "claude-opus-6-1" }, { id: "claude-fable-5-2" }]],
     ["unreadable version only", [{ id: "claude-3-opus-20240229" }]],
   ];
   // SPEC 7.5 says the release-date tiebreak is a code-unit comparison; Node uses localeCompare.

@@ -199,7 +199,7 @@ export async function fakeUpstream(handle) {
     handle ??
       ((_record, res) => {
         res.writeHead(200, UPSTREAM_REPLY_HEADERS);
-        res.end('{"id":"msg_1","type":"message","model":"claude-haiku-4-5-20251001","content":[]}');
+        res.end('{"id":"msg_1","type":"message","model":"claude-haiku-5-5","content":[]}');
       }),
   );
 }
@@ -256,7 +256,7 @@ export async function startProxy(t, { jevURL, upstreamURL, env: extra = {} }) {
 }
 
 /** One fake Jev, one fake upstream, and the proxy between them, all closed after the test. */
-export async function setup(t, { answer = () => jevAnswer("claude-haiku-4-5-20251001", 0.92), upstream: handle, env } = {}) {
+export async function setup(t, { answer = () => jevAnswer("claude-haiku-5-5", 0.92), upstream: handle, env } = {}) {
   const jev = await fakeJev(answer);
   const upstream = await fakeUpstream(handle);
   t.after(() => jev.close());

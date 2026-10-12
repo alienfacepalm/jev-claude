@@ -26,7 +26,7 @@ class TierSpec(TypedDict):
 
 # Model tiers, cheapest first (SPEC 4.1). `floor` is absent for Haiku.
 TIERS: Final[list[TierSpec]] = [
-    {"name": "haiku", "id": "claude-haiku-4-5-20251001", "family": "haiku", "thinking": False, "effort": False},
+    {"name": "haiku", "id": "claude-haiku-5-5", "family": "haiku", "thinking": False, "effort": False},
     {
         "name": "sonnet",
         "id": "claude-sonnet-5-5",

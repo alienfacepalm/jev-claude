@@ -19,7 +19,7 @@ use jev_router::status::dump_body;
 use std::sync::Arc;
 use std::time::Duration;
 
-const HAIKU: &str = "claude-haiku-4-5-20251001";
+const HAIKU: &str = "claude-haiku-5-5";
 
 fn sure(choice: &str) -> RouteFn {
     answer(choice, 0.97)

@@ -154,7 +154,7 @@ For each new prompt, Jev scores the work and picks a tier:
 
 | Tier | Model | Best for | Cost per completed task |
 | --- | --- | --- | --- |
-| Haiku | Claude Haiku 4.5 | Trivial, mechanical edits | Cheapest; does no reasoning |
+| Haiku | Claude Haiku 5.5 | Trivial, mechanical edits | Cheapest; does no reasoning |
 | Sonnet | Claude Sonnet 5.5 | Well-scoped changes, bugs with a known cause, tests, documents and analysis | About 40-60% less than Opus |
 | Opus | Claude Opus 5.5 | Open-ended or multi-step coding, unknown-cause bugs, security, migrations, judgement calls | About 1.6-2.6x Sonnet |
 | Fable | Claude Fable 5.1 | Long-horizon autonomous work, problems a strong model has already failed at, adversarial reviews of plans | Most expensive ($10 / $50 per million tokens) |
@@ -203,7 +203,7 @@ a bold symbol in the terminal's own text colour, so it contrasts with any backgr
 
 ```text
 ✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8% · ~/work/my-project
-✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 4.5,Sonnet 5.5 · ❐ my-project · ≡ 34% · ~/work/my-project
+✧✦ Opus 5.5 (91%) · ◔ medium (keeping the cache) · ✦ Haiku 5.5,Sonnet 5.5 · ❐ my-project · ≡ 34% · ~/work/my-project
 ☞ manual Opus 4.6 · ❐ my-project · ≡ 21% · ~/work/my-project
 ```
 
@@ -259,8 +259,8 @@ Run `/jev-calibrate` in a `jev-claude` session for a read-only report on your se
 ```text
 Routing      on - Jev Router picks a model for each turn
 Claude       your Claude Code sign-in
-Tuned for    haiku claude-haiku-4-5-20251001, sonnet claude-sonnet-5-5, opus claude-opus-5-5, fable claude-fable-5-1
-Your account claude-haiku-4-5-20251001, claude-sonnet-5-5, claude-opus-5-5, claude-fable-5-1
+Tuned for    haiku claude-haiku-5-5, sonnet claude-sonnet-5-5, opus claude-opus-5-5, fable claude-fable-5-1
+Your account claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5, claude-fable-5-1
 Newer models none - the router is tuned for the newest models your account offers
 Fable        offered when the work calls for it (bills extra usage credits; JEV_ALLOW_FABLE=0 turns it off)
 ```

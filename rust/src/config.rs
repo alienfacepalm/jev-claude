@@ -27,7 +27,7 @@ pub struct Tier {
 pub const TIERS: [Tier; 4] = [
     Tier {
         name: "haiku",
-        id: "claude-haiku-4-5-20251001",
+        id: "claude-haiku-5-5",
         family: "haiku",
         thinking: false,
         effort: false,

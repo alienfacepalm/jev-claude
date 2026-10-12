@@ -72,7 +72,7 @@ func TestProxyRouting(t *testing.T) {
 	session := SessionOf(fixture(t).Value("body"))
 
 	t.Run("a real print-mode request is routed on the user's prompt", func(t *testing.T) {
-		h := newRoutingHarness(t, answer("claude-haiku-4-5-20251001", 0.92))
+		h := newRoutingHarness(t, answer("claude-haiku-5-5", 0.92))
 		if code := h.post(t, realRequest(t)); code != 200 {
 			t.Fatalf("status %d", code)
 		}
@@ -81,7 +81,7 @@ func TestProxyRouting(t *testing.T) {
 		}
 		sent := h.rec.all()[0]
 		body := sent.body.(*jsjson.Object)
-		if sent.url != "/v1/messages?beta=true" || body.Value("model") != "claude-haiku-4-5-20251001" {
+		if sent.url != "/v1/messages?beta=true" || body.Value("model") != "claude-haiku-5-5" {
 			t.Errorf("%s %v", sent.url, body.Value("model"))
 		}
 		// Haiku takes neither adaptive thinking nor effort; sending them as captured would be rejected.
@@ -96,11 +96,11 @@ func TestProxyRouting(t *testing.T) {
 	t.Run("an unwritable JEV_DUMP path does not stop the turn being routed", func(t *testing.T) {
 		// A real misconfiguration: the dump directory does not exist, so the dump cannot be written.
 		t.Setenv("JEV_DUMP", filepath.Join(os.TempDir(), "jev-no-such-dir", "nested", "dump"))
-		h := newRoutingHarness(t, answer("claude-haiku-4-5-20251001", 0.92))
+		h := newRoutingHarness(t, answer("claude-haiku-5-5", 0.92))
 		if code := h.post(t, realRequest(t)); code != 200 {
 			t.Fatalf("the API would reject the sentinel with a 400, got %d", code)
 		}
-		if modelOf(h.rec.all()[0]) != "claude-haiku-4-5-20251001" {
+		if modelOf(h.rec.all()[0]) != "claude-haiku-5-5" {
 			t.Error("routed as usual, dump or no dump")
 		}
 	})
@@ -125,7 +125,7 @@ func TestProxyRouting(t *testing.T) {
 		h := newRoutingHarness(t, func(a router.Args) (*jsjson.Object, error) {
 			choice := "claude-sonnet-5-5"
 			if strings.HasPrefix(a.Prompt, "Search the codebase") {
-				choice = "claude-haiku-4-5-20251001"
+				choice = "claude-haiku-5-5"
 			}
 			return jsjson.Obj("choice", choice, "confidence", 0.9, "ms", 1.0), nil
 		})

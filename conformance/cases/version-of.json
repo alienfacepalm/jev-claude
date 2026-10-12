@@ -22,6 +22,17 @@
     ]
   },
   {
+    "name": "claude-haiku-5-5 as haiku",
+    "input": {
+      "id": "claude-haiku-5-5",
+      "tier": "haiku"
+    },
+    "expected": [
+      5,
+      5
+    ]
+  },
+  {
     "name": "claude-haiku-4-5-20251001 as haiku",
     "input": {
       "id": "claude-haiku-4-5-20251001",

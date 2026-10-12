@@ -34,7 +34,7 @@ type Tier struct {
 
 // Tiers lists every model tier, cheapest first.
 var Tiers = []Tier{
-	{Name: "haiku", ID: "claude-haiku-4-5-20251001", Family: "haiku"},
+	{Name: "haiku", ID: "claude-haiku-5-5", Family: "haiku"},
 	{Name: "sonnet", ID: "claude-sonnet-5-5", Family: "sonnet", Thinking: true, Effort: true, Floor: "high"},
 	{Name: "opus", ID: "claude-opus-5-5", Family: "opus", Thinking: true, Effort: true, Floor: "medium"},
 	{Name: "fable", ID: "claude-fable-5-1", Family: "fable", Thinking: true, Effort: true, Floor: "high"},

@@ -85,15 +85,15 @@
     "input": {
       "catalog": [
         {
-          "id": "claude-haiku-4-5-20251001"
+          "id": "claude-haiku-5-5-20261001"
         },
         {
-          "id": "claude-haiku-4-6"
+          "id": "claude-haiku-5-6"
         }
       ]
     },
     "expected": [
-      "claude-haiku-4-6"
+      "claude-haiku-5-6"
     ]
   },
   {
@@ -241,9 +241,7 @@
         }
       ]
     },
-    "expected": [
-      "claude-haiku-5-5"
-    ]
+    "expected": []
   },
   {
     "name": "full fields",
@@ -302,7 +300,7 @@
     "input": {
       "catalog": [
         {
-          "id": "claude-haiku-5"
+          "id": "claude-haiku-5-6"
         },
         {
           "id": "claude-sonnet-6"
@@ -318,8 +316,8 @@
     "expected": [
       "claude-opus-6-1",
       "claude-sonnet-6",
-      "claude-fable-5-2",
-      "claude-haiku-5"
+      "claude-haiku-5-6",
+      "claude-fable-5-2"
     ]
   },
   {

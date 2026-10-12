@@ -6,10 +6,10 @@
     },
     "expected": [
       {
-        "id": "claude-haiku-4-5-20251001",
+        "id": "claude-haiku-5-5",
         "tier": "haiku",
         "releasedAt": "",
-        "description": "claude-haiku-4-5-20251001"
+        "description": "claude-haiku-5-5"
       },
       {
         "id": "claude-sonnet-5-5",
@@ -170,22 +170,22 @@
     "input": {
       "catalog": [
         {
-          "id": "claude-haiku-4-5-20251001"
+          "id": "claude-haiku-5-5-20261001"
         },
         {
-          "id": "claude-haiku-4-6"
+          "id": "claude-haiku-5-6"
         }
       ]
     },
     "expected": [
       {
-        "id": "claude-haiku-4-6",
+        "id": "claude-haiku-5-6",
         "tier": "haiku",
         "releasedAt": "",
         "description": ""
       },
       {
-        "id": "claude-haiku-4-5-20251001",
+        "id": "claude-haiku-5-5-20261001",
         "tier": "haiku",
         "releasedAt": "",
         "description": ""
@@ -576,7 +576,7 @@
     "input": {
       "catalog": [
         {
-          "id": "claude-haiku-5"
+          "id": "claude-haiku-5-6"
         },
         {
           "id": "claude-sonnet-6"
@@ -603,14 +603,14 @@
         "description": ""
       },
       {
-        "id": "claude-fable-5-2",
-        "tier": "fable",
+        "id": "claude-haiku-5-6",
+        "tier": "haiku",
         "releasedAt": "",
         "description": ""
       },
       {
-        "id": "claude-haiku-5",
-        "tier": "haiku",
+        "id": "claude-fable-5-2",
+        "tier": "fable",
         "releasedAt": "",
         "description": ""
       }

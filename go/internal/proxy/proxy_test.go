@@ -440,13 +440,13 @@ func TestBodyRewriting(t *testing.T) {
 	}
 	t.Run("routing to haiku strips fields haiku cannot accept", func(t *testing.T) {
 		got := apply(t, `{"model":"claude-sonnet-4-6","thinking":{"type":"adaptive"},"output_config":{"effort":"medium"},"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]}}`, "haiku", none)
-		if got != `{"model":"claude-haiku-4-5-20251001"}` {
+		if got != `{"model":"claude-haiku-5-5"}` {
 			t.Error(got)
 		}
 	})
 	t.Run("routing to haiku keeps context-management strategies unrelated to thinking", func(t *testing.T) {
 		got := apply(t, `{"model":"claude-sonnet-4-6","context_management":{"edits":[{"type":"clear_tool_uses_20250919"},{"type":"clear_thinking_20251015"}]}}`, "haiku", none)
-		if got != `{"model":"claude-haiku-4-5-20251001","context_management":{"edits":[{"type":"clear_tool_uses_20250919"}]}}` {
+		if got != `{"model":"claude-haiku-5-5","context_management":{"edits":[{"type":"clear_tool_uses_20250919"}]}}` {
 			t.Error(got)
 		}
 	})
@@ -485,7 +485,7 @@ func TestBodyRewriting(t *testing.T) {
 		}
 	})
 	t.Run("never names an effort for a tier that cannot take one", func(t *testing.T) {
-		if got := apply(t, `{"model":"jev-router","output_config":{"effort":"high"}}`, "haiku", none); got != `{"model":"claude-haiku-4-5-20251001"}` {
+		if got := apply(t, `{"model":"jev-router","output_config":{"effort":"high"}}`, "haiku", none); got != `{"model":"claude-haiku-5-5"}` {
 			t.Error(got)
 		}
 	})

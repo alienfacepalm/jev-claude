@@ -508,7 +508,7 @@ class ApplyTier(unittest.TestCase):
             "context_management": {"edits": [{"type": "clear_thinking_20251015", "keep": "all"}]},
         }
         apply_tier(body, "haiku")
-        self.assertEqual(body, {"model": "claude-haiku-4-5-20251001"})
+        self.assertEqual(body, {"model": "claude-haiku-5-5"})
 
     def test_routing_to_haiku_keeps_context_management_strategies_unrelated_to_thinking(self) -> None:
         """routing to haiku keeps context-management strategies unrelated to thinking"""

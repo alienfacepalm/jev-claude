@@ -4,10 +4,10 @@
     "input": {
       "models": [
         {
-          "id": "claude-haiku-4-5-20251001",
+          "id": "claude-haiku-5-5",
           "tier": "haiku",
           "releasedAt": "",
-          "description": "claude-haiku-4-5-20251001"
+          "description": "claude-haiku-5-5"
         },
         {
           "id": "claude-sonnet-5-5",
@@ -31,10 +31,10 @@
     },
     "expected": [
       {
-        "id": "claude-haiku-4-5-20251001",
+        "id": "claude-haiku-5-5",
         "tier": "haiku",
         "releasedAt": "",
-        "description": "claude-haiku-4-5-20251001"
+        "description": "claude-haiku-5-5"
       },
       {
         "id": "claude-sonnet-5-5",
@@ -187,13 +187,13 @@
     "input": {
       "models": [
         {
-          "id": "claude-haiku-4-6",
+          "id": "claude-haiku-5-6",
           "tier": "haiku",
           "releasedAt": "",
           "description": ""
         },
         {
-          "id": "claude-haiku-4-5-20251001",
+          "id": "claude-haiku-5-5-20261001",
           "tier": "haiku",
           "releasedAt": "",
           "description": ""
@@ -202,7 +202,7 @@
     },
     "expected": [
       {
-        "id": "claude-haiku-4-6",
+        "id": "claude-haiku-5-6",
         "tier": "haiku",
         "releasedAt": "",
         "description": ""
@@ -604,14 +604,14 @@
           "description": ""
         },
         {
-          "id": "claude-fable-5-2",
-          "tier": "fable",
+          "id": "claude-haiku-5-6",
+          "tier": "haiku",
           "releasedAt": "",
           "description": ""
         },
         {
-          "id": "claude-haiku-5",
-          "tier": "haiku",
+          "id": "claude-fable-5-2",
+          "tier": "fable",
           "releasedAt": "",
           "description": ""
         }
@@ -631,14 +631,14 @@
         "description": ""
       },
       {
-        "id": "claude-fable-5-2",
-        "tier": "fable",
+        "id": "claude-haiku-5-6",
+        "tier": "haiku",
         "releasedAt": "",
         "description": ""
       },
       {
-        "id": "claude-haiku-5",
-        "tier": "haiku",
+        "id": "claude-fable-5-2",
+        "tier": "fable",
         "releasedAt": "",
         "description": ""
       }

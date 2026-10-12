@@ -76,7 +76,7 @@ async function harness(t, route) {
 const answer = (choice) => async () => ({ choice, confidence: 0.92, ms: 1 });
 
 test("a real print-mode request is routed on the user's prompt", async (t) => {
-  const { seen, prompts, post } = await harness(t, answer("claude-haiku-4-5-20251001"));
+  const { seen, prompts, post } = await harness(t, answer("claude-haiku-5-5"));
 
   const res = await post(realRequest());
 
@@ -84,7 +84,7 @@ test("a real print-mode request is routed on the user's prompt", async (t) => {
   assert.deepEqual(prompts, ["rename the variable x to count in utils.js"], "reminders stripped, prompt intact");
   const sent = seen[0].body;
   assert.equal(seen[0].url, "/v1/messages?beta=true");
-  assert.equal(sent.model, "claude-haiku-4-5-20251001");
+  assert.equal(sent.model, "claude-haiku-5-5");
   // Haiku takes neither adaptive thinking nor effort; sending them as captured would be rejected.
   assert.equal(sent.thinking, undefined);
   assert.equal(sent.context_management, undefined);
@@ -100,12 +100,12 @@ test("an unwritable JEV_DUMP path does not stop the turn being routed", async (t
     if (previous === undefined) delete process.env.JEV_DUMP;
     else process.env.JEV_DUMP = previous;
   });
-  const { seen, post } = await harness(t, answer("claude-haiku-4-5-20251001"));
+  const { seen, post } = await harness(t, answer("claude-haiku-5-5"));
 
   const res = await post(realRequest());
 
   assert.equal(res.status, 200, "the API would reject the sentinel with a 400");
-  assert.equal(seen[0].body.model, "claude-haiku-4-5-20251001", "routed as usual, dump or no dump");
+  assert.equal(seen[0].body.model, "claude-haiku-5-5", "routed as usual, dump or no dump");
 });
 
 test("tool-call continuations keep the tier the turn was routed to", async (t) => {
@@ -125,7 +125,7 @@ test("tool-call continuations keep the tier the turn was routed to", async (t) =
 
 test("the main thread keeps its tier after more than 50 sub-agents start", async (t) => {
   const { seen, post } = await harness(t, async ({ prompt }) => ({
-    choice: prompt.startsWith("Search the codebase") ? "claude-haiku-4-5-20251001" : "claude-sonnet-5-5",
+    choice: prompt.startsWith("Search the codebase") ? "claude-haiku-5-5" : "claude-sonnet-5-5",
     confidence: 0.9,
     ms: 1,
   }));

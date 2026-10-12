@@ -377,7 +377,7 @@ fn math() {
 fn config_tables_match_node() {
     // Every tier id and family in one place, as `jev-check` prints them.
     let ids: Vec<&str> = config::TIERS.iter().map(|t| t.id).collect();
-    assert_eq!(ids, ["claude-haiku-4-5-20251001", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"]);
+    assert_eq!(ids, ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"]);
 }
 
 /// Runs the real status line binary the way the case README describes.

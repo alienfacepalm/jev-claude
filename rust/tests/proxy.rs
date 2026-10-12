@@ -412,7 +412,7 @@ fn routing_to_haiku_strips_fields_haiku_cannot_accept() {
         "haiku",
         &EnvMap::new(),
     );
-    assert_eq!(body, json(r#"{"model":"claude-haiku-4-5-20251001"}"#));
+    assert_eq!(body, json(r#"{"model":"claude-haiku-5-5"}"#));
 }
 
 /// "routing to haiku keeps context-management strategies unrelated to thinking"

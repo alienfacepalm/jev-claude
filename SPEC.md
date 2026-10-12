@@ -344,7 +344,7 @@ checks the assembled request.
 
 | name | id | family | thinking | effort | floor |
 | --- | --- | --- | --- | --- | --- |
-| haiku | `claude-haiku-4-5-20251001` | haiku | false | false | none |
+| haiku | `claude-haiku-5-5` | haiku | false | false | none |
 | sonnet | `claude-sonnet-5-5` | sonnet | true | true | high |
 | opus | `claude-opus-5-5` | opus | true | true | medium |
 | fable | `claude-fable-5-1` | fable | true | true | high |

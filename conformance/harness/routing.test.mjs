@@ -31,7 +31,7 @@ import {
   test,
 } from "./helpers.mjs";
 
-const HAIKU = "claude-haiku-4-5-20251001";
+const HAIKU = "claude-haiku-5-5";
 const SONNET = "claude-sonnet-5-5";
 const GREEN = "\x1b[32m";
 const CYAN = "\x1b[36m";
@@ -56,7 +56,7 @@ test("a routed turn: the Jev request, the rewritten request, the status file, an
   const to = Date.now();
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.toString(), '{"id":"msg_1","type":"message","model":"claude-haiku-4-5-20251001","content":[]}');
+  assert.equal(res.body.toString(), '{"id":"msg_1","type":"message","model":"claude-haiku-5-5","content":[]}');
   assertRelayedHeaders(UPSTREAM_REPLY_HEADERS, res.headers);
 
   const prompt = node.proxy.newTurnPrompt(body);
@@ -85,7 +85,7 @@ test("a routed turn: the Jev request, the rewritten request, the status file, an
   assertStatusFile(fileOf(proxy, session), { ...decision, agents: { [key]: agent }, history: [{ ...decision, agent: { key, label, main: true } }] }, { from, to });
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${tailOf(proxy)}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 5.5${RESET} ${DIM}(92%)${RESET}${tailOf(proxy)}`);
 
   // The fire-and-forget prewarm (SPEC 5.4) reaches Jev's origin.
   const deadline = Date.now() + 3000;
@@ -158,7 +158,7 @@ test("an auxiliary call is not routed, a tool continuation keeps the tier, and a
   );
 
   const line = runStatusLine(proxy.env, proxy.dirs.cwd, statusInput(proxy, session));
-  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 4.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tailOf(proxy)}`);
+  assert.equal(line, `${icon("✧✦")} ${GREEN}Haiku 5.5${RESET} ${DIM}(92%)${RESET}${SEP}${icon("✦")} ${CYAN}Sonnet 5.5${RESET}${tailOf(proxy)}`);
 });
 
 test("a model the user picked passes through untouched and pauses routing", async (t) => {
