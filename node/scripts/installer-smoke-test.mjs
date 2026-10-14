@@ -53,7 +53,12 @@ function serve(root) {
   return new Promise((done) => server.listen(0, "127.0.0.1", () => done(server)));
 }
 
-/** The installers to run on this machine: [label, command, args, extra env]. */
+/**
+ * The installers to run on this machine: [label, command, args, extra env, file piped to stdin].
+ * The last form of each is the one the README tells people to type, `curl ... | bash` and
+ * `irm ... | iex`: the script arrives on stdin or as a string, so no child it starts may read stdin and
+ * swallow the rest of it, and there is no script path to find the clone by.
+ */
 function installers() {
   const list = [];
   if (IS_WINDOWS) {
@@ -61,20 +66,32 @@ function installers() {
     const run = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1];
     // Windows PowerShell 5.1 started from PowerShell 7 would inherit its module path and lose its own cmdlets.
     list.push(["install.ps1 (Windows PowerShell)", "powershell.exe", run, { PSModulePath: null }]);
+    const piped = ["-NoProfile", "-Command", `Get-Content -Raw '${ps1}' | Invoke-Expression`];
+    list.push(["install.ps1 piped to iex (Windows PowerShell)", "powershell.exe", piped, { PSModulePath: null }]);
     if (spawnSync("pwsh", ["-NoProfile", "-Command", "exit 0"]).status === 0) {
       list.push(["install.ps1 (PowerShell 7)", "pwsh", run, {}]);
+      list.push(["install.ps1 piped to iex (PowerShell 7)", "pwsh", piped, {}]);
     }
     const gitBash = "C:\\Program Files\\Git\\bin\\bash.exe";
     if (existsSync(gitBash))
       list.push(["install.sh (Git Bash)", gitBash, [join(REPO_ROOT, "install.sh"), "--rust"], {}]);
+    if (existsSync(gitBash))
+      list.push([
+        "install.sh piped to bash (Git Bash)",
+        gitBash,
+        ["-s", "--", "--rust"],
+        {},
+        join(REPO_ROOT, "install.sh"),
+      ]);
   } else {
     list.push(["install.sh (bash)", "bash", [join(REPO_ROOT, "install.sh"), "--rust"], {}]);
+    list.push(["install.sh piped to bash", "bash", ["-s", "--", "--rust"], {}, join(REPO_ROOT, "install.sh")]);
   }
   return list;
 }
 
 // Asynchronous: the release server lives in this process and must keep answering while the installer runs.
-function install([label, command, args, extra], { releaseUrl, work, fresh = true }) {
+function install([label, command, args, extra, stdinFile], { releaseUrl, work, fresh = true }) {
   const home = join(work, "home");
   const installDir = join(work, "install");
   if (fresh) rmSync(installDir, { recursive: true, force: true });
@@ -98,7 +115,8 @@ function install([label, command, args, extra], { releaseUrl, work, fresh = true
   delete env.JEV_ROOT;
   for (const [name, value] of Object.entries(extra)) if (value === null) delete env[name];
   return new Promise((done) => {
-    const child = spawn(command, args, { env, cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(command, args, { env, cwd: work, stdio: [stdinFile ? "pipe" : "ignore", "pipe", "pipe"] });
+    if (stdinFile) child.stdin.end(readFileSync(stdinFile));
     let output = "";
     child.stdout.on("data", (chunk) => {
       output += chunk;

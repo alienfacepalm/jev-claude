@@ -230,6 +230,8 @@ install_rust() {
   esac
   # A shell started under Rosetta reports x86_64 on an Apple-silicon Mac; the native programs run there.
   if [ "$os" = macos ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)" = 1 ]; then arch=arm64; fi
+  # Windows on ARM runs the x64 programs through emulation, and a Git Bash there reports either CPU.
+  [ "$os" = windows ] && [ "$arch" = arm64 ] && arch=x64
   target="$os-$arch"
   case "$target" in
     linux-x64 | linux-arm64 | macos-x64 | macos-arm64 | windows-x64)
@@ -316,7 +318,7 @@ install_rust() {
     esac
   fi
   if [ -n "$claude_path" ]; then
-    claude_version="$("$claude_path" --version 2>/dev/null | head -n 1 | cut -d " " -f 1 || true)"
+    claude_version="$("$claude_path" --version </dev/null 2>/dev/null | head -n 1 | cut -d " " -f 1 || true)"
     if claude_needs_node "$claude_path"; then
       if command -v node >/dev/null 2>&1; then
         native_note="npm package, runs on Node.js $(node --version)"
@@ -482,7 +484,7 @@ install_rust() {
   # 6. Prove the installed programs run: the read-only setup check, from the install folder.
   say ""
   say "Step 6 of 6: running the installed setup check (jev-check)"
-  if report="$("$DIR/bin/jev-check$exe" 2>&1)"; then
+  if report="$("$DIR/bin/jev-check$exe" </dev/null 2>&1)"; then
     printf '%s\n' "$report" | sed 's/^/[jev]        /'
   else
     printf '%s\n' "$report" | sed 's/^/[jev]        /'
