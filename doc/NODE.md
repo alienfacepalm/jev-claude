@@ -435,7 +435,7 @@ the only copy.
 | Path | Contents |
 | --- | --- |
 | `node/bin/` | The six programs (`jev-claude`, `jev-statusline`, `jev-explain`, `jev-legend`, `jev-check`, `jev-update-check`) |
-| `node/src/` | One module per concern: `config`, `env`, `router`, `policy`, `reasons`, `proxy`, `status`, `atomic-rename`, `settings`, `launch`, `first-run`, `explain`, `legend`, `icons`, `model-names`, `worktree`, `update`, `log` |
+| `node/src/` | One module per concern: `config`, `env`, `router`, `policy`, `reasons`, `proxy`, `status`, `atomic-rename`, `settings`, `launch`, `first-run`, `explain`, `legend`, `icons`, `usage`, `model-names`, `worktree`, `update`, `log` |
 | `node/scripts/` | `proxy-host.mjs` (for the harness), and the developer tools `calibrate.mjs`, `calibration-cases.mjs`, `live-routing.mjs`, `bump-version.mjs` |
 | `node/test/` | The unit tests (`*.test.mjs`) and `isolate-status.mjs` |
 | `node/package.json` | The workspace package: the SDK dependency and the `test` script |

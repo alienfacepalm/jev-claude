@@ -530,7 +530,7 @@ list is the only copy; `python/README.md` links here.
 | Path | What it holds |
 | --- | --- |
 | `python/pyproject.toml` | Project `jev-router` 0.0.0, `[project.scripts]` for the seven programs, the `dev` extra, and the `[tool.ruff]` and `[tool.mypy]` policy |
-| `python/src/jev_router/` | One module per Node module in `node/src/` (`config`, `env`, `explain`, `first_run`, `icons`, `launch`, `legend`, `log`, `model_names`, `policy`, `proxy`, `reasons`, `router`, `settings`, `status`, `update`, `worktree`) |
+| `python/src/jev_router/` | One module per Node module in `node/src/` (`config`, `env`, `explain`, `first_run`, `icons`, `launch`, `legend`, `log`, `model_names`, `policy`, `proxy`, `reasons`, `router`, `settings`, `status`, `update`, `usage`, `worktree`) |
 | `python/src/jev_router/jsjson.py`, `jsstr.py` | JSON and string, number and regular-expression semantics as JavaScript has them (SPEC 3) |
 | `python/src/jev_router/osdirs.py`, `repo.py` | Node's home and temp rules; the repository root and release version (SPEC 2.4, 3.8) |
 | `python/src/jev_router/cli/` | One module per program, each with `main()` |

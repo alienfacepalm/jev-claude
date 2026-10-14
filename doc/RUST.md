@@ -532,7 +532,7 @@ list is the only copy; `rust/README.md` links here.
 | `osdirs` | `os.homedir`, `os.tmpdir` | Node's rules (SPEC 3.8) |
 | `repo` | (file location) | The repository root and the release version (SPEC 2.3, 2.4) |
 | `envx` | `process.env` | The process environment, plus the values `loadEnv` adds; names compare case-insensitively on Windows |
-| `config`, `policy`, `reasons`, `model_names`, `icons`, `legend`, `worktree`, `explain`, `env`, `settings`, `status`, `log`, `update`, `launch`, `firstrun`, `router`, `proxy` | the module of the same name in `node/src` | |
+| `config`, `policy`, `reasons`, `model_names`, `icons`, `legend`, `usage`, `worktree`, `explain`, `env`, `settings`, `status`, `log`, `update`, `launch`, `firstrun`, `router`, `proxy` | the module of the same name in `node/src` | |
 | `statusline` | `node/bin/jev-statusline.mjs` | The rendering, shared by the binary and the tests |
 | `http`, `process`, `fsx`, `timefmt` | | Shared plumbing: HTTP/1.1 connections and bodies, child processes with timeouts, file modes and temp names, ISO timestamps |
 
