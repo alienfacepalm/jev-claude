@@ -182,7 +182,7 @@ SOURCE_BUILD_DOC="https://github.com/alienfacepalm/jev-claude/blob/master/doc/RU
 check() { printf '[jev]   %-5s %-18s %s\n' "$1" "$2" "$3"; }
 
 # Reads "version" out of a package.json without Node or jq.
-version_in() { sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$1/package.json" 2>/dev/null | head -n 1; }
+version_in() { sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$1/package.json" 2>/dev/null | head -n 1 || true; }
 
 # Prints the SHA-256 of a file with whichever tool the machine has.
 sha256_of() {
@@ -444,7 +444,8 @@ install_rust() {
   new_shell=0
   # What the PATH finds today, before this install is added: the Node edition may be there.
   local found
-  found="$(type -a jev-claude 2>/dev/null | sed 's/^jev-claude is //' | tr '\n' ' ')"
+  # `type -a` fails when nothing is found, which is the normal case on a clean machine and must not stop a `set -e -o pipefail` script.
+  found="$(type -a jev-claude 2>/dev/null | sed 's/^jev-claude is //' | awk '!seen[$0]++' | tr '\n' ' ' || true)"
   case ":$PATH:" in
     *":$DIR/bin:"*) say "        $DIR/bin is already on your PATH" ;;
     *)

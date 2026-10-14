@@ -24,7 +24,7 @@ import {
 } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { archive, hostTarget, releaseVersion, stageBundle } from "./package-rust-release.mjs";
 
@@ -90,8 +90,27 @@ function installers() {
   return list;
 }
 
+const OTHER_EDITION = ["jev-claude", "jev-claude.exe", "jev-claude.cmd", "jev-claude.ps1"];
+
+/**
+ * The PATH to run an installer with. "clean" has no jev-claude anywhere, as on a new machine
+ * (whatever this one has installed): the installer must not trip over finding nothing. "shadowed"
+ * has a stand-in for the Node edition's command in front, as on a machine with both editions.
+ */
+function pathFor(mode, work, current) {
+  const kept = current
+    .split(delimiter)
+    .filter((dir) => dir && !OTHER_EDITION.some((name) => existsSync(join(dir, name))));
+  if (mode === "clean") return kept.join(delimiter);
+  const other = join(work, "other-edition");
+  mkdirSync(other, { recursive: true });
+  writeFileSync(join(other, "jev-claude"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+  writeFileSync(join(other, "jev-claude.cmd"), "@exit /b 0\r\n");
+  return [other, ...kept].join(delimiter);
+}
+
 // Asynchronous: the release server lives in this process and must keep answering while the installer runs.
-function install([label, command, args, extra, stdinFile], { releaseUrl, work, fresh = true }) {
+function install([label, command, args, extra, stdinFile], { releaseUrl, work, fresh = true, path = "clean" }) {
   const home = join(work, "home");
   const installDir = join(work, "install");
   if (fresh) rmSync(installDir, { recursive: true, force: true });
@@ -113,6 +132,8 @@ function install([label, command, args, extra, stdinFile], { releaseUrl, work, f
     JEV_INSTALL_CLAUDE: "0",
   };
   delete env.JEV_ROOT;
+  const pathKey = Object.keys(env).find((name) => name.toLowerCase() === "path") ?? "PATH";
+  env[pathKey] = pathFor(path, work, env[pathKey] ?? "");
   for (const [name, value] of Object.entries(extra)) if (value === null) delete env[name];
   return new Promise((done) => {
     const child = spawn(command, args, { env, cwd: work, stdio: [stdinFile ? "pipe" : "ignore", "pipe", "pipe"] });
@@ -206,9 +227,10 @@ async function main() {
       );
 
       // Again over the top: an update replaces the folder and says so.
-      const again = await install(entry, { releaseUrl: url(goodServer), work, fresh: false });
+      const again = await install(entry, { releaseUrl: url(goodServer), work, fresh: false, path: "shadowed" });
       check(again.status === 0, "a second run succeeds");
       check(/reinstalled version/.test(again.output), "and says it reinstalled the same version");
+      check(/already on your PATH/.test(again.output), "and reports the other jev-claude on the PATH");
 
       // A download that does not match its published checksum must install nothing.
       const tampered = await install(entry, { releaseUrl: url(badServer), work });
