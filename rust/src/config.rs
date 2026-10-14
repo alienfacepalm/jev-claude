@@ -25,14 +25,7 @@ pub struct Tier {
 
 /// Model tiers, cheapest first.
 pub const TIERS: [Tier; 4] = [
-    Tier {
-        name: "haiku",
-        id: "claude-haiku-5-5",
-        family: "haiku",
-        thinking: false,
-        effort: false,
-        floor: None,
-    },
+    Tier { name: "haiku", id: "claude-haiku-5-5", family: "haiku", thinking: false, effort: false, floor: None },
     Tier {
         name: "sonnet",
         id: "claude-sonnet-5-5",

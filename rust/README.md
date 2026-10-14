@@ -8,6 +8,22 @@ nothing, the Node implementation in [`node/`](../node) is the reference.
 Windows, macOS and Linux, installing the programs and putting them on PATH, configuration,
 troubleshooting, and the list of known divergences from Node.
 
+## Install a release (no Node.js, no Rust)
+
+Every release carries ready-made programs. The installer checks your machine, verifies the
+download's SHA-256, installs to `~/jev-claude-rust`, and puts it on your PATH:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | bash -s -- --rust
+```
+
+```powershell
+$env:JEV_IMPL = 'rust'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex
+```
+
+[`doc/RUST.md`](../doc/RUST.md#install-a-release-no-toolchain-no-nodejs) lists the checks, the
+settings, and how to update or remove it. The rest of this page is for building from source.
+
 ## Quick start
 
 You need Rust 1.85+ from [rustup](https://rustup.rs), a C compiler (the MSVC Build Tools on

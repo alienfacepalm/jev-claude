@@ -413,3 +413,36 @@ pub fn answer(choice: &str, confidence: f64) -> jev_router::proxy::RouteFn {
         })
     })
 }
+
+/// What the stand-in prints: the arguments and the variables that say whether a session was set up.
+pub const FAKE_CLAUDE: &str = r#"process.stdout.write(JSON.stringify({
+  args: process.argv.slice(2),
+  env: Object.fromEntries(
+    ["ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL", "JEV_API_KEY"].map((k) => [k, process.env[k] ?? null]),
+  ),
+}));
+"#;
+
+/// A `claude` the launcher finds on PATH: an npm-style `.cmd` shim on Windows (the form the launcher
+/// runs directly through node), an executable script elsewhere.
+pub fn fake_claude(dir: &Path) {
+    #[cfg(windows)]
+    {
+        std::fs::write(dir.join("claude-fake.mjs"), FAKE_CLAUDE).unwrap();
+        std::fs::write(dir.join("claude.cmd"), "@ECHO off\r\n\"node\"  \"%~dp0\\claude-fake.mjs\" %*\r\n").unwrap();
+    }
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let file = dir.join("claude");
+        std::fs::write(&file, format!("#!/usr/bin/env node\n{FAKE_CLAUDE}")).unwrap();
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+}
+
+/// PATH with `dir` first.
+pub fn path_with(dir: &Path) -> std::ffi::OsString {
+    let mut paths = vec![PathBuf::from(dir)];
+    paths.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()));
+    std::env::join_paths(paths).unwrap()
+}

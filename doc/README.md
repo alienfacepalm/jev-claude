@@ -10,7 +10,7 @@ forwarded to Anthropic untouched.
 | --- | --- |
 | [../README.md](../README.md) | What it is, installing, configuration, how routing works, development |
 | [PLUGIN_INSTALL.md](PLUGIN_INSTALL.md) | Installing from inside Claude Code with the `jev-installer` plugin |
-| [UPDATES.md](UPDATES.md) | How to update today; the planned launch-time update check and `jev-claude --update` |
+| [UPDATES.md](UPDATES.md) | How to update today (both editions); the planned launch-time update check and `jev-claude --update` |
 
 ## Implementations
 
@@ -21,7 +21,7 @@ what CI runs, troubleshooting, and known divergences from Node.
 | Page | What it covers |
 | --- | --- |
 | [NODE.md](NODE.md) | The Node.js reference implementation in `node/` (what the installers set up); Biome |
-| [RUST.md](RUST.md) | The Rust port in `rust/`; rustfmt, clippy, the MSRV check |
+| [RUST.md](RUST.md) | The Rust port in `rust/`: installing a release without Node.js, building from source; rustfmt, clippy, the MSRV check |
 | [PYTHON.md](PYTHON.md) | The Python port in `python/`; ruff, mypy, the virtual environment |
 
 The short quick starts in [node/](../node/README.md),

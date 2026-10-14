@@ -48,8 +48,14 @@ Plus the library behaviour those programs use, sections 3-15.
   call the real Jev. They stay Node-only.
 - `node/scripts/bump-version.mjs` and the release workflow: the release version stays in the root
   `package.json` (section 2.3).
-- Installers, the `shim/claude` script, the Claude Code plugin, and the skills: they keep invoking
-  the Node implementation. Choosing an implementation at install time is future work.
+- The `shim/claude` script, the Claude Code plugin, and the repository's skills keep invoking the
+  Node implementation. The installers (`install.sh`, `install.ps1`) set up the Node implementation
+  by default, or the Rust one with `--rust` / `JEV_IMPL=rust`: a release archive built by
+  `node/scripts/package-rust-release.mjs` that holds `bin/` (the seven programs), `.claude/skills/`
+  (the repository's skills with the call to `node .../node/bin/<program>.mjs` replaced by the
+  program, found on PATH) and a `package.json` with the release version. That folder is what
+  section 2.4 walks up to, so those programs need no `JEV_ROOT`. The Python port has no installer
+  path.
 - Auto-update wiring in the launcher. `node/src/update.mjs` exists but the Node launcher does not
   yet print the update notice or accept `--update` (`doc/UPDATES.md` describes the intended
   behaviour). Ports implement the update library and `jev-update-check` (section 14) and must not
@@ -113,7 +119,8 @@ Several behaviours need the repository root (the directory holding `.git`, `pack
    it is documented in the Rust and Python guides as the override for programs installed
    outside the clone, and not in the root README's Configuration table or `.env.example`; it is
    never a project `.env` key);
-2. otherwise the nearest ancestor that contains `.claude/skills/jev-calibrate/SKILL.md`, walking up
+2. otherwise the nearest ancestor that contains `.claude/skills/jev-calibrate/SKILL.md` (a clone, or
+   a Rust release install, which has `bin/` beside `.claude/` and `package.json`), walking up
    from: Rust `std::env::current_exe()`, after `canonicalize`; Python the `jev_router` package's `__file__`;
 3. otherwise none. Then: the launcher omits the `--add-dir <root>` pair; `shadowsSkill` is false
    (the first-run offer and its `/jev-calibrate check` prompt still work); `jev-check` reports mode

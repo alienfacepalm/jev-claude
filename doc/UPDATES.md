@@ -28,6 +28,12 @@ git -C ~/jev-claude pull --ff-only
 cd ~/jev-claude && pnpm install --frozen-lockfile
 ```
 
+The Rust edition installed from a release (`install.sh --rust`, `install.ps1` with `JEV_IMPL=rust`;
+see [doc/RUST.md](RUST.md#install-a-release-no-toolchain-no-nodejs)) is not a clone. Update it by
+running the same installer again: it downloads the latest release, checks its SHA-256, swaps the
+folder, and prints `updated X -> Y` or `reinstalled version Y`. `jev-update-check` has nothing to
+look at in such an install (there is no git history) and reports no update.
+
 The `jev-claude` command itself is a pnpm shim that records the path of the entry point at install
 time, and nothing here rewrites it. An install made before the code moved into `node/` (any install older
 than the move, whatever its version) therefore fails after a fast-forward with `Cannot find module .../bin/jev-claude.mjs`; the

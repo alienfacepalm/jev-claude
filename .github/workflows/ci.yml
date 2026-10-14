@@ -138,6 +138,12 @@ jobs:
           JEV_IMPL_CMD_STATUSLINE="rust/target/release/jev-statusline$exe" \
           node --test conformance/harness
 
+      # Packages the build as the release archive and installs it with the real installers
+      # (install.sh, and install.ps1 on Windows) from a local server: see node/scripts/installer-smoke-test.mjs.
+      - name: Installers install the Rust edition
+        working-directory: .
+        run: node node/scripts/installer-smoke-test.mjs --bin-dir rust/target/release
+
   python:
     name: python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -213,6 +219,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
     # Two pushes in quick succession bump one after the other, never side by side.
     concurrency:
       group: version-bump
@@ -236,3 +244,90 @@ jobs:
           git commit -am "chore(release): v${{ steps.bump.outputs.version }}"
           git tag "v${{ steps.bump.outputs.version }}"
           git push origin HEAD:master "v${{ steps.bump.outputs.version }}"
+
+  # The native programs, built from the release commit for each platform, so the Rust edition
+  # installs without Node.js (install.sh --rust, install.ps1 with JEV_IMPL=rust). They must be
+  # jobs of this run: a push made with GITHUB_TOKEN does not start another workflow. Linux builds
+  # are static (musl), so they need no particular glibc; Windows builds link the C runtime in.
+  binaries:
+    name: binaries (${{ matrix.target }})
+    needs: release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: windows-x64, os: windows-latest, triple: x86_64-pc-windows-msvc }
+          - { target: linux-x64, os: ubuntu-22.04, triple: x86_64-unknown-linux-musl }
+          - { target: linux-arm64, os: ubuntu-22.04-arm, triple: aarch64-unknown-linux-musl }
+          - { target: macos-arm64, os: macos-latest, triple: aarch64-apple-darwin }
+          - { target: macos-x64, os: macos-latest, triple: x86_64-apple-darwin }
+    steps:
+      # The tag, not github.sha: the version bump is a commit made after the push.
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.release.outputs.version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.REFERENCE_NODE }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.triple }}
+
+      - name: musl C compiler (the ring TLS backend compiles a little C)
+        if: endsWith(matrix.triple, '-musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          key: ${{ matrix.triple }}
+
+      - name: Build
+        working-directory: rust
+        run: cargo build --release --locked --target ${{ matrix.triple }}
+
+      - name: Package
+        run: node node/scripts/package-rust-release.mjs --bin-dir rust/target/${{ matrix.triple }}/release --target ${{ matrix.target }} --out dist
+
+      # The archive that will be published, installed by the real installer. The Intel Mac build is
+      # cross-compiled on an Apple-silicon runner and cannot run there, so it is only packaged.
+      - name: Install the archive with the installer
+        if: matrix.target != 'macos-x64'
+        run: node node/scripts/installer-smoke-test.mjs --archive dist/jev-claude-${{ matrix.target }}.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive-${{ matrix.target }}
+          path: dist/jev-claude-*.tar.gz
+          if-no-files-found: error
+
+  # Publishes the GitHub release, with SHA256SUMS, only once every archive exists. The installers
+  # download releases/latest/download/<archive>, so the names carry no version.
+  publish:
+    name: publish release
+    needs: [release, binaries]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: archive-*
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum jev-claude-*.tar.gz | tee SHA256SUMS
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ needs.release.outputs.version }}"
+          gh release create "$tag" dist/jev-claude-*.tar.gz dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --verify-tag --title "$tag" --generate-notes

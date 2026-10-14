@@ -18,7 +18,8 @@ jev-claude/
 ├─ conformance/          # fixtures, golden cases and the harness shared by every implementation
 ├─ node/                 # Node.js: the reference implementation
 │  ├─ package.json       # workspace package @jev-router/node (dependencies, test script)
-│  ├─ bin/  src/  test/  scripts/
+│  ├─ bin/  src/  test/  scripts/   # scripts/ also holds the release tooling: bump-version,
+│  │                                #   package-rust-release, installer-smoke-test
 ├─ rust/                 # Rust port: Cargo.toml (with the [lints] policy), src/, tests/
 │  ├─ rustfmt.toml  .cargo/config.toml   # 120 columns; rustdoc warnings are errors
 │  └─ target/            # build output (git-ignored)
@@ -48,9 +49,11 @@ and passes three layers of tests: its own port of `node/test/`, every golden cas
 `conformance/cases/` (generated from the Node functions), and the black-box harness in
 `conformance/harness/`, which drives any implementation's proxy and status line. Each guide
 gives the commands for running the harness against it and lists where it knowingly differs from
-Node. The installers, the shim, the skills, and the plugin still use the Node implementation;
-choosing another one at install time is not built yet. Because the skills run `node/bin/*.mjs`,
-Node.js must be on `PATH` whichever launcher you use.
+Node. The shim, the repository's skills, and the plugin use the Node implementation. The
+installers set up Node by default, or Rust with `--rust` / `JEV_IMPL=rust`, from a release archive
+(below). In a clone the skills run `node/bin/*.mjs`, so Node.js must be on `PATH` whichever
+launcher you use; the archive's skills are generated copies that run the native programs, so the
+installed Rust edition needs no Node.js.
 
 ## Continuous integration
 
@@ -64,20 +67,40 @@ Each implementation is one job, run on `windows-latest` (the gating platform, SP
 | `rust` | `cargo fmt --check`, clippy with `-D warnings`, `cargo test`, `cargo doc`, `cargo +1.85 check` (MSRV), `cargo build --release`, then the harness against `rust/target/release` |
 | `python` | a virtual environment with the `dev` extra, `ruff format --check`, `ruff check`, mypy for `win32` and `linux`, `compileall`, `unittest`, then the harness against the venv interpreter |
 
-The `release` job at the end of `ci.yml` `needs` all three, on both platforms, so a version is only
-cut from a push that passed everything. It runs on pushes to `master` (not pull requests, and not
+The `release` job `needs` all three, on both platforms, so a version is only cut from a push that
+passed everything. It runs on pushes to `master` (not pull requests, and not
 the `chore(release):` commit it makes itself), bumps the version in the root `package.json` from the
 commits pushed, commits it and tags it. Runs for `master` are never cancelled by a newer push, so
-each bump sees its own push's commits.
+each bump sees its own push's commits. After it, `binaries` (one job per platform) and `publish`
+run in the same workflow, because a push made with the workflow's token starts no further run.
 
 ## Why the root keeps a package.json
 
-Installs are git clones that the installers link onto the PATH with
+Node installs are git clones that the installers link onto the PATH with
 `pnpm add --global link:<clone>`, and the update check reads the release version from
 `package.json` at the top of the clone. The root `package.json` therefore stays the installed
 package: it carries the version, the pinned pnpm, and `bin` entries that point into `node/bin/`.
 It is a pnpm workspace root, so `pnpm install` at the root installs `node/`'s dependencies (and
 Biome), and `pnpm test` at the root runs `node/`'s tests and then the conformance harness.
+
+## The Rust release archive
+
+`node/scripts/package-rust-release.mjs` turns a Rust build into `jev-claude-<platform>.tar.gz`, which
+unpacks to:
+
+```
+bin/                 the seven programs
+.claude/skills/      the repository's three skills, with the node call replaced by the program
+package.json         name and release version only
+.env.example  LICENSE
+```
+
+This is the shape SPEC.md 2.4 walks up to, so the programs find their root and version with no
+`JEV_ROOT`. `rust/tests/bundle.rs` and `node/test/package-rust-release.test.mjs` check it, and
+`node/scripts/installer-smoke-test.mjs` installs the archive with the real `install.sh` /
+`install.ps1` from a local server (a wrong checksum must install nothing). The `binaries` and
+`publish` jobs of `ci.yml` build the five platform archives from the release tag, run that smoke
+test on each one that can run on its runner, and publish them with `SHA256SUMS` as a GitHub release.
 
 ## Two roots in the Node code
 

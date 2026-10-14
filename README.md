@@ -19,7 +19,8 @@ need a Jev API key: sign in at
 [console.typesafe.ai](https://console.typesafe.ai) and create one on the
 [API keys page](https://console.typesafe.ai/keys). The installer asks for it.
 
-Run the line for your system:
+Without Node.js, use the [Rust edition](#without-nodejs-the-rust-edition) below instead: it needs
+only Claude Code. Otherwise run the line for your system:
 
 | System | Command |
 | --- | --- |
@@ -50,6 +51,49 @@ jev-claude
 ```
 
 The `jev-router` package on npm is the original project and does not include this fork's changes.
+
+### Without Node.js: the Rust edition
+
+The same program is also built as native executables. The Rust edition needs no Node.js, no pnpm,
+and no clone, only [Claude Code](https://code.claude.com/docs/en/setup) to run. Ask the installer
+for it:
+
+| System | Command |
+| --- | --- |
+| macOS, Linux, WSL | `curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh \| bash -s -- --rust` |
+| Windows, PowerShell | `$env:JEV_IMPL = 'rust'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex` |
+| Windows, Command Prompt | `powershell -NoProfile -Command "$env:JEV_IMPL='rust'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex"` |
+| Windows, Git Bash | the macOS / Linux line (it sets up Git Bash only; run the PowerShell line too for PowerShell and cmd) |
+
+The installer checks the machine before it changes anything, and prints each check and each step as
+it goes. A required check that fails stops it with a list of what to fix, so nothing is left half
+done:
+
+| Check | Needed? | If it fails |
+| --- | --- | --- |
+| Platform: Windows x64 (ARM64 runs it through emulation), macOS Apple silicon or Intel, Linux x64 or arm64 | required | [build from source](doc/RUST.md#install-the-toolchain) |
+| A download tool (`curl`, or PowerShell) and `tar` (Windows 10 version 1803 and later has one) | required | the message names what to install |
+| A checksum tool (`sha256sum`, `shasum` or `openssl`; built in on Windows) | required | the download is never used unchecked |
+| The release host answers (your network, VPN or proxy) | required | check the connection and run it again |
+| Claude Code (`claude`) | warns | offers to run Anthropic's own installer, or prints the command |
+| Whether Claude Code is the native build or the older npm package, which runs on Node.js | warns | reinstall it natively |
+| git | optional | the status line leaves out the branch and worktree |
+| Node.js | not used | reported for information only |
+
+Then it downloads the archive for your platform from the latest
+[release](https://github.com/alienfacepalm/jev-claude/releases), compares its SHA-256 with the
+release's `SHA256SUMS` (a mismatch installs nothing), unpacks it to `~/jev-claude-rust`, adds
+`~/jev-claude-rust/bin` to your PATH (your shell profile, or your user PATH on Windows), runs the
+installed `jev-check` as a final test, and asks for your keys as above. The `/jev-calibrate`,
+`/jev-explain` and `/jev-legend` skills in that install run the native programs, so they need no
+Node.js either. Running the installer again updates the install and says which version it replaced.
+
+Settings: `JEV_INSTALL_DIR` (where to install), `JEV_VERSION` (a release tag such as `v0.10.0`, instead
+of the latest), `JEV_NO_MODIFY_PATH=1` (leave your PATH alone and print what to add),
+`JEV_INSTALL_CLAUDE=1` or `0` (install Claude Code when missing without asking, or never offer), and
+`JEV_RELEASE_URL` (download from a mirror). If both editions are installed, whichever `jev-claude`
+comes first on your PATH runs; the installer shows you both. To remove the Rust edition, delete
+`~/jev-claude-rust` and its PATH entry. [doc/RUST.md](doc/RUST.md) has the details.
 
 ### Installing by hand
 
@@ -373,8 +417,9 @@ node node/bin/jev-claude.mjs -p "what is 2+2?"
 prompts.
 
 The Node.js implementation lives in `node/`; ports to Rust and Python live beside it in
-`rust/` and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers use
-the Node.js implementation. See [doc/LAYOUT.md](doc/LAYOUT.md) for each implementation's test
+`rust/` and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers set up the
+Node.js implementation, or the Rust one with `--rust` (see
+[Without Node.js](#without-nodejs-the-rust-edition)). See [doc/LAYOUT.md](doc/LAYOUT.md) for each implementation's test
 commands, what lives where, and why the root keeps a `package.json`.
 
 ```bash
@@ -391,15 +436,16 @@ differs from Node.
 
 | Implementation | Guide | Quick start | Toolchain | Lint and format |
 | --- | --- | --- | --- | --- |
-| Node.js (reference; what the installers set up) | [doc/NODE.md](doc/NODE.md) | [node/README.md](node/README.md) | Node 22.16+ (24.21 to regenerate golden cases), pnpm | Biome |
-| Rust | [doc/RUST.md](doc/RUST.md) | [rust/README.md](rust/README.md) | Rust stable, MSRV 1.85 | rustfmt, clippy (`all` + `pedantic`, `-D warnings`) |
+| Node.js (reference; the installers' default) | [doc/NODE.md](doc/NODE.md) | [node/README.md](node/README.md) | Node 22.16+ (24.21 to regenerate golden cases), pnpm | Biome |
+| Rust (also released as ready-made programs; the installers' `--rust` edition) | [doc/RUST.md](doc/RUST.md) | [rust/README.md](rust/README.md) | Rust stable, MSRV 1.85 | rustfmt, clippy (`all` + `pedantic`, `-D warnings`) |
 | Python | [doc/PYTHON.md](doc/PYTHON.md) | [python/README.md](python/README.md) | CPython 3.12+ | ruff (format and lint), mypy `strict` |
 
-Whichever launcher you run, the `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the
-Node.js scripts in `node/bin/`, so Node.js must be on `PATH`. A Rust or Python build finds the
-repository root (and with it those skills) by walking up from its own location, so build it
-inside the clone; each guide says what a copy installed elsewhere loses and how `JEV_ROOT` fixes
-it.
+In a clone, the `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the Node.js scripts
+in `node/bin/`, so Node.js must be on `PATH` whichever launcher you run. The Rust release archive
+ships its own copies of the skills that run the native programs instead, which is why that
+edition needs no Node.js. A Rust or Python build finds the repository root (and with it the skills)
+by walking up from its own location, so build it inside the clone; each guide says what a copy
+installed elsewhere loses and how `JEV_ROOT` fixes it.
 
 ### Continuous integration
 
@@ -407,7 +453,8 @@ it.
 Windows (the gating platform, SPEC.md 16) and Ubuntu, with one job per implementation. Each job
 runs that implementation's lint, format and unit-test gates and then the conformance harness
 against its programs. The Node job also regenerates the golden cases and fails if
-`conformance/cases` changes. The commands are the ones in each guide's "What CI runs" section
+`conformance/cases` changes, and the Rust job packages its build as a release archive and installs
+it with the real installers. The commands are the ones in each guide's "What CI runs" section
 (for Rust, "The full gate").
 
 ### Calibrating for new models
@@ -427,7 +474,10 @@ clone of this repository. It checks Anthropic's model notes and published per-ta
 Every push to `master` runs [CI](.github/workflows/ci.yml) (lint, format and tests for all three
 implementations on Windows and Linux). Only when every job passes does its final `release` job bump
 the version in the root `package.json`, commit it as `chore(release): vX.Y.Z`, and tag it.
-Pull after pushing to pick up that commit. The size of the bump comes from the
+Pull after pushing to pick up that commit. The same run then builds the Rust programs for Windows,
+macOS and Linux from the tagged commit, tests each archive with the installer, and publishes them,
+with `SHA256SUMS`, as a GitHub release: that release is what `install.sh --rust` and `install.ps1`
+download. The size of the bump comes from the
 [Conventional Commits](https://www.conventionalcommits.org) prefixes of the commits pushed:
 
 | Commit subject | Bump |
