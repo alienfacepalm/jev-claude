@@ -25,9 +25,19 @@ case "${CLAUDE_CONFIG_DIR:-}" in
     ;;
 esac
 
-# Run the entry point through node rather than exec'ing the `jev-claude` link: the repository
-# is checked out with CRLF line endings, which makes the kernel read the shebang as `node\r`
-# and refuse to start it. A missing entry point must not take Lattis's Claude row down with it.
+# Prefer the native Rust launcher that `install.sh --rust` puts in ~/jev-claude-rust/bin: it is a
+# compiled program, so it needs neither node nor a shebang.
+JEV_NATIVE="${JEV_NATIVE:-$HOME/jev-claude-rust/bin/jev-claude}"
+if [ -x "$JEV_NATIVE" ]; then
+  JEV_SHIM=1
+  export JEV_SHIM
+  exec "$JEV_NATIVE" "$@"
+fi
+
+# Otherwise run the Node entry point through node rather than exec'ing the `jev-claude` link: the
+# repository is checked out with CRLF line endings, which makes the kernel read the shebang as
+# `node\r` and refuse to start it. A missing entry point must not take Lattis's Claude row down
+# with it.
 JEV_ENTRY="${JEV_ENTRY:-$HOME/.claude/jev-router/node/bin/jev-claude.mjs}"
 if [ ! -f "$JEV_ENTRY" ] || ! command -v node >/dev/null 2>&1; then
   exec "$REAL" "$@"
