@@ -19,9 +19,6 @@ jev-claude/
 ├─ node/                 # Node.js: the reference implementation
 │  ├─ package.json       # workspace package @jev-router/node (dependencies, test script)
 │  ├─ bin/  src/  test/  scripts/
-├─ go/                   # Go port: go.mod, cmd/, internal/
-│  ├─ .golangci.yml  staticcheck.conf    # lint policy
-│  └─ bin/               # local build output (git-ignored)
 ├─ rust/                 # Rust port: Cargo.toml (with the [lints] policy), src/, tests/
 │  ├─ rustfmt.toml  .cargo/config.toml   # 120 columns; rustdoc warnings are errors
 │  └─ target/            # build output (git-ignored)
@@ -31,15 +28,15 @@ jev-claude/
 
 ## Implementations
 
-| | Node.js | Go | Rust | Python |
-| --- | --- | --- | --- | --- |
-| Status | reference; what the installers set up | complete | complete | complete |
-| Guide | [NODE.md](NODE.md) | [GO.md](GO.md) | [RUST.md](RUST.md) | [PYTHON.md](PYTHON.md) |
-| Toolchain | Node 22.16+ to run, Node 24.21.x to regenerate golden cases; pnpm | Go 1.23+ | Rust stable, MSRV 1.85 | CPython 3.12+ |
-| Runtime dependencies | `@typesafe-ai/sdk` | standard library | hyper, tokio, rustls (`ring`), sha1, regex | standard library |
-| Dev tools | Biome (root devDependency) | staticcheck 2024.1.1, golangci-lint v2.1.6 | rustfmt, clippy | ruff, mypy (the `dev` extra, in `python/.venv`) |
-| Tests (as SPEC 16.4) | `pnpm test` | `cd go && go vet ./... && go test ./...` | `cd rust && cargo clippy --all-targets -- -D warnings && cargo test` | `python -m unittest discover -s python/tests -t python` |
-| Lint and format | `pnpm lint && pnpm run format:check` | `gofmt -l .` (must print nothing), `staticcheck ./...`, `golangci-lint run ./...` | `cargo fmt --check`, `cargo doc --no-deps`, `cargo +1.85 check --all-targets` | `ruff format --check python`, `ruff check python`, `mypy --config-file python/pyproject.toml` |
+| | Node.js | Rust | Python |
+| --- | --- | --- | --- |
+| Status | reference; what the installers set up | complete | complete |
+| Guide | [NODE.md](NODE.md) | [RUST.md](RUST.md) | [PYTHON.md](PYTHON.md) |
+| Toolchain | Node 22.16+ to run, Node 24.21.x to regenerate golden cases; pnpm | Rust stable, MSRV 1.85 | CPython 3.12+ |
+| Runtime dependencies | `@typesafe-ai/sdk` | hyper, tokio, rustls (`ring`), sha1, regex | standard library |
+| Dev tools | Biome (root devDependency) | rustfmt, clippy | ruff, mypy (the `dev` extra, in `python/.venv`) |
+| Tests (as SPEC 16.4) | `pnpm test` | `cd rust && cargo clippy --all-targets -- -D warnings && cargo test` | `python -m unittest discover -s python/tests -t python` |
+| Lint and format | `pnpm lint && pnpm run format:check` | `cargo fmt --check`, `cargo doc --no-deps`, `cargo +1.85 check --all-targets` | `ruff format --check python`, `ruff check python`, `mypy --config-file python/pyproject.toml` |
 
 The "Tests" row is the minimum SPEC.md 16.4 requires; the "Lint and format" row is what each
 implementation adds on top, and CI runs both. Each guide has the exact commands, for Bash and
@@ -64,11 +61,10 @@ Each implementation is one job, run on `windows-latest` (the gating platform, SP
 | Job | Runs |
 | --- | --- |
 | `node` | `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm run format:check`, `pnpm test` (unit tests and the harness against Node), then `node conformance/generate.mjs` and `git diff --exit-code conformance/cases`. Node is pinned to 24.21.x in every job, because the generator runs on nothing else |
-| `go` | gofmt, `go vet`, staticcheck, golangci-lint, `go test` (plus `go test -race` on Ubuntu), `go build -o bin/ ./cmd/...`, then the harness against `go/bin` |
 | `rust` | `cargo fmt --check`, clippy with `-D warnings`, `cargo test`, `cargo doc`, `cargo +1.85 check` (MSRV), `cargo build --release`, then the harness against `rust/target/release` |
 | `python` | a virtual environment with the `dev` extra, `ruff format --check`, `ruff check`, mypy for `win32` and `linux`, `compileall`, `unittest`, then the harness against the venv interpreter |
 
-The `release` job at the end of `ci.yml` `needs` all four, on both platforms, so a version is only
+The `release` job at the end of `ci.yml` `needs` all three, on both platforms, so a version is only
 cut from a push that passed everything. It runs on pushes to `master` (not pull requests, and not
 the `chore(release):` commit it makes itself), bumps the version in the root `package.json` from the
 commits pushed, commits it and tags it. Runs for `master` are never cancelled by a newer push, so

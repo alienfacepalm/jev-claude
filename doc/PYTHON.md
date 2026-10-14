@@ -199,7 +199,7 @@ $env:PYTHONPATH = "$PWD\python\src"; python -m jev_router.cli.claude
 Keep `PYTHONPATH` set while Claude Code runs: the status line it starts imports the package the
 same way.
 
-### Next to the Node, Go and Rust installs
+### Next to the Node and Rust installs
 
 If you also ran the installer, Node's `jev-claude` is on `PATH` as well, and whichever directory
 comes first on `PATH` wins. To see which one runs, use `command -v jev-claude` (Bash) or

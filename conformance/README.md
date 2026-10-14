@@ -1,6 +1,6 @@
 # Conformance data
 
-Inputs shared by every implementation's tests, so that Node.js, Go, Rust, and Python are checked
+Inputs shared by every implementation's tests, so that Node.js, Rust, and Python are checked
 against the same real data. Behaviour is defined in [`SPEC.md`](../SPEC.md).
 
 | Path | What it is |

@@ -152,12 +152,12 @@ Without linking anything, run the launcher by path:
 node node/bin/jev-claude.mjs -p "what is 2+2?"
 ```
 
-### Next to the Go, Rust and Python builds
+### Next to the Rust and Python builds
 
 The ports build programs with the same names. Whichever directory comes first on `PATH` wins;
 see which with `command -v jev-claude` (Bash) or `Get-Command jev-claude -All` (PowerShell). The
 installer sets up this implementation, so it is the default; call a port by its path, or give it
-a short name, as each port's guide (`doc/GO.md`, `doc/RUST.md`) describes. Every implementation
+a short name, as each port's guide (`doc/RUST.md`, `doc/PYTHON.md`) describes. Every implementation
 shares the same files: settings, the status directory, the decision log and the update state,
 so you can switch between them freely.
 

@@ -21,11 +21,10 @@ what CI runs, troubleshooting, and known divergences from Node.
 | Page | What it covers |
 | --- | --- |
 | [NODE.md](NODE.md) | The Node.js reference implementation in `node/` (what the installers set up); Biome |
-| [GO.md](GO.md) | The Go port in `go/`; gofmt, go vet, staticcheck, golangci-lint |
 | [RUST.md](RUST.md) | The Rust port in `rust/`; rustfmt, clippy, the MSRV check |
 | [PYTHON.md](PYTHON.md) | The Python port in `python/`; ruff, mypy, the virtual environment |
 
-The short quick starts in [node/](../node/README.md), [go/](../go/README.md),
+The short quick starts in [node/](../node/README.md),
 [rust/](../rust/README.md) and [python/](../python/README.md) link back to these guides.
 
 ## Contributing and the shared contract

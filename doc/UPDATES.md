@@ -4,7 +4,7 @@ jev-claude is a git clone (`~/jev-claude` by default). Updating means fast-forwa
 
 ## Status
 
-The update library (`node/src/update.mjs`, and its Go, Rust and Python ports; SPEC.md section 14)
+The update library (`node/src/update.mjs`, and its Rust and Python ports; SPEC.md section 14)
 and the `jev-update-check` program (`node/bin/jev-update-check.mjs`) exist and are tested by
 `node/test/update.test.mjs`. The `jev-claude` launcher does not call them yet (SPEC.md 1.2). So
 today the launcher:

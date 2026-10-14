@@ -8,7 +8,7 @@ directory in section 12, the negated-verb and question strips in 7.6, and sectio
 subcommands). Reference implementation: `node/` at commit `e5a09fb`, run on Node.js
 24.21.0.
 
-This document specifies how the Node.js implementation of jev-claude is ported to Go, Rust, and
+This document specifies how the Node.js implementation of jev-claude is ported to Rust and
 Python. It is normative for the ports. Where this document is silent, the Node.js source is the
 specification; where the two disagree, the disagreement is a defect in this document and must be
 raised, not resolved silently by either port.
@@ -65,13 +65,6 @@ Each port lives in its own top-level directory, idiomatic for its language, and 
 outside it.
 
 ```
-go/
-  go.mod                      module github.com/alienfacepalm/jev-claude/go, go 1.23
-  cmd/<program>/main.go       one per program in 1.1
-  internal/<package>/         config, env, jev, router, policy, reasons, proxy, status,
-                              settings, launch, firstrun, statusline, explain, legend, icons,
-                              modelnames, worktree, update, logx, jsjson, jsstr, osdirs, repo
-  README.md
 rust/
   Cargo.toml                  package jev-router, edition 2024, rust-version 1.85
   src/lib.rs, src/<module>.rs
@@ -98,7 +91,6 @@ that holds an API key.
 
 | Port | Toolchain | Runtime dependencies | Build | Test |
 | --- | --- | --- | --- | --- |
-| Go | Go 1.23+ | standard library only | `go build ./...` | `go vet ./... && go test ./...` |
 | Rust | stable, MSRV 1.85 | `tokio`, `hyper` 1.x, `hyper-util`, `http-body-util`, `hyper-rustls` (or `rustls` + `tokio-rustls` + `webpki-roots`), `sha1`, `regex`; anything else needs a line of justification in `rust/README.md` | `cargo build --release` | `cargo test && cargo clippy --all-targets -- -D warnings` |
 | Python | CPython 3.12+ | standard library only; tests use `unittest` | none needed | `python -m unittest discover -s python/tests -t python` |
 
@@ -118,12 +110,11 @@ Several behaviours need the repository root (the directory holding `.git`, `pack
 `.claude/skills`). Node derives it from its own file location. Ports resolve it, once at start:
 
 1. `JEV_ROOT`, when set and non-empty in the process environment (ports only; Node ignores it, so
-   it is documented in the Go, Rust and Python guides as the override for programs installed
+   it is documented in the Rust and Python guides as the override for programs installed
    outside the clone, and not in the root README's Configuration table or `.env.example`; it is
    never a project `.env` key);
 2. otherwise the nearest ancestor that contains `.claude/skills/jev-calibrate/SKILL.md`, walking up
-   from: Go `os.Executable()` and Rust `std::env::current_exe()`, each after
-   `filepath.EvalSymlinks` / `canonicalize`; Python the `jev_router` package's `__file__`;
+   from: Rust `std::env::current_exe()`, after `canonicalize`; Python the `jev_router` package's `__file__`;
 3. otherwise none. Then: the launcher omits the `--add-dir <root>` pair; `shadowsSkill` is false
    (the first-run offer and its `/jev-calibrate check` prompt still work); `jev-check` reports mode
    `installed`; `jev-update-check` exits 0 without writing anything; the Jev `User-Agent` uses
@@ -151,17 +142,15 @@ see, so each port puts them in its helper modules (2.1) and tests them directly.
   `[\t\n\x0B\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]` (call it `JSWS`).
   Ports must never use their engine's own `\s`; every `\s` in a ported pattern is written out as
   `JSWS`. `\w`/`\d`/`\b` are written ASCII-only: Python compiles with `re.ASCII` (safe, since `\s`
-  is spelled out), Rust uses `(?-u:\b)` and explicit ASCII classes, Go's RE2 classes are already
-  ASCII.
+  is spelled out), Rust uses `(?-u:\b)` and explicit ASCII classes.
 - **Case-insensitivity.** JavaScript's non-`u` `i` flag folds ASCII letters only for these
   patterns (`ſ` does not match `s`, U+212A does not match `k`). Python with `re.ASCII` behaves the
   same. Rust's `(?i)` folds those in Unicode mode, and the pattern must stay in Unicode mode for the
   `JSWS` class, so Rust scopes case-insensitivity to the literal words inside ASCII groups,
-  `(?i-u:use|switch to|...)`, or uses the lowering approach below. Go's `(?i)` folds Unicode, so Go
-  must not use it: it matches against a copy of the text with ASCII `A-Z` lowered (same length,
-  same offsets) using lower-case patterns.
-- **Lookahead.** Go's `regexp` and Rust's `regex` have none. Python may use the pattern as written.
-  Go and Rust implement the three Node patterns that use it by these rules, which give the same
+  `(?i-u:use|switch to|...)`, or uses the lowering approach below: match against a copy of the text
+  with ASCII `A-Z` lowered (same length, same offsets) using lower-case patterns.
+- **Lookahead.** Rust's `regex` has none. Python may use the pattern as written.
+  Rust implements the three Node patterns that use it by these rules, which give the same
   result as the JavaScript engine on every input:
   - *Override patterns* (4.5), trailing `(?![-\w])`: search with the lookahead removed. If the
     character after the match is end of text or not in `[-A-Za-z0-9_]`, it matches. Otherwise
@@ -170,8 +159,7 @@ see, so each port puts them in its helper modules (2.1) and tests them directly.
     could backtrack into a shorter passing match (`NAME` alternatives and `model`/`tier` are fixed
     words), and start + 1 always falls inside the verb (`use`, `switch`, `route`), where no
     alternative can begin. The restarted search must still see the real preceding character for
-    `\b`: Rust uses `Regex::find_at(text, start)`, never a search over a sub-slice; Go searches the
-    whole text from the start offset with its own `\b` check against the real preceding character.
+    `\b`: Rust uses `Regex::find_at(text, start)`, never a search over a sub-slice.
   - *`versionOf`* (7.5) and *`shortName`* (12.3), `-(\d{1,2})(?!\d)` inside an optional group:
     after `-(\d+)` (the major), look at the text that follows. If it is `-` followed by a maximal
     digit run `R` with `1 <= len(R) <= 2`, the minor is `R`; in every other case (no `-`, no
@@ -203,10 +191,10 @@ parses and forwards, the Jev request and response, and every file written.
 - Every number becomes an IEEE-754 double (`12345678901234567890` becomes
   `12345678901234567000`; `1.0` becomes `1`; `-0` stays negative zero).
 - Strings may contain lone surrogates from `\uD800`-style escapes; these parse and must survive a
-  round trip as the same escape. Go and Rust therefore hold strings in a representation that can
+  round trip as the same escape. Rust therefore holds strings in a representation that can
   carry them (WTF-8 bytes, or UTF-16 units); Python `str` already can. Regex processing, trimming,
   slicing, and concatenation operate on that surrogate-carrying representation (Rust
-  `regex::bytes` over WTF-8, or UTF-16; Go `regexp` over WTF-8 bytes; Python `str`), so a lone
+  `regex::bytes` over WTF-8, or UTF-16; Python `str`), so a lone
   surrogate in a prompt or label is still a lone surrogate in the Jev request and status file.
   Only hashing and printing to a terminal convert to UTF-8, replacing each lone surrogate with
   U+FFFD, so `conversationKey` hashes a lone surrogate as `EF BF BD`.
@@ -218,8 +206,7 @@ parses and forwards, the Jev request and response, and every file written.
   `merge`, `agentView`), and object spread. A repeated key keeps its first position and takes its
   last value.
 - The literals `NaN`, `Infinity`, `-Infinity` are not JSON and fail to parse.
-- Go: no `map[string]any`; an ordered object type implementing the order above. Rust: no
-  `serde_json::Value`. Python: `json.loads` is acceptable on the already U+FFFD-decoded `str`
+- Rust: no `serde_json::Value`; an ordered object type implementing the order above. Python: `json.loads` is acceptable on the already U+FFFD-decoded `str`
   (never on bytes, whose path sniffs UTF-16/32 BOMs), with `parse_int=float`, a `parse_constant`
   that **raises** (so a body Node rejects takes the error path), and an `object_pairs_hook` that
   builds the ordered object above.
@@ -243,7 +230,7 @@ Timestamps are integer milliseconds since the Unix epoch (`Date.now()`). ISO str
 
 ### 3.5 Trimming
 
-`String.prototype.trim()` strips exactly the `JSWS` characters from both ends. Python `str.strip()`, Go `strings.TrimSpace`, and
+`String.prototype.trim()` strips exactly the `JSWS` characters from both ends. Python `str.strip()` and
 Rust `str::trim` strip different sets (U+001C-U+001F, U+0085, missing U+FEFF) and must not be
 used where Node calls `trim()`: `newTurnPrompt`, `agentLabel`, `fableAllowed`, `effortFloor`,
 `forcedEffort`, `askYesNo`, `gitBranch`, `inspectClone` output, the SDK's environment reads (5.1).
@@ -268,18 +255,18 @@ sign before `0x` (`"-0x1"`) are NaN. This applies to `jev.confidence` in policy
   for doubles), else `r`; `-0` for `-0.5 <= x < 0` and for `-0`; NaN and infinities pass through.
   So `2.5` -> 3, `-2.5` -> -2, `0.49999999999999994` -> 0. The naive `floor(x + 0.5)` is wrong
   (it gives 1 for that last input).
-  Python `round()` and Go `math.Round` differ and must not be used.
+  Python `round()` differs and must not be used.
 - `x.toFixed(2)`: as ECMAScript specifies: for negative `x`, `"-"` plus the result for `-x`
   (`-0` prints `0.00`); otherwise pick the integer `n` minimising `|n/100 - x|` over the exact
   value of the double, the larger `n` on a tie, and print it with exactly two decimals; NaN prints
   `NaN`. Example: `0.125` ->
   `0.13`, `0.375` -> `0.38`, `1.005` -> `1.00` (its double is below 1.005). Python `f"{x:.2f}"`
-  and Go `FormatFloat(x, 'f', 2, 64)` round half-to-even and are wrong on ties.
+  rounds half-to-even and is wrong on ties.
 - `Math.round(confidence * 100)` for percentages uses the `Math.round` rule above.
 
 ### 3.8 Directories (`osdirs`)
 
-Node's rules, which all implementations must share (platform helpers such as Go `os.TempDir`,
+Node's rules, which all implementations must share (platform helpers such as
 Python `tempfile.gettempdir`, Rust `env::home_dir`/`temp_dir` differ and must not be used):
 
 - **Home** (`os.homedir()`): Windows: `USERPROFILE` when non-empty, else the profile directory
@@ -299,7 +286,7 @@ TTY (15). Every other setting is read when used, after `loadEnv`.
 
 ### 3.10 Concurrency
 
-Node is single-threaded; Go, Rust, and Python ports serve requests concurrently and must keep
+Node is single-threaded; the Rust and Python ports serve requests concurrently and must keep
 Node's results:
 
 - One process-wide lock around each status-file read-modify-write (`writeDecision`, `markManual`)
@@ -688,10 +675,7 @@ Header names compare case-insensitively everywhere; values pass through unchange
   when the URL has one); `content-length`, `transfer-encoding`, `connection`, `keep-alive`
   removed; `content-length` set to the forwarded body's byte length when it is non-zero. For
   `GET /v1/models`, and for every request while `JEV_DEBUG` is set, `accept-encoding` is removed.
-- Ports must not let their HTTP client add or change anything else: Go sets
-  `Transport.DisableCompression = true`, `ForceAttemptHTTP2 = false`, a `CheckRedirect` that
-  returns `http.ErrUseLastResponse`, and sends `User-Agent` only when the client sent one (setting
-  it to `""` otherwise suppresses Go's default); Python uses `http.client` with
+- Ports must not let their HTTP client add or change anything else: Python uses `http.client` with
   `skip_host=True, skip_accept_encoding=True` and sets `host` itself; Rust uses hyper's HTTP/1.1
   client without decompression layers. Redirects are relayed, never followed. Response bodies are
   relayed byte for byte, never decompressed.
@@ -856,7 +840,7 @@ None when `JEV_NO_STATUSLINE` is truthy, or when `<cwd>/.claude/settings.json` o
 `<home>/.claude/settings.json` parses and has a truthy `statusLine`. Otherwise `writePrivate` the
 status directory's `settings.json` with `{"statusLine":{"type":"command","command":"<cmd>"}}` and
 pass `--settings <that file>`; a write failure means no args. `<cmd>` is how to run this port's
-status line: Node `"<node executable>" "<script>"`; Go and Rust `"<jev-statusline executable next
+status line: Node `"<node executable>" "<script>"`; Rust `"<jev-statusline executable next
 to the running one>"`; Python `"<sys.executable>" -m jev_router.cli.statusline`.
 
 ### 10.2 Command resolution and launch (`node/src/launch.mjs`)
@@ -873,8 +857,8 @@ to the running one>"`; Python `"<sys.executable>" -m jev_router.cli.statusline`.
   (Node uses its own executable; ports use `node` resolved with `resolveCommand`, falling back to
   the cmd route when there is none); else `ComSpec` or `cmd.exe` with the verbatim command line
   `/d /s /c "<caret-escaped shim> <quoteForCmd(arg)>..."`; anything else runs directly. Never
-  through an implicit shell. The verbatim line needs raw argument passing: Go
-  `SysProcAttr.CmdLine`, Rust `CommandExt::raw_arg`, Python a string command with `shell=False`.
+  through an implicit shell. The verbatim line needs raw argument passing: Rust
+  `CommandExt::raw_arg`, Python a string command with `shell=False`.
 - `quoteForCmd(arg)`: double each run of backslashes that precedes a `"` and escape the `"`;
   double a trailing run of backslashes; wrap in `"`; then caret-escape every character of
   `()[]%!^"`<>&|;, *?` and do that a second time on the result.
@@ -1178,7 +1162,7 @@ Found while generating the golden cases; each is Node's behaviour, pinned by a c
 
 ## 20. Clarifications from the ports
 
-Raised by the Go, Rust, and Python agents; each is Node's behaviour and normative.
+Raised by the Go (since removed), Rust, and Python agents; each is Node's behaviour and normative.
 
 1. **Values fixed at start (3.9)** also include every path Node binds when its modules load:
    `USER_SETTINGS`, `SAVED_MODEL_MEMO`, `FIRST_RUN_FILE`, `UPDATE_FILE`, and `SETTINGS_FILE`
@@ -1189,8 +1173,7 @@ Raised by the Go, Rust, and Python agents; each is Node's behaviour and normativ
    the client is first built, and do not change afterwards.
 4. **Upstream connection (7.7):** `host` omits the port when the URL's port is the scheme's default
    (Node's `URL` drops `:80` for `http` and `:443` for `https`). Ports never use an outbound proxy
-   from `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` (Node does not); Go sets `Transport.Proxy = nil`, and
-   may call `Transport.RoundTrip` directly instead of using a `CheckRedirect`.
+   from `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` (Node does not).
 5. **A throw after the rewrite (7.2):** if processing throws after `applyTier` (for example
    `writeDecision` on a status file whose `history` is not iterable), `body.model` is no longer the
    sentinel, so the original bytes, sentinel included, are forwarded.

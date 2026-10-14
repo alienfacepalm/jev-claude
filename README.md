@@ -372,8 +372,8 @@ node node/bin/jev-claude.mjs -p "what is 2+2?"
 `pnpm test` runs offline. `node/scripts/live-routing.mjs` asks the real Jev about a few sample
 prompts.
 
-The Node.js implementation lives in `node/`; ports to Go, Rust, and Python live beside it in
-`go/`, `rust/`, and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers use
+The Node.js implementation lives in `node/`; ports to Rust and Python live beside it in
+`rust/` and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers use
 the Node.js implementation. See [doc/LAYOUT.md](doc/LAYOUT.md) for each implementation's test
 commands, what lives where, and why the root keeps a `package.json`.
 
@@ -392,12 +392,11 @@ differs from Node.
 | Implementation | Guide | Quick start | Toolchain | Lint and format |
 | --- | --- | --- | --- | --- |
 | Node.js (reference; what the installers set up) | [doc/NODE.md](doc/NODE.md) | [node/README.md](node/README.md) | Node 22.16+ (24.21 to regenerate golden cases), pnpm | Biome |
-| Go | [doc/GO.md](doc/GO.md) | [go/README.md](go/README.md) | Go 1.23+ | gofmt, go vet, staticcheck, golangci-lint |
 | Rust | [doc/RUST.md](doc/RUST.md) | [rust/README.md](rust/README.md) | Rust stable, MSRV 1.85 | rustfmt, clippy (`all` + `pedantic`, `-D warnings`) |
 | Python | [doc/PYTHON.md](doc/PYTHON.md) | [python/README.md](python/README.md) | CPython 3.12+ | ruff (format and lint), mypy `strict` |
 
 Whichever launcher you run, the `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the
-Node.js scripts in `node/bin/`, so Node.js must be on `PATH`. A Go, Rust or Python build finds the
+Node.js scripts in `node/bin/`, so Node.js must be on `PATH`. A Rust or Python build finds the
 repository root (and with it those skills) by walking up from its own location, so build it
 inside the clone; each guide says what a copy installed elsewhere loses and how `JEV_ROOT` fixes
 it.
@@ -425,7 +424,7 @@ clone of this repository. It checks Anthropic's model notes and published per-ta
 
 ### Versions and commit messages
 
-Every push to `master` runs [CI](.github/workflows/ci.yml) (lint, format and tests for all four
+Every push to `master` runs [CI](.github/workflows/ci.yml) (lint, format and tests for all three
 implementations on Windows and Linux). Only when every job passes does its final `release` job bump
 the version in the root `package.json`, commit it as `chore(release): vX.Y.Z`, and tag it.
 Pull after pushing to pick up that commit. The size of the bump comes from the
@@ -481,7 +480,7 @@ For a pull request:
 2. Fork the repository and create a focused branch from `master`.
 3. Make the smallest change that solves the problem, with commit subjects as described in
    [Versions and commit messages](#versions-and-commit-messages).
-4. Run `pnpm test` and include tests for non-trivial behaviour changes. A change to `go/`,
+4. Run `pnpm test` and include tests for non-trivial behaviour changes. A change to
    `rust/` or `python/` must also pass that implementation's gates (its guide's CI section),
    and a change to Node's behaviour must regenerate the golden cases and pass every port.
 

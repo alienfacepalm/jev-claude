@@ -1,8 +1,8 @@
 # Checks every implementation on every push and pull request: one job per language, each on
 # Windows (the gating platform, SPEC.md 16) and Ubuntu. Each job runs that implementation's lint,
 # format and unit-test gates, then the black-box conformance harness against its own programs.
-# The commands are the ones in doc/NODE.md, doc/GO.md, doc/RUST.md and doc/PYTHON.md; change them
-# there and here together. The last job cuts the release, and only runs when all four pass.
+# The commands are the ones in doc/NODE.md, doc/RUST.md and doc/PYTHON.md; change them
+# there and here together. The last job cuts the release, and only runs when all three pass.
 name: CI
 
 on:
@@ -68,83 +68,6 @@ jobs:
           git diff --exit-code conformance/cases
           untracked="$(git status --porcelain conformance/cases)"
           if [ -n "$untracked" ]; then echo "$untracked"; exit 1; fi
-
-  go:
-    name: go (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    env:
-      # Build the lint tools with the Go 1.23 installed below instead of downloading a newer Go;
-      # golangci-lint v2.1.6 cannot load packages under a newer toolchain (doc/GO.md).
-      GOTOOLCHAIN: local
-    steps:
-      - uses: actions/checkout@v4
-
-      # Node and the root dependencies first: the unit tests run node, and the harness needs both.
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.REFERENCE_NODE }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          # The module is standard library only, so there is no go.sum to key a cache on.
-          cache: false
-
-      - name: Install the pinned lint tools
-        run: |
-          go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
-
-      - name: gofmt
-        working-directory: go
-        run: |
-          unformatted="$(gofmt -l .)"
-          if [ -n "$unformatted" ]; then echo "Not gofmt-formatted:"; echo "$unformatted"; exit 1; fi
-
-      - name: go vet
-        working-directory: go
-        run: go vet ./...
-
-      - name: staticcheck
-        working-directory: go
-        run: staticcheck ./...
-
-      - name: golangci-lint
-        working-directory: go
-        run: golangci-lint run ./...
-
-      - name: Unit and golden tests
-        working-directory: go
-        run: go test ./...
-
-      # The race detector needs cgo and a C compiler, which the Ubuntu runner has.
-      - name: Race detector
-        if: runner.os == 'Linux'
-        working-directory: go
-        run: go test -race ./...
-
-      - name: Build
-        working-directory: go
-        run: go build -o bin/ ./cmd/...
-
-      # The harness checks that the program file exists, so Windows needs the .exe suffix.
-      - name: Conformance harness against Go
-        run: |
-          exe=""
-          if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
-          JEV_IMPL_CMD_PROXY="go/bin/jev-proxy-host$exe" \
-          JEV_IMPL_CMD_STATUSLINE="go/bin/jev-statusline$exe" \
-          node --test conformance/harness
 
   rust:
     name: rust (${{ matrix.os }})
@@ -282,7 +205,7 @@ jobs:
   # commit. Never runs unless every job above passed, on both platforms.
   release:
     name: release
-    needs: [node, go, rust, python]
+    needs: [node, rust, python]
     # The bump commit itself must not bump again. A push made with GITHUB_TOKEN does not start a
     # workflow anyway; this also covers a release commit pushed some other way.
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'chore(release):') }}

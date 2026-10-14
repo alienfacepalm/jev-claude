@@ -391,7 +391,7 @@ export function assertJevCall(call, request, { retry } = {}) {
   assert.equal(call.headers["content-type"], "application/json");
   // Node's SDK sends its own User-Agent (and X-TypeSafe-SDK/-Runtime, which ports omit); ports send
   // jev-router-<lang>/<version>.
-  assert.match(call.headers["user-agent"] ?? "", /^(typesafe-sdk|jev-router-(go|rust|python))\/\S+$/);
+  assert.match(call.headers["user-agent"] ?? "", /^(typesafe-sdk|jev-router-(rust|python))\/\S+$/);
   assert.equal(call.headers["x-typesafe-retry-count"], retry === undefined ? undefined : String(retry));
   assert.equal(call.body.toString(), JSON.stringify({ ...request, model: "jev-latest" }), "the Jev request body, byte for byte");
 }
