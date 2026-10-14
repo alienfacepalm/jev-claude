@@ -462,6 +462,7 @@ cd rust && cargo build --release --locked
 | The installer says `No prebuilt programs are published` (HTTP 404) | No release has this platform's archive yet. Build from source ([Install the toolchain](#install-the-toolchain)), or pin an older release that has one with `JEV_VERSION` |
 | The installer says `The checksums differ` | The download is not what the release published (a bad mirror or a damaged transfer). Nothing was installed; run it again, and do not use the file |
 | `jev-claude` is not found after the installer ran | Open a new terminal. If it still is not, another `jev-claude` (the Node edition's) may come first: the installer printed both folders |
+| An installed `/jev-explain`, `/jev-legend` or `/jev-calibrate` says `command not found` | These skills run the native programs by name, so the install's `bin` folder must be on the PATH of the shell Claude Code runs commands in. Open a new terminal after the installer, or add the folder to PATH. Verified with Claude Code on Windows (Git Bash): `claude -p "/jev-legend" --add-dir <install folder>` prints the key |
 | `/jev-explain`, `/jev-legend` or `/jev-calibrate` is missing | The programs are outside the clone and `JEV_ROOT` is unset, so `--add-dir` was not passed. Set `JEV_ROOT` |
 | A `/jev-*` skill fails with a Node error | The skills run Node: install Node.js 22+ and run `pnpm install` at the repository root |
 | `jev-check` says `Mode installed` although you run from a clone | Same cause: set `JEV_ROOT` to the clone |
