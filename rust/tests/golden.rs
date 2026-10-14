@@ -223,20 +223,31 @@ fn icons_reasons_legend() {
         o.insert("noChange", Value::Bool(reasons::is_no_change(r.as_deref())));
         Ok(Value::Object(o))
     });
-    check_cases("format-legend", &mut |i| {
-        let set = i.get("set");
-        let leak =
-            |k: &str| -> &'static str { Box::leak(set.get(k).to_js_string().to_string_lossy().into_boxed_str()) };
-        let icons = icons::Icons {
-            model: leak("model"),
-            effort: leak("effort"),
-            agents: leak("agents"),
-            dir: leak("dir"),
-            branch: leak("branch"),
-            worktree: leak("worktree"),
-            context: leak("context"),
-        };
-        Ok(Value::from(legend::format_legend(&icons)))
+    check_cases("format-legend", &mut |i| Ok(Value::from(legend::format_legend(&icon_set(i.get("set"))))));
+}
+
+/// An icon table (the `set` of a case) as an `Icons`.
+fn icon_set(set: &Value) -> icons::Icons {
+    let leak = |k: &str| -> &'static str { Box::leak(set.get(k).to_js_string().to_string_lossy().into_boxed_str()) };
+    icons::Icons {
+        model: leak("model"),
+        effort: leak("effort"),
+        agents: leak("agents"),
+        dir: leak("dir"),
+        branch: leak("branch"),
+        worktree: leak("worktree"),
+        context: leak("context"),
+        five_hour: leak("fiveHour"),
+        seven_day: leak("sevenDay"),
+        meter_full: leak("meterFull"),
+        meter_empty: leak("meterEmpty"),
+    }
+}
+
+#[test]
+fn usage_meters() {
+    check_cases("usage-meters", &mut |i| {
+        Ok(Value::from(jev_router::usage::usage_meters(i.get("rateLimits"), &icon_set(i.get("set")))))
     });
 }
 
@@ -545,7 +556,7 @@ async fn jev_request() {
 /// Every case file in `conformance/cases` has a test above; a new file fails this until it does.
 #[test]
 fn every_case_file_is_checked() {
-    const CHECKED: [&str; 37] = [
+    const CHECKED: [&str; 38] = [
         "agent-label",
         "agent-of",
         "agent-view",
@@ -581,6 +592,7 @@ fn every_case_file_is_checked() {
         "status-line",
         "stringify",
         "update-notice",
+        "usage-meters",
         "version-of",
         "write-decision",
     ];

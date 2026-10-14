@@ -31,6 +31,10 @@ test("every item has a symbol and a word", () => {
   const keys = Object.keys(icons({ JEV_ICONS: "text" }, "darwin"));
   assert.deepEqual(Object.keys(icons({ JEV_ICONS: "symbols" }, "darwin")), keys);
   for (const set of ["text", "symbols"]) {
-    for (const [name, label] of Object.entries(icons({ JEV_ICONS: set }, "darwin"))) assert.ok(label, `${set}.${name}`);
+    for (const [name, label] of Object.entries(icons({ JEV_ICONS: set }, "darwin"))) {
+      // The word set draws no bar cells: a usage meter there is its percentage alone.
+      if (set === "text" && name.startsWith("meter")) assert.equal(label, "", `${set}.${name}`);
+      else assert.ok(label, `${set}.${name}`);
+    }
   }
 });

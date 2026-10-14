@@ -37,7 +37,11 @@ class Icons(unittest.TestCase):
         for choice in ["text", "symbols"]:
             for name, label in icons({"JEV_ICONS": choice}, "darwin").items():
                 with self.subTest(item=f"{choice}.{name}"):
-                    self.assertTrue(label)
+                    # The word set draws no bar cells: a usage meter there is its percentage alone.
+                    if choice == "text" and name.startswith("meter"):
+                        self.assertEqual(label, "")
+                    else:
+                        self.assertTrue(label)
 
 
 if __name__ == "__main__":

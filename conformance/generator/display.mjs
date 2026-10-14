@@ -27,7 +27,7 @@ export function cleanEnv(extra) {
   return { ...env, ...extra };
 }
 
-export default function displayCases({ root, reasons, icons, legend, explain, worktree }) {
+export default function displayCases({ root, reasons, icons, legend, usage, explain, worktree }) {
   // ---- icons ---------------------------------------------------------------------------------
   const iconInputs = [];
   for (const platform of ["darwin", "linux", "win32"]) {
@@ -134,10 +134,64 @@ export default function displayCases({ root, reasons, icons, legend, explain, wo
   const sets = [
     ["symbols", icons.icons({ JEV_ICONS: "symbols" }, "darwin")],
     ["text", icons.icons({ JEV_ICONS: "text" }, "darwin")],
-    ["astral marks count as one", { model: "\ud83d\ude80", effort: "e", agents: "\ud83e\udd16\ud83e\udd16", dir: "dir", branch: "br", worktree: "wt", context: "ctx" }],
-    ["long word", { model: "the-model-mark", effort: "x", agents: "y", dir: "z", branch: "b", worktree: "w", context: "c" }],
+    ["astral marks count as one", { model: "\ud83d\ude80", effort: "e", agents: "\ud83e\udd16\ud83e\udd16", dir: "dir", branch: "br", worktree: "wt", context: "ctx", fiveHour: "5h", sevenDay: "7d", meterFull: "\ud83d\udfe9", meterEmpty: "\u2b1c" }],
+    ["long word", { model: "the-model-mark", effort: "x", agents: "y", dir: "z", branch: "b", worktree: "w", context: "c", fiveHour: "five", sevenDay: "seven", meterFull: "#", meterEmpty: "-" }],
+    ["no bar cells", { model: "m", effort: "e", agents: "a", dir: "d", branch: "b", worktree: "w", context: "c", fiveHour: "5h", sevenDay: "7d", meterFull: "", meterEmpty: "" }],
   ];
   const formatLegend = sets.map(([name, set]) => ({ name, input: { set }, expected: legend.formatLegend(set) }));
+
+  // ---- usageMeters ---------------------------------------------------------------------------
+  const symbolSet = icons.icons({ JEV_ICONS: "symbols" }, "darwin");
+  const textSet = icons.icons({ JEV_ICONS: "text" }, "darwin");
+  const window = (used_percentage) => ({ used_percentage, resets_at: 1_738_425_600 });
+  const meters = [
+    [
+      "the block from Claude Code's documentation, spend limit ignored",
+      {
+        five_hour: { used_percentage: 23.5, resets_at: 1738425600 },
+        seven_day: { used_percentage: 41.2, resets_at: 1738857600 },
+        spend_limit: { used_percentage: 62.8, resets_at: 1740787200, used_usd: 314.12, limit_usd: 500, period: "monthly" },
+      },
+      symbolSet,
+    ],
+    ["both windows, bars", { five_hour: window(41.2), seven_day: window(12) }, symbolSet],
+    ["both windows, words", { five_hour: window(41.2), seven_day: window(12) }, textSet],
+    ["five hour only", { five_hour: window(23.5) }, symbolSet],
+    ["seven day only", { seven_day: window(88) }, symbolSet],
+    ["nothing used", { five_hour: window(0), seven_day: window(0) }, symbolSet],
+    ["0.4 rounds to 0 and fills no cell, 0.6 rounds to 1 and fills one", { five_hour: window(0.4), seven_day: window(0.6) }, symbolSet],
+    ["a quarter is one cell", { five_hour: window(25), seven_day: window(25.4) }, symbolSet],
+    ["26 percent is two cells", { five_hour: window(26), seven_day: window(50) }, symbolSet],
+    ["75 percent is three cells", { five_hour: window(75), seven_day: window(75.4) }, symbolSet],
+    ["69.4 stays dim, 69.5 rounds up and turns bold", { five_hour: window(69.4), seven_day: window(69.5) }, symbolSet],
+    ["70 turns bold", { five_hour: window(70), seven_day: window(69.6) }, symbolSet],
+    ["full", { five_hour: window(100), seven_day: window(99.6) }, symbolSet],
+    ["over 100 is clamped", { five_hour: window(104.2), seven_day: window(1e6) }, symbolSet],
+    ["negative is clamped", { five_hour: window(-3), seven_day: window(-0) }, symbolSet],
+    ["rounds half up", { five_hour: window(2.5), seven_day: window(0.5) }, textSet],
+    ["no resets_at needed", { five_hour: { used_percentage: 30 } }, symbolSet],
+    ["window without a number", { five_hour: {}, seven_day: window(10) }, symbolSet],
+    ["numeric string is not a number", { five_hour: window("41"), seven_day: window(10) }, symbolSet],
+    ["null percentage", { five_hour: window(null), seven_day: window(10) }, symbolSet],
+    ["boolean percentage", { five_hour: window(true) }, symbolSet],
+    ["array percentage", { five_hour: window([50]) }, symbolSet],
+    ["infinite percentage", { five_hour: window(Number.POSITIVE_INFINITY) }, symbolSet],
+    ["window not an object", { five_hour: 50, seven_day: "12" }, symbolSet],
+    ["null window", { five_hour: null, seven_day: window(10) }, symbolSet],
+    ["other windows ignored", { spend_limit: window(62.8), opus: window(10) }, symbolSet],
+    ["empty object", {}, symbolSet],
+    ["null", null, symbolSet],
+    ["undefined", undefined, symbolSet],
+    ["a string", "five_hour", symbolSet],
+    ["a number", 41, symbolSet],
+    ["an array", [window(10)], symbolSet],
+    ["custom cells", { five_hour: window(50), seven_day: window(100) }, { ...symbolSet, meterFull: "#", meterEmpty: "-" }],
+  ];
+  const usageMeters = meters.map(([name, rateLimits, set]) => ({
+    name,
+    input: { rateLimits: structuredClone(rateLimits), set },
+    expected: usage.usageMeters(structuredClone(rateLimits), set),
+  }));
 
   // ---- locationInfo --------------------------------------------------------------------------
   const locations = [
@@ -229,6 +283,13 @@ export default function displayCases({ root, reasons, icons, legend, explain, wo
     ["context not a number", { stdin: stdin("sl-a", { context_window: { used_percentage: "abc" } }), icons: "symbols" }],
     ["context negative zero", { stdin: stdin("sl-a", { context_window: { used_percentage: -0.3 } }), icons: "symbols" }],
     ["context array", { stdin: stdin("sl-a", { context_window: { used_percentage: [50] } }), icons: "symbols" }],
+    ["usage meters, bars", { stdin: stdin("sl-a", { rate_limits: { five_hour: { used_percentage: 41.2, resets_at: 1738425600 }, seven_day: { used_percentage: 12, resets_at: 1738857600 } } }), icons: "symbols" }],
+    ["usage meters, words", { stdin: stdin("sl-a", { rate_limits: { five_hour: { used_percentage: 41.2, resets_at: 1738425600 }, seven_day: { used_percentage: 12, resets_at: 1738857600 } } }), icons: "text" }],
+    ["usage meter near the limit is bold", { stdin: stdin("sl-a", { rate_limits: { five_hour: { used_percentage: 93 } } }), icons: "symbols" }],
+    ["only the seven day window", { stdin: stdin("sl-a", { rate_limits: { seven_day: { used_percentage: 70 } } }), icons: "text" }],
+    ["usage meters after the context share and before the notice", { stdin: stdin("sl-a", { rate_limits: { five_hour: { used_percentage: 5 }, seven_day: { used_percentage: 100 } } }), calibration: { newer: ["claude-opus-6"], models: [], at: 1 }, icons: "symbols" }],
+    ["no rate limits", { stdin: stdin("sl-a", { rate_limits: {} }), icons: "symbols" }],
+    ["rate limits not an object", { stdin: stdin("sl-a", { rate_limits: "41" }), icons: "symbols" }],
     ["calibration notice, one model", { stdin: stdin("sl-a"), status: routedStatus(sonnet), calibration: { newer: ["claude-opus-6"], models: ["claude-opus-6"], at: 1 }, icons: "symbols" }],
     ["calibration notice, three models", { stdin: stdin("sl-a"), calibration: { newer: ["claude-opus-6", "claude-sonnet-6", "claude-haiku-5"], models: [], at: 1 }, icons: "text" }],
     ["calibration newer not an array", { stdin: stdin("sl-a"), calibration: { newer: "claude-opus-6", models: [], at: 1 }, icons: "text" }],
@@ -269,6 +330,7 @@ export default function displayCases({ root, reasons, icons, legend, explain, wo
     "format-explanation": formatExplanation,
     "format-agents": formatAgents,
     "format-legend": formatLegend,
+    "usage-meters": usageMeters,
     "location-info": locationInfo,
     "status-line": statusLine,
   };

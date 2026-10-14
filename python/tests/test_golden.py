@@ -33,6 +33,7 @@ from jev_router import (
     router,
     status,
     update,
+    usage,
     worktree,
 )
 from jev_router import env as envmod
@@ -299,6 +300,9 @@ class Golden(unittest.TestCase):
 
     def test_format_legend(self) -> None:
         self.check_file("format-legend.json", lambda i: legend.format_legend(i["set"]))
+
+    def test_usage_meters(self) -> None:
+        self.check_file("usage-meters.json", lambda i: usage.usage_meters(opt(i, "rateLimits"), i["set"]))
 
     def test_location_info(self) -> None:
         def call(i: Case) -> object:

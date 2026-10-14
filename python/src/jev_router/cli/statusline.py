@@ -24,6 +24,7 @@ from ..model_names import short_name
 from ..osdirs import home
 from ..reasons import short_reason
 from ..status import agent_view, read_calibration, read_status
+from ..usage import usage_meters
 from ..worktree import location_info
 from ._io import read_stdin, write_stdout
 
@@ -64,7 +65,8 @@ def _clip(text: str, limit: int) -> str:
 
 def render(input_bytes: bytes) -> str:
     """The status line for Claude Code's JSON on stdin (SPEC 12)."""
-    marks = {name: f"{BOLD}{mark}{RESET}" for name, mark in icons().items()}
+    labels = icons()
+    marks = {name: f"{BOLD}{mark}{RESET}" for name, mark in labels.items()}
 
     try:
         text = jsjson.decode_bytes(input_bytes) or "{}"
@@ -141,7 +143,9 @@ def render(input_bytes: bytes) -> str:
     path_part = f" {DIM}\u00b7 {_tilde_path(full_path)}{RESET}" if full_path else ""
 
     context_part = f" {DIM}\u00b7{RESET} {marks['context']} {to_string(pct)}%"
-    return f"{routed}{agents}{dir_part}{where}{context_part}{notice}{path_part}\n"
+    # The /usage meters, tiny: the 5-hour and 7-day limits, when Claude Code reports them.
+    usage = usage_meters(_get(data, "rate_limits"), labels)
+    return f"{routed}{agents}{dir_part}{where}{context_part}{usage}{notice}{path_part}\n"
 
 
 def _tilde_path(path: str) -> str:

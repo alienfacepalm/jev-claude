@@ -46,9 +46,14 @@ fn every_item_has_a_symbol_and_a_word() {
     let symbols = icons_for(&map(&[("JEV_ICONS", "symbols")]), false);
     let keys = |s: Icons| s.entries().map(|(k, _)| k);
     assert_eq!(keys(text), keys(symbols));
-    for set in [text, symbols] {
+    for (choice, set) in [("text", text), ("symbols", symbols)] {
         for (name, label) in set.entries() {
-            assert!(!label.is_empty(), "{name}");
+            // The word set draws no bar cells: a usage meter there is its percentage alone.
+            if choice == "text" && name.starts_with("meter") {
+                assert!(label.is_empty(), "{choice}.{name}");
+            } else {
+                assert!(!label.is_empty(), "{choice}.{name}");
+            }
         }
     }
 }

@@ -55,6 +55,7 @@ const ctx = {
   reasons: await node("reasons"),
   icons: await node("icons"),
   legend: await node("legend"),
+  usage: await node("usage"),
   explain: await node("explain"),
   modelNames: await node("model-names"),
   worktree: await node("worktree"),

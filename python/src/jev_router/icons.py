@@ -15,6 +15,10 @@ SYMBOLS: Final[dict[str, str]] = {
     "branch": "\ue0a0",
     "worktree": "\u2302",
     "context": "\u2261",
+    "fiveHour": "5h",
+    "sevenDay": "7d",
+    "meterFull": "\u25b0",
+    "meterEmpty": "\u25b1",
 }
 
 TEXT: Final[dict[str, str]] = {
@@ -25,6 +29,10 @@ TEXT: Final[dict[str, str]] = {
     "branch": "branch",
     "worktree": "worktree",
     "context": "ctx",
+    "fiveHour": "5h",
+    "sevenDay": "7d",
+    "meterFull": "",
+    "meterEmpty": "",
 }
 
 

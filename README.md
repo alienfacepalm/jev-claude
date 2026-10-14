@@ -262,6 +262,21 @@ and not the model. It is left out when Claude Code reports no directory.
 `☞` marks a model you picked by hand with `/model`, which Jev leaves alone: in front of `manual` when it
 is the main model, and in front of a sub-agent's name when that sub-agent is pinned to its own model.
 
+Right after the context share come tiny versions of the `/usage` meters, one for the 5-hour limit and
+one for the 7-day limit: the label, a bar of four cells (each a quarter of the limit, and any use that
+shows as at least 1% fills the first), and the percentage used. The value is dimmed while there is
+plenty left and turns bold from 70%:
+
+```text
+✧✦ Sonnet 5.5 (94%) · ◔ high · ❐ my-project · ≡ 8% · 5h ▰▰▱▱ 41% · 7d ▰▱▱▱ 12% · ~/work/my-project
+```
+
+Claude Code reports these limits only to claude.ai Pro and Max accounts, and only after the first
+response of a session, so on an API key, or before that first reply, the meters are simply absent. A
+window that has passed its reset time is dropped by Claude Code, and then so is its meter. Only the
+5-hour and 7-day limits are available to a status line: the per-model weekly rows of `/usage` are
+not. Where the line falls back to words (below) there are no bars, just `5h 41% · 7d 12%`.
+
 In a git checkout the line also shows the branch after the directory, and in a worktree (a Claude
 Code `--worktree` session, or any directory in a linked worktree from `git worktree add`) the
 worktree's name too. `(detached)` stands in for the branch when none is checked out, and a

@@ -19,11 +19,19 @@ pub struct Icons {
     pub worktree: &'static str,
     /// The context usage item.
     pub context: &'static str,
+    /// The label of the 5-hour usage meter.
+    pub five_hour: &'static str,
+    /// The label of the 7-day usage meter.
+    pub seven_day: &'static str,
+    /// A used cell of a usage meter's bar; empty when the set draws no bar.
+    pub meter_full: &'static str,
+    /// An unused cell of a usage meter's bar.
+    pub meter_empty: &'static str,
 }
 
 impl Icons {
     /// `(name, mark)` pairs in the order Node's object lists them.
-    pub fn entries(&self) -> [(&'static str, &'static str); 7] {
+    pub fn entries(&self) -> [(&'static str, &'static str); 11] {
         [
             ("model", self.model),
             ("effort", self.effort),
@@ -32,6 +40,10 @@ impl Icons {
             ("branch", self.branch),
             ("worktree", self.worktree),
             ("context", self.context),
+            ("fiveHour", self.five_hour),
+            ("sevenDay", self.seven_day),
+            ("meterFull", self.meter_full),
+            ("meterEmpty", self.meter_empty),
         ]
     }
 }
@@ -45,6 +57,10 @@ pub const SYMBOLS: Icons = Icons {
     branch: "\u{E0A0}",
     worktree: "\u{2302}",
     context: "\u{2261}",
+    five_hour: "5h",
+    seven_day: "7d",
+    meter_full: "\u{25B0}",
+    meter_empty: "\u{25B1}",
 };
 
 /// Word labels: `JEV_ICONS=text`, and the default in a Windows console that is not Windows
@@ -57,6 +73,10 @@ pub const TEXT: Icons = Icons {
     branch: "branch",
     worktree: "worktree",
     context: "ctx",
+    five_hour: "5h",
+    seven_day: "7d",
+    meter_full: "",
+    meter_empty: "",
 };
 
 /// `icons(env, platform)`; `windows` stands for `platform === "win32"`.

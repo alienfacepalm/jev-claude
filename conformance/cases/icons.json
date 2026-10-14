@@ -12,7 +12,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -30,7 +34,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -48,7 +56,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -66,7 +78,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -84,7 +100,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -102,7 +122,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -120,7 +144,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -138,7 +166,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -156,7 +188,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -175,7 +211,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -194,7 +234,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -212,7 +256,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -230,7 +278,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -248,7 +300,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -264,7 +320,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -282,7 +342,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -300,7 +364,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -318,7 +386,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -336,7 +408,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -354,7 +430,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -372,7 +452,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -390,7 +474,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -408,7 +496,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -427,7 +519,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -446,7 +542,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -464,7 +564,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -482,7 +586,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -500,7 +608,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -516,7 +628,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -534,7 +650,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -552,7 +672,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -570,7 +694,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -588,7 +716,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -606,7 +738,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -624,7 +760,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -642,7 +782,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -660,7 +804,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -679,7 +827,11 @@
       "dir": "❐",
       "branch": "",
       "worktree": "⌂",
-      "context": "≡"
+      "context": "≡",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "▰",
+      "meterEmpty": "▱"
     }
   },
   {
@@ -698,7 +850,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -716,7 +872,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -734,7 +894,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   },
   {
@@ -752,7 +916,11 @@
       "dir": "dir",
       "branch": "branch",
       "worktree": "worktree",
-      "context": "ctx"
+      "context": "ctx",
+      "fiveHour": "5h",
+      "sevenDay": "7d",
+      "meterFull": "",
+      "meterEmpty": ""
     }
   }
 ]

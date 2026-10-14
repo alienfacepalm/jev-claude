@@ -6,6 +6,7 @@ use crate::jsstr::{JsStr, number_to_string};
 use crate::model_names::short_name;
 use crate::reasons::short_reason;
 use crate::status::{agent_view_now, calibration_file, read_calibration, read_status};
+use crate::usage::usage_meters;
 use crate::worktree::{git_branch, location_info};
 use regex::bytes::Regex;
 use std::fmt::Write as _;
@@ -199,8 +200,10 @@ pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Op
         format!(" {DIM}\u{00B7} {}{RESET}", JsStr::from_wtf8(shown).to_string_lossy())
     };
 
+    let usage = usage_meters(input.get("rate_limits"), icons);
+
     Ok(format!(
-        "{routed}{agents}{dir_part}{where_} {DIM}\u{00B7}{RESET} {} {}%{notice}{full_path}\n",
+        "{routed}{agents}{dir_part}{where_} {DIM}\u{00B7}{RESET} {} {}%{usage}{notice}{full_path}\n",
         icon(icons.context),
         number_to_string(pct)
     ))

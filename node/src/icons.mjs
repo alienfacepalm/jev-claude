@@ -4,7 +4,21 @@
 // glyphs for effort and directory (U+F0E4, U+F07B) show as a "?" box without a patched font.
 // The main model is the sub-agents' star with an outlined one behind it: the same family, and the
 // outline marks the one the sub-agents belong to.
-const SYMBOLS = { model: "✧✦", effort: "◔", agents: "✦", dir: "❐", branch: "", worktree: "⌂", context: "≡" };
+// The usage meters (SPEC 12) label the 5-hour and 7-day limits with those words in both sets, and draw
+// each as a bar of four cells (meterFull, meterEmpty); the word set has no cells and shows the percentage alone.
+const SYMBOLS = {
+  model: "✧✦",
+  effort: "◔",
+  agents: "✦",
+  dir: "❐",
+  branch: "",
+  worktree: "⌂",
+  context: "≡",
+  fiveHour: "5h",
+  sevenDay: "7d",
+  meterFull: "▰",
+  meterEmpty: "▱",
+};
 
 // For a console that cannot draw them: the word instead of the glyph.
 const TEXT = {
@@ -15,6 +29,10 @@ const TEXT = {
   branch: "branch",
   worktree: "worktree",
   context: "ctx",
+  fiveHour: "5h",
+  sevenDay: "7d",
+  meterFull: "",
+  meterEmpty: "",
 };
 
 /**

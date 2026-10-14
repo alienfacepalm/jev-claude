@@ -63,6 +63,7 @@ absent from `input` takes the function's default, and `expected` is the return v
 | `format-explanation.json` | `explain.formatExplanation(status)` | `status` | string | |
 | `format-agents.json` | `explain.formatAgents(status, now)` | `status`, `now` | string | |
 | `format-legend.json` | `legend.formatLegend(set)` | `set` (an icon table) | string | widths count code points |
+| `usage-meters.json` | `usage.usageMeters(rateLimits, set)` | `rateLimits` (any value, `undefined` included), `set` (an icon table) | string, possibly empty | contains ANSI escapes; compare byte for byte |
 | `location-info.json` | `worktree.locationInfo(input, branchOf)` | `input`, `branch`: what the injected `branchOf` returns for any directory | `result`: the return value; `asked`: the arguments `branchOf` was called with, in order | `branchOf` must not be called when `worktree.branch` is present |
 | `compare-versions.json` | `update.compareVersions(a, b)` | `a`, `b` (any values) | the exact number returned, not only its sign | |
 | `update-notice.json` | `update.updateNotice(state, currentVersion)` | `state`, `currentVersion` | string or `null` | |

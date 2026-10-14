@@ -27,6 +27,7 @@ pub mod status;
 pub mod statusline;
 pub mod timefmt;
 pub mod update;
+pub mod usage;
 pub mod worktree;
 
 /// Fixes the values Node computes when its modules load (SPEC 3.9): the status directory, the

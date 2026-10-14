@@ -1,0 +1,888 @@
+[
+  {
+    "name": "the block from Claude Code's documentation, spend limit ignored",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 23.5,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 41.2,
+          "resets_at": 1738857600
+        },
+        "spend_limit": {
+          "used_percentage": 62.8,
+          "resets_at": 1740787200,
+          "used_usd": 314.12,
+          "limit_usd": 500,
+          "period": "monthly"
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▱▱▱ 24%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▰▱▱ 41%\u001b[0m"
+  },
+  {
+    "name": "both windows, bars",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 41.2,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 12,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▰▱▱ 41%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 12%\u001b[0m"
+  },
+  {
+    "name": "both windows, words",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 41.2,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 12,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "model",
+        "effort": "effort",
+        "agents": "agents",
+        "dir": "dir",
+        "branch": "branch",
+        "worktree": "worktree",
+        "context": "ctx",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "",
+        "meterEmpty": ""
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m41%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m12%\u001b[0m"
+  },
+  {
+    "name": "five hour only",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 23.5,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▱▱▱ 24%\u001b[0m"
+  },
+  {
+    "name": "seven day only",
+    "input": {
+      "rateLimits": {
+        "seven_day": {
+          "used_percentage": 88,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▰ 88%\u001b[0m"
+  },
+  {
+    "name": "nothing used",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 0,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 0,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▱▱▱▱ 0%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▱▱▱▱ 0%\u001b[0m"
+  },
+  {
+    "name": "0.4 rounds to 0 and fills no cell, 0.6 rounds to 1 and fills one",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 0.4,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 0.6,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▱▱▱▱ 0%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 1%\u001b[0m"
+  },
+  {
+    "name": "a quarter is one cell",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 25,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 25.4,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▱▱▱ 25%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 25%\u001b[0m"
+  },
+  {
+    "name": "26 percent is two cells",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 26,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 50,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▰▱▱ 26%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▰▱▱ 50%\u001b[0m"
+  },
+  {
+    "name": "75 percent is three cells",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 75,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 75.4,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[1m▰▰▰▱ 75%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▱ 75%\u001b[0m"
+  },
+  {
+    "name": "69.4 stays dim, 69.5 rounds up and turns bold",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 69.4,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 69.5,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▰▰▱ 69%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▱ 70%\u001b[0m"
+  },
+  {
+    "name": "70 turns bold",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 70,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 69.6,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[1m▰▰▰▱ 70%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▱ 70%\u001b[0m"
+  },
+  {
+    "name": "full",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 100,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 99.6,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[1m▰▰▰▰ 100%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▰ 100%\u001b[0m"
+  },
+  {
+    "name": "over 100 is clamped",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 104.2,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 1000000,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[1m▰▰▰▰ 100%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▰ 100%\u001b[0m"
+  },
+  {
+    "name": "negative is clamped",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": -3,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": {
+            "$number": "-0"
+          },
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▱▱▱▱ 0%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▱▱▱▱ 0%\u001b[0m"
+  },
+  {
+    "name": "rounds half up",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 2.5,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 0.5,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "model",
+        "effort": "effort",
+        "agents": "agents",
+        "dir": "dir",
+        "branch": "branch",
+        "worktree": "worktree",
+        "context": "ctx",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "",
+        "meterEmpty": ""
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m3%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m1%\u001b[0m"
+  },
+  {
+    "name": "no resets_at needed",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 30
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▰▱▱ 30%\u001b[0m"
+  },
+  {
+    "name": "window without a number",
+    "input": {
+      "rateLimits": {
+        "five_hour": {},
+        "seven_day": {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 10%\u001b[0m"
+  },
+  {
+    "name": "numeric string is not a number",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": "41",
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 10%\u001b[0m"
+  },
+  {
+    "name": "null percentage",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": null,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 10%\u001b[0m"
+  },
+  {
+    "name": "boolean percentage",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": true,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "array percentage",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": [
+            50
+          ],
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "infinite percentage",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": {
+            "$number": "Infinity"
+          },
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "window not an object",
+    "input": {
+      "rateLimits": {
+        "five_hour": 50,
+        "seven_day": "12"
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "null window",
+    "input": {
+      "rateLimits": {
+        "five_hour": null,
+        "seven_day": {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 10%\u001b[0m"
+  },
+  {
+    "name": "other windows ignored",
+    "input": {
+      "rateLimits": {
+        "spend_limit": {
+          "used_percentage": 62.8,
+          "resets_at": 1738425600
+        },
+        "opus": {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "empty object",
+    "input": {
+      "rateLimits": {},
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "null",
+    "input": {
+      "rateLimits": null,
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "undefined",
+    "input": {
+      "rateLimits": {
+        "$undefined": true
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "a string",
+    "input": {
+      "rateLimits": "five_hour",
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "a number",
+    "input": {
+      "rateLimits": 41,
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "an array",
+    "input": {
+      "rateLimits": [
+        {
+          "used_percentage": 10,
+          "resets_at": 1738425600
+        }
+      ],
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "▰",
+        "meterEmpty": "▱"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "custom cells",
+    "input": {
+      "rateLimits": {
+        "five_hour": {
+          "used_percentage": 50,
+          "resets_at": 1738425600
+        },
+        "seven_day": {
+          "used_percentage": 100,
+          "resets_at": 1738425600
+        }
+      },
+      "set": {
+        "model": "✧✦",
+        "effort": "◔",
+        "agents": "✦",
+        "dir": "❐",
+        "branch": "",
+        "worktree": "⌂",
+        "context": "≡",
+        "fiveHour": "5h",
+        "sevenDay": "7d",
+        "meterFull": "#",
+        "meterEmpty": "-"
+      }
+    },
+    "expected": " \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m##-- 50%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m#### 100%\u001b[0m"
+  }
+]

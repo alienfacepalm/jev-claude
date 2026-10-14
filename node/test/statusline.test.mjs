@@ -212,3 +212,27 @@ test("a space separates the sub-agents symbol from the first model name", () => 
   );
   assert.match(render(id, {}, {}, "symbols"), /✦ Haiku 4\.5/);
 });
+
+test("the /usage meters sit after the context share and before the directory path", () => {
+  const id = `statusline-usage-${process.pid}`;
+  const rate_limits = {
+    five_hour: { used_percentage: 41.2, resets_at: 1738425600 },
+    seven_day: { used_percentage: 12, resets_at: 1738857600 },
+  };
+  assert.equal(
+    render(id, {}, { rate_limits }, "symbols"),
+    "jev: waiting for first prompt · ❐ proj · ≡ 8% · 5h ▰▰▱▱ 41% · 7d ▰▱▱▱ 12% · /work/proj",
+  );
+  assert.equal(
+    render(id, {}, { rate_limits }, "text"),
+    "jev: waiting for first prompt · dir proj · ctx 8% · 5h 41% · 7d 12% · /work/proj",
+  );
+});
+
+test("a session that reports no limits shows the line it always did", () => {
+  const id = `statusline-nousage-${process.pid}`;
+  const plain = render(id, {}, {}, "symbols");
+  assert.equal(render(id, {}, { rate_limits: {} }, "symbols"), plain);
+  assert.equal(render(id, {}, { rate_limits: null }, "symbols"), plain);
+  assert.doesNotMatch(plain, /5h|7d/);
+});

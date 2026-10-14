@@ -922,7 +922,8 @@ output must be byte-identical on the golden and harness cases.
 - Then the directory (last segment of `workspace.current_dir ?? cwd ?? ""` split on `/` or `\`,
   omitted when empty or equal to the worktree name), the branch (`(detached)` for "", clipped to 28
   units with `…`, blue), the worktree (green), ` <DIM>·<RESET> <context icon> <pct>%` with
-  `pct = MathRound(ToNumber(context_window.used_percentage ?? 0))`, the calibration notice
+  `pct = MathRound(ToNumber(context_window.used_percentage ?? 0))`, the usage meters (12.5) from
+  `rate_limits`, the calibration notice
   ` <DIM>·<RESET> <yellow>new <newer[0]>[ +<n-1>]: /jev-calibrate<RESET>` when `newer` is
   non-empty, and last the whole working directory, ` <DIM>· <path><RESET>`, where `path` is
   `workspace.current_dir ?? cwd ?? ""` as Claude Code sent it (no clipping, no separator
@@ -941,7 +942,10 @@ output must be byte-identical on the golden and harness cases.
 
 `JEV_ICONS` lower-cased: `symbols` forces glyphs; `text` or `ascii` forces words; otherwise words
 only on Windows when none of `WT_SESSION`, `TERM_PROGRAM`, `ConEmuPID` is truthy. Both tables are
-copied from Node exactly.
+copied from Node exactly. Besides the seven item labels they hold the usage meters' four entries
+(12.5): `fiveHour` `5h` and `sevenDay` `7d` in both tables, and the bar cells `meterFull` `▰`
+(U+25B0) and `meterEmpty` `▱` (U+25B1) in the symbols table, both `""` in the words table. Every
+entry of the symbols table is non-empty; in the words table only the two cells are empty.
 
 ### 12.2 Location (`node/src/worktree.mjs`)
 
@@ -963,6 +967,30 @@ The table of `match`, `short`, `long` is copied exactly and checked in order by 
 `shortReason` returns the short text or null; `longReason` the long text or
 `"the router's recommendation"`; `isNoChange` tests for the substring `no-change`.
 
+### 12.5 Usage meters (`node/src/usage.mjs`)
+
+`usageMeters(rateLimits, set)` draws tiny versions of the `/usage` meters from `rate_limits` in the
+status line's stdin, which Claude Code sends only to claude.ai Pro and Max accounts (or behind a
+gateway), only after the first response, and each window only while it has not passed its
+`resets_at`. `set` is the icon table (12.1). For each window in order, `five_hour` with label
+`set.fiveHour`, then `seven_day` with `set.sevenDay` (no other window, such as `spend_limit`, is
+drawn):
+
+- `used = rateLimits?.[window]?.used_percentage`. The window is skipped unless `used` is a number
+  that is finite (`typeof used === "number" && Number.isFinite(used)`): a numeric string, `null`,
+  a boolean, an array, an object, `NaN` and the infinities all skip it. Property access on a value
+  that is not an object yields `undefined`, so `rateLimits` of any other type draws nothing.
+- `shown = MathRound(Math.min(100, Math.max(0, used)))` (3.7; `-0` becomes `0`). `filled =
+  ceil(shown / 25)`, so any value that shows as at least 1% fills the first of the four cells.
+- Bar: when `set.meterFull` is non-empty, `meterFull` repeated `filled` times, then `meterEmpty`
+  repeated `4 - filled` times, then one space; otherwise empty.
+- Emphasis: `<BOLD>` when `shown >= 70`, else `<DIM>`.
+- The item is ` <DIM>·<RESET> <BOLD><label><RESET> <emphasis><bar><shown>%<RESET>`; the result is
+  the items joined with nothing between them, and `""` when no window is drawn.
+
+The status line puts the result straight after the context share (12). Golden cases: `usage-meters`
+(the function) and the `status-line` cases that carry `rate_limits`.
+
 ---
 
 ## 13. Explain, legend, check
@@ -973,7 +1001,12 @@ The table of `match`, `short`, `long` is copied exactly and checked in order by 
   `metric` (`toFixed(2)` for finite numbers, else `n/a`), ages, and wording exactly as
   `node/src/explain.mjs`. `recommendationOf` reads `jev.response.answers.model.choice`, then
   `answers.model_tier.choice`.
-- `jev-legend`: `Status line key\n\n<formatLegend(icons())>\n`, aligned by code points.
+- `jev-legend`: `Status line key\n\n<formatLegend(icons())>\n`, aligned by code points. The rows are
+  the seven item labels, then `set.fiveHour` and `set.sevenDay` (the usage meters, 12.5), then the
+  three fixed rows. The `fiveHour` row says `how much of your 5-hour usage limit is used, in quarters
+  (<meterFull> used, <meterEmpty> left); bold from 70%` when `set.meterFull` is non-empty and `how
+  much of your 5-hour usage limit is used; bold from 70%` when it is empty; the `sevenDay` row says
+  `the same for your 7-day usage limit`.
 - `jev-check`: the read-only report of `node/bin/jev-check.mjs`, same rows and wording. `Mode` is
   `repository` exactly when the repository root exists, contains `.git`, and contains
   `node/scripts/calibrate.mjs` (the same condition in every implementation); else `installed`.
@@ -1051,7 +1084,8 @@ Required case files and what each must include beyond ordinary inputs:
 | `write-decision` | a sequence of `writeDecision`/`markManual` calls on one session (history cap 20, the 12-agent trim with ties, manual surviving a routed merge), compared as parsed JSON after each step; every decision carries an explicit `at`, and `at` values written by `markManual` (which uses the clock) are replaced by a placeholder on both sides before comparing |
 | `agent-view`, `main-decision` | freshness at the 90 s boundary, missing `at`, pre-agent statuses |
 | `effort-floor`, `forced-effort`, `fable-allowed`, `icons`, `reasons` | whitespace and case variants |
-| `format-explanation`, `format-agents`, `format-legend` | `contextSize` exactly `0.125`; NaN and missing metrics; manual; long prompts that wrap; fixed `now` |
+| `format-explanation`, `format-agents`, `format-legend` | `contextSize` exactly `0.125`; NaN and missing metrics; manual; long prompts that wrap; fixed `now`; legend with and without bar cells |
+| `usage-meters` | the `rate_limits` block from Claude Code's documentation; 0%, 0.4%, 25%, 26%, 69.4%, 69.5%, 70%, 100%; values over 100, negative and `-0`; half-way rounding; each window alone; strings, `null`, booleans, arrays and infinities instead of a number; non-object windows and `rate_limits`; words (no cells) and custom cells |
 | `location-info` | each source of worktree and branch, with an injected branch lookup |
 | `compare-versions`, `update-notice`, `is-check-due`, `needs-install` | pre-release tags; future `checkedAt` |
 | `quote-for-cmd` | backslashes before quotes and at the end, every metacharacter, spaces |

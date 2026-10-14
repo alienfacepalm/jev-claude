@@ -861,6 +861,83 @@
     }
   },
   {
+    "name": "usage meters, bars",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{\"five_hour\":{\"used_percentage\":41.2,\"resets_at\":1738425600},\"seven_day\":{\"used_percentage\":12,\"resets_at\":1738857600}}}",
+      "icons": "symbols"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▰▱▱ 41%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m▰▱▱▱ 12%\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "usage meters, words",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{\"five_hour\":{\"used_percentage\":41.2,\"resets_at\":1738425600},\"seven_day\":{\"used_percentage\":12,\"resets_at\":1738857600}}}",
+      "icons": "text"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m41%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[2m12%\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "usage meter near the limit is bold",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{\"five_hour\":{\"used_percentage\":93}}}",
+      "icons": "symbols"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[1m▰▰▰▰ 93%\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "only the seven day window",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{\"seven_day\":{\"used_percentage\":70}}}",
+      "icons": "text"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1mdir\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1mctx\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m70%\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "usage meters after the context share and before the notice",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{\"five_hour\":{\"used_percentage\":5},\"seven_day\":{\"used_percentage\":100}}}",
+      "calibration": {
+        "newer": [
+          "claude-opus-6"
+        ],
+        "models": [],
+        "at": 1
+      },
+      "icons": "symbols"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m·\u001b[0m \u001b[1m5h\u001b[0m \u001b[2m▰▱▱▱ 5%\u001b[0m \u001b[2m·\u001b[0m \u001b[1m7d\u001b[0m \u001b[1m▰▰▰▰ 100%\u001b[0m \u001b[2m·\u001b[0m \u001b[33mnew claude-opus-6: /jev-calibrate\u001b[0m \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "no rate limits",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":{}}",
+      "icons": "symbols"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
+    "name": "rate limits not an object",
+    "input": {
+      "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8},\"rate_limits\":\"41\"}",
+      "icons": "symbols"
+    },
+    "expected": {
+      "stdout": "\u001b[2mjev: waiting for first prompt\u001b[0m \u001b[2m·\u001b[0m \u001b[1m❐\u001b[0m proj \u001b[2m·\u001b[0m \u001b[1m≡\u001b[0m 8% \u001b[2m· /work/proj\u001b[0m\n"
+    }
+  },
+  {
     "name": "calibration notice, one model",
     "input": {
       "stdin": "{\"session_id\":\"sl-a\",\"workspace\":{\"current_dir\":\"/work/proj\"},\"context_window\":{\"used_percentage\":8}}",

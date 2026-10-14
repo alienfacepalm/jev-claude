@@ -7,6 +7,7 @@ import { shortName } from "../src/model-names.mjs";
 import { locationInfo } from "../src/worktree.mjs";
 import { homedir } from "node:os";
 import { icons } from "../src/icons.mjs";
+import { usageMeters } from "../src/usage.mjs";
 
 // Colour by the model's family, for manual sub-agents that carry a model but no routed tier.
 const tierOf = (model) => /claude-([a-z]+)-/.exec(model ?? "")?.[1];
@@ -127,4 +128,9 @@ const dirPart = dir && dir !== loc?.worktree ? ` ${DIM}·${RESET} ${I.dir} ${dir
 // Under the home directory it starts with ~, which leaves room for more of a deep path.
 const fullPath = fullDir ? ` ${DIM}· ${tildePath(fullDir)}${RESET}` : "";
 
-process.stdout.write(`${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${notice}${fullPath}\n`);
+// The /usage meters, tiny: the 5-hour and 7-day limits, when Claude Code reports them.
+const usage = usageMeters(input.rate_limits, icons());
+
+process.stdout.write(
+  `${routed}${agents}${dirPart}${where} ${DIM}·${RESET} ${I.context} ${pct}%${usage}${notice}${fullPath}\n`,
+);

@@ -14,6 +14,13 @@ export function formatLegend(set = icons()) {
     [set.branch, "the git branch, cut with … when long; (detached) when none is checked out"],
     [set.worktree, "the linked git worktree you are working in"],
     [set.context, "how much of the context window is used"],
+    [
+      set.fiveHour,
+      set.meterFull
+        ? `how much of your 5-hour usage limit is used, in quarters (${set.meterFull} used, ${set.meterEmpty} left); bold from 70%`
+        : "how much of your 5-hour usage limit is used; bold from 70%",
+    ],
+    [set.sevenDay, "the same for your 7-day usage limit"],
     ["☞", "you picked the model with /model, so Jev leaves it alone"],
     ["(why)", "a reason in brackets after the effort, only when the pick is not the obvious one"],
     ["new …", "a newer model than the router was tuned for: run /jev-calibrate"],
