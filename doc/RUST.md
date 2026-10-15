@@ -203,10 +203,47 @@ installs each one with the real installer, on a machine of its own architecture,
 publishing (the Intel Mac archive is built and installed on an Intel runner); each Linux archive is
 also checked to be statically linked, and each Windows one to link the C runtime in.
 
+**Also on the release page.** `install.sh` and `install.ps1` as they are at the release tag, and
+`jev-claude-windows-x64.msi` (below). `SHA256SUMS` lists every file of the release; the installers
+look their archive up there by exact file name.
+
 **Unsupported platforms.** For a platform with no archive (32-bit systems, FreeBSD, other CPU
 architectures) the installer stops with the reason. There is no source-build fallback in the
 installer: build the programs as described in [Install the toolchain](#install-the-toolchain) and
 [Install the programs and put them on PATH](#install-the-programs-and-put-them-on-path).
+
+### The Windows installer (MSI)
+
+The command-line installers above are the recommended way to install, on Windows too: they check the
+machine, install Claude Code when it is missing, ask for the Jev key, and update with the same line.
+For people who want a standard Windows setup wizard, each release also has
+`jev-claude-windows-x64.msi` (x64; Windows 11 on ARM runs it through emulation, like the archive).
+
+- **What it installs.** The same files as the Windows archive, in the same layout (`bin\` with the
+  seven programs, `.claude\skills\`, `package.json`, `.env.example`, `LICENSE`), per user, into
+  `%LocalAppData%\Programs\jev-claude`. No administrator prompt. It adds that folder's `bin` to your
+  user PATH; open a new terminal for it to take effect.
+- **What it does not do.** It does not install Claude Code, git or anything else, and does not ask
+  for a key. Run `jev-check` afterwards: it reports what is missing, and `jev-claude` offers its
+  setup check on the first launch. See the README's
+  [Settings file and API key](../README.md#settings-file-and-api-key).
+- **Signing.** It is not code-signed, so Windows SmartScreen shows "Windows protected your PC": More
+  info, then Run anyway. Compare its hash with `SHA256SUMS` if you want to be sure.
+- **Silent install.** `msiexec /i jev-claude-windows-x64.msi /qn` (add `/l*v install.log` for a log).
+- **Update.** Install the newer MSI over it (double-click, or the `msiexec` line); the old version is
+  replaced. A downgrade is refused.
+- **Remove.** Settings > Apps > jev-claude > Uninstall, or `msiexec /x jev-claude-windows-x64.msi /qn`.
+  It removes the files and the PATH entry. `~/.jev-router.env` and the other files listed in the
+  README's [Removing](../README.md#removing) stay.
+- **Do not mix the two.** An install by `install.ps1` lives in `~\jev-claude-rust`, an MSI install in
+  `%LocalAppData%\Programs\jev-claude`, and each puts its own `bin` on PATH. Having both means two
+  copies, and whichever PATH entry comes first runs. `install.ps1` does not update an MSI install and
+  `jev-update-check` does not look at either. Pick one and remove the other.
+
+CI builds it with WiX (`installer/windows/jev-claude.wxs`, `.github/scripts/build-msi.ps1`) from the
+archive it has just checked, then installs it on a Windows runner, runs a program, installs it again,
+uninstalls it, and checks that the files and the PATH entry are gone
+(`.github/scripts/test-msi.ps1`), before a release can be tagged.
 
 ## Install the toolchain
 

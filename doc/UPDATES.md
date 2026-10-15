@@ -1,7 +1,9 @@
 # Updates
 
 jev-claude is installed from a release archive into `~/jev-claude-rust` (or `JEV_INSTALL_DIR`).
-Updating means installing the newer release over it: run the installer again.
+Updating means installing the newer release over it: run the installer again. (An install made with
+the Windows MSI is updated by installing the newer MSI instead; see
+[doc/RUST.md](RUST.md#the-windows-installer-msi).)
 
 ## Status
 

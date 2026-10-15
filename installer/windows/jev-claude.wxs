@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Windows installer (MSI) for jev-claude, built by .github/scripts/build-msi.ps1 from the release
+  archive, so it holds exactly the files the archive does: bin\ (the seven programs), .claude\skills\,
+  package.json, .env.example and LICENSE. SPEC.md 2.4 finds the root by walking up from bin\, so the
+  programs need no JEV_ROOT.
+
+  Per user, like install.ps1: no administrator prompt, installed under %LocalAppData%\Programs\jev-claude,
+  and that folder's bin\ is added to the user PATH (and taken off again by uninstall). Not signed.
+
+  Variables, passed by build-msi.ps1: Version (the release version, x.y.z), StageDir (the unpacked
+  archive), License (the licence as RTF, for the licence page).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="jev-claude" Manufacturer="alienfacepalm" Version="$(Version)"
+           UpgradeCode="6f0a3c5e-8b1d-4f6a-9c2e-5d7b4a1e0f93" Scope="perUser" Compressed="yes">
+    <SummaryInformation Description="jev-claude: routes each Claude Code turn to the model that gets the best result for the least cost" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of jev-claude is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="jev-claude">
+          <!-- bin\ on the user PATH. The registry value is the component's key path (a per-user
+               component needs one under HKCU). -->
+          <Component Id="UserPath" Guid="b3d1c7a4-2e58-4c0b-a6f9-81e4d2c5b7a0">
+            <RegistryValue Root="HKCU" Key="Software\alienfacepalm\jev-claude" Name="InstallFolder"
+                           Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+            <Environment Id="JevBinOnPath" Name="PATH" Value="[INSTALLFOLDER]bin" Action="set"
+                         Part="last" System="no" Permanent="no" />
+          </Component>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Every file of the archive, in the same layout (the .claude folder included). -->
+    <ComponentGroup Id="Payload" Directory="INSTALLFOLDER">
+      <Files Include="$(StageDir)\**" />
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="jev-claude" Level="1">
+      <ComponentRef Id="UserPath" />
+      <ComponentGroupRef Id="Payload" />
+    </Feature>
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(License)" />
+    <ui:WixUI Id="WixUI_Minimal" />
+  </Package>
+</Wix>

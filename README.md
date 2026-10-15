@@ -40,6 +40,17 @@ Then start it from any project:
 jev-claude
 ```
 
+**Prefer a standard Windows installer?** The command line above is the recommended way to install:
+it checks Windows for everything jev-claude needs, installs Claude Code for you when it is missing,
+asks for your Jev key, and updates the same way. If you would rather click through a normal setup
+wizard, every release also has `jev-claude-windows-x64.msi` on its
+[releases page](https://github.com/alienfacepalm/jev-claude/releases/latest). It installs for your user
+only (no administrator prompt) into `%LocalAppData%\Programs\jev-claude`, puts the `bin` folder on your
+user PATH, and appears in Settings > Apps for removal. It does not install Claude Code or ask for a
+key: open a new terminal and run `jev-check` to see what is still missing. The MSI is not code-signed,
+so Windows SmartScreen asks you to confirm it. See [doc/RUST.md](doc/RUST.md#the-windows-installer-msi)
+for how to update and remove it, and do not install both ways on one machine.
+
 jev-claude is a set of native programs. It needs no Node.js, no pnpm, no Rust toolchain and no
 clone of this repository, and git is optional. It does need [Claude Code](https://code.claude.com/docs/en/setup),
 because jev-claude is a launcher for it; the installer installs it when it is missing. Claude Code
@@ -184,11 +195,13 @@ says why. There is no automatic source build: build the programs yourself, as
 
 Run the same line again. It downloads the latest release, checks it, replaces the install, and
 says which version it replaced (`updated 0.10.0 -> 0.11.0`, or `reinstalled version 0.11.0`). Your
-settings in `~/.jev-router.env` stay.
+settings in `~/.jev-router.env` stay. (An install made with the Windows MSI is updated by running the
+newer MSI instead; see [doc/RUST.md](doc/RUST.md#the-windows-installer-msi).)
 
 ### Removing
 
-There is no uninstaller; removing it takes a few deletions. In these commands `~` is your home
+There is no uninstaller for the command-line install; removing it takes a few deletions (an install
+made with the Windows MSI is removed in Settings > Apps instead). In these commands `~` is your home
 folder (`C:\Users\you` on Windows), and the install folder is `~/jev-claude-rust` unless you set
 `JEV_INSTALL_DIR`.
 
@@ -628,7 +641,8 @@ copy installed elsewhere loses and how `JEV_ROOT` fixes it.
   version, a release build, and on Windows a check that the C runtime is linked in.
 - `release-targets`: every published target (Windows x64, Linux x64 and arm64 on musl, macOS Apple
   silicon and Intel) built, checked for static linking, packaged, and installed by the real
-  installer on a machine of its own architecture.
+  installer on a machine of its own architecture; the Windows leg also builds the MSI and installs,
+  runs and uninstalls it.
 - `installers`: `cargo xtask installer-smoke-test` against the freshly built programs on all three
   systems, plus Windows 11 on ARM (experimental), and the skills' command lines under Windows
   PowerShell 5.1 and PowerShell 7.

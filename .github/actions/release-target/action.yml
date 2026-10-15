@@ -94,3 +94,16 @@ runs:
           echo "::error::the $TARGET archive was not installed: this runner is not a $TARGET machine"
           exit 1
         fi
+
+    # Windows also ships a standard installer (MSI), built from the archive just checked so it holds
+    # exactly the same files, then installed, run and uninstalled for real on this runner (a CI runner
+    # is thrown away, so the user PATH and %LocalAppData% it changes do not matter).
+    - name: Build the Windows installer (MSI)
+      if: inputs.target == 'windows-x64'
+      shell: pwsh
+      run: ./.github/scripts/build-msi.ps1 -Archive dist/jev-claude-windows-x64.tar.gz -Out dist
+
+    - name: The MSI installs, runs and uninstalls
+      if: inputs.target == 'windows-x64'
+      shell: pwsh
+      run: ./.github/scripts/test-msi.ps1 -Msi dist/jev-claude-windows-x64.msi

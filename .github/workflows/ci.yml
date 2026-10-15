@@ -8,7 +8,8 @@
 #                     node-gated launcher tests both with node (required) and without it
 #   release-targets   every published target (musl Linux x64/arm64, Windows x64, macOS arm64 and
 #                     Intel) built, checked for static linking, packaged and installed by the real
-#                     installer, from this commit, before any release is tagged
+#                     installer, from this commit, before any release is tagged; the Windows leg
+#                     also builds the MSI and installs, runs and uninstalls it
 #   installers        install.sh / install.ps1 against the freshly built binaries
 #                     (`cargo xtask installer-smoke-test`; windows, ubuntu, macos, and Windows on
 #                     ARM through x64 emulation), plus the skills' command lines under PowerShell
@@ -466,11 +467,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: archive-${{ matrix.target }}
-          path: dist/jev-claude-*.tar.gz
+          # The Windows leg also builds the MSI; the other legs have only the archive.
+          path: |
+            dist/jev-claude-*.tar.gz
+            dist/jev-claude-*.msi
           if-no-files-found: error
 
   # Publishes the GitHub release, with SHA256SUMS, only once every archive exists. The installers
-  # download releases/latest/download/<archive>, so the names carry no version.
+  # download releases/latest/download/<archive>, so the names carry no version. The release also
+  # carries the Windows installer (the MSI) and the two install scripts as they are at the tag, so a
+  # release holds every way to install it.
   publish:
     name: publish release
     needs: [release, binaries]
@@ -480,6 +486,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The tag, as in the binaries job: the install scripts that ship are the ones at the release commit.
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.release.outputs.version }}
+          sparse-checkout: |
+            install.sh
+            install.ps1
+          sparse-checkout-cone-mode: false
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -487,8 +502,10 @@ jobs:
           merge-multiple: true
 
       - name: Checksums
-        working-directory: dist
-        run: sha256sum jev-claude-*.tar.gz | tee SHA256SUMS
+        run: |
+          cp install.sh install.ps1 dist/
+          cd dist
+          sha256sum jev-claude-*.tar.gz jev-claude-*.msi install.sh install.ps1 | tee SHA256SUMS
 
       - name: Create the release
         env:
@@ -496,4 +513,4 @@ jobs:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
           tag="v$VERSION"
-          gh release create "$tag" dist/jev-claude-*.tar.gz dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --verify-tag --title "$tag" --generate-notes
+          gh release create "$tag" dist/jev-claude-*.tar.gz dist/jev-claude-*.msi dist/install.sh dist/install.ps1 dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --verify-tag --title "$tag" --generate-notes

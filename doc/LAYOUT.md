@@ -15,7 +15,8 @@ jev-claude/
 ├─ package.json          # the release version only (see below); no scripts, no dependencies
 ├─ .env.example  LICENSE  # the settings template (copied to ~/.jev-router.env by the installers)
 ├─ .github/workflows/    # ci.yml (every job, then the release)
-├─ .github/actions/  .github/scripts/   # the release-target composite action; CI check scripts (static linking, skill lines)
+├─ .github/actions/  .github/scripts/   # the release-target composite action; CI scripts (static linking, skill lines, build-msi.ps1, test-msi.ps1)
+├─ installer/windows/    # jev-claude.wxs: the WiX source of the Windows installer (MSI)
 ├─ .claude/skills/       # /jev-calibrate, /jev-explain, /jev-legend
 ├─ plugin/  .claude-plugin/   # the jev-installer plugin and its marketplace entry
 ├─ install.sh  install.ps1    # the installers (macOS, Linux, WSL, Git Bash / Windows PowerShell)
@@ -87,8 +88,10 @@ commit since the last release tag, so the newer run releases those commits too. 
 `binaries` (one job per platform) and `publish` run in the same workflow, because a push made
 with the workflow's token starts no further run. `binaries` builds the five archives (musl for
 Linux) from the release tag with the same steps as `release-targets`, and installs each one with
-`cargo xtask installer-smoke-test --archive`; `publish` adds `SHA256SUMS` and creates
-the GitHub release that the installers download. If a `binaries` leg fails after the tag exists,
+`cargo xtask installer-smoke-test --archive`; the Windows leg also builds the MSI from its archive
+(`.github/scripts/build-msi.ps1`) and installs, runs and uninstalls it (`test-msi.ps1`). `publish`
+adds the install scripts at the tag, `SHA256SUMS` over everything, and creates the GitHub release
+that the installers download. If a `binaries` leg fails after the tag exists,
 **Re-run failed jobs** on that run rebuilds it and then publishes.
 
 ## Why the root keeps a package.json
