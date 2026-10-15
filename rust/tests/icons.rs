@@ -1,7 +1,7 @@
-//! Port of node/test/icons.test.mjs.
+//! The status line's item labels (SPEC 12.1).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 use jev_router::envx::{EnvMap, map};

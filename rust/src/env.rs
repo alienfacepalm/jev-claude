@@ -1,4 +1,4 @@
-//! Loading jev's settings files (SPEC 9.1; `node/src/env.mjs`), with Node's `util.parseEnv`
+//! Loading jev's settings files (SPEC 9.1), with Node's `util.parseEnv`
 //! ported line for line from `conformance/reference/node_dotenv_parse_content.cc`.
 
 use crate::envx::EnvMut;

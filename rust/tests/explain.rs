@@ -1,7 +1,7 @@
-//! Port of node/test/explain.test.mjs.
+//! The explanation panel (SPEC 13).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -63,7 +63,10 @@ fn reads_the_recommendation_from_sessions_recorded_before_the_rename() {
 #[test]
 fn claude_skill_pre_approves_its_read_only_explanation_command() {
     let skill = std::fs::read_to_string(repo_root().join(".claude/skills/jev-explain/SKILL.md")).unwrap();
-    assert!(skill.lines().any(|l| l.trim_end() == "allowed-tools: Bash(node *)"));
+    assert!(
+        skill.lines().any(|l| l.trim_end() == "allowed-tools: Bash(jev-explain *) PowerShell(jev-explain *)"),
+        "{skill}"
+    );
 }
 
 /// "says a held decision in words a person reads, not the reason code"

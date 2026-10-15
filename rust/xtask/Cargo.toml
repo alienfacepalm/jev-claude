@@ -1,0 +1,42 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Developer and CI tasks for jev-claude (version bump, release packaging, installer smoke test). Never shipped."
+license = "MIT"
+publish = false
+
+[lib]
+name = "xtask"
+path = "src/lib.rs"
+
+# Run as `cargo xtask <command>` from rust/ (the alias is in rust/.cargo/config.toml).
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies]
+regex = "1"
+sha2 = "0.10"
+
+# The same policy as the product crate, less the allows that only its JavaScript arithmetic needs.
+[lints.rust]
+# The only unsafe code is the setsid(2) call that detaches the smoke test's installers from the
+# terminal; it carries `#[allow(unsafe_code)]` and a SAFETY comment.
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+# Errors are plain messages for the person running the task; the docs say when they happen.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+too_many_lines = "allow"

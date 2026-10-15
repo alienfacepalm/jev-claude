@@ -1,4 +1,4 @@
-//! Shared test support: an isolated status directory (Node's `isolate-status.mjs`), temporary
+//! Shared test support: an isolated status directory, temporary
 //! directories, the golden-case tagged encoding, and loopback HTTP servers.
 #![allow(dead_code)]
 
@@ -423,13 +423,35 @@ pub const FAKE_CLAUDE: &str = r#"process.stdout.write(JSON.stringify({
 }));
 "#;
 
-/// A `claude` the launcher finds on PATH: an npm-style `.cmd` shim on Windows (the form the launcher
-/// runs directly through node), an executable script elsewhere.
+/// Whether `node` is on PATH, for the tests that run an npm-style stand-in `claude` through it (the
+/// way an npm-installed Claude Code starts). Node is needed for nothing else: the native stand-in
+/// ([`native_claude`]) runs without it. When it is missing the caller skips and this prints a note
+/// straight to stderr, past the test harness's capture.
+pub fn have_node(test: &str) -> bool {
+    use std::io::Write;
+    if jev_router::launch::resolve_command("node", None, None, cfg!(windows)).is_some() {
+        return true;
+    }
+    // CI sets JEV_REQUIRE_NODE=1 where `node` is installed on purpose: a missing one is then a failure,
+    // not a quiet skip that leaves the npm-shim launch paths untested.
+    assert!(
+        std::env::var("JEV_REQUIRE_NODE").map_or(true, |v| v != "1"),
+        "{test}: JEV_REQUIRE_NODE=1 but `node` is not on PATH (CI installs it with actions/setup-node)"
+    );
+    // One write, so the line is not split by the harness's own output.
+    let note = format!("note: {test} skipped: `node` is not on PATH (it runs the npm-style stand-in)\n");
+    let _ = std::io::stderr().write_all(note.as_bytes());
+    false
+}
+
+/// An npm-style `claude` the launcher finds on PATH: a `.cmd` shim on Windows (the form the launcher
+/// runs directly through node), a node script elsewhere. Both need `node` ([`have_node`]); for a
+/// stand-in without it see [`native_claude`].
 pub fn fake_claude(dir: &Path) {
     #[cfg(windows)]
     {
-        std::fs::write(dir.join("claude-fake.mjs"), FAKE_CLAUDE).unwrap();
-        std::fs::write(dir.join("claude.cmd"), "@ECHO off\r\n\"node\"  \"%~dp0\\claude-fake.mjs\" %*\r\n").unwrap();
+        std::fs::write(dir.join("claude-fake.js"), FAKE_CLAUDE).unwrap();
+        std::fs::write(dir.join("claude.cmd"), "@ECHO off\r\n\"node\"  \"%~dp0\\claude-fake.js\" %*\r\n").unwrap();
     }
     #[cfg(not(windows))]
     {
@@ -445,4 +467,24 @@ pub fn path_with(dir: &Path) -> std::ffi::OsString {
     let mut paths = vec![PathBuf::from(dir)];
     paths.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()));
     std::env::join_paths(paths).unwrap()
+}
+
+/// A native `claude` on Unix, the form Anthropic's installer puts on PATH: a plain executable (here
+/// a `/bin/sh` script) the launcher runs directly, with no node involved. It prints one `arg:<value>`
+/// line per argument, then `env:<NAME>=<value>` for the variables that say whether a session was
+/// set up, `<unset>` when one is missing.
+#[cfg(unix)]
+pub fn native_claude(dir: &Path) {
+    use std::os::unix::fs::PermissionsExt;
+    let file = dir.join("claude");
+    std::fs::write(
+        &file,
+        "#!/bin/sh\n\
+         for a in \"$@\"; do printf 'arg:%s\\n' \"$a\"; done\n\
+         printf 'env:ANTHROPIC_BASE_URL=%s\\n' \"${ANTHROPIC_BASE_URL-<unset>}\"\n\
+         printf 'env:ANTHROPIC_MODEL=%s\\n' \"${ANTHROPIC_MODEL-<unset>}\"\n\
+         printf 'env:JEV_API_KEY=%s\\n' \"${JEV_API_KEY-<unset>}\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
 }

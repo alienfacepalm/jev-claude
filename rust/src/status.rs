@@ -1,4 +1,4 @@
-//! Per-session status files (SPEC 8; `node/src/status.mjs`).
+//! Per-session status files (SPEC 8).
 
 use crate::envx;
 use crate::fsx::{chmod, mkdir_all, temp_name, write_with_mode};
@@ -23,11 +23,23 @@ static DUMPED: AtomicU64 = AtomicU64::new(0);
 /// One lock around every status-file read-modify-write and the calibration write (3.10).
 static LOCK: Mutex<()> = Mutex::new(());
 
+/// The default status directory inside `temp`: `jev-claude-<uid>` for a Unix user id, plain
+/// `jev-claude` without one (Windows, whose temp directory is already per user). On Linux and WSL
+/// the temp directory is the shared `/tmp`, so one name for everybody would let the first user's
+/// owner-only directory lock every other user out (SPEC 8.1).
+pub fn default_status_dir(temp: &Path, uid: Option<u32>) -> PathBuf {
+    temp.join(uid.map_or_else(|| "jev-claude".to_string(), |uid| format!("jev-claude-{uid}")))
+}
+
 fn resolve_dir() -> PathBuf {
-    match envx::get("JEV_STATUS_DIR").filter(|d| !d.is_empty()) {
-        Some(d) => PathBuf::from(d),
-        None => temp_dir().join("jev-claude"),
+    if let Some(d) = envx::get("JEV_STATUS_DIR").filter(|d| !d.is_empty()) {
+        return PathBuf::from(d);
     }
+    #[cfg(unix)]
+    let uid = Some(crate::osdirs::real_uid());
+    #[cfg(not(unix))]
+    let uid = None;
+    default_status_dir(&temp_dir(), uid)
 }
 
 /// The status directory, fixed at its first use (programs call [`crate::init`] at start).
@@ -35,8 +47,7 @@ pub fn status_dir() -> &'static Path {
     DIR.get_or_init(resolve_dir)
 }
 
-/// Points the status directory somewhere else before anything has used it (tests; Node's
-/// `isolate-status.mjs`). Returns the directory in force.
+/// Points the status directory somewhere else before anything has used it (tests). Returns the directory in force.
 pub fn set_status_dir(dir: PathBuf) -> &'static Path {
     let _ = DIR.set(dir);
     status_dir()
@@ -52,7 +63,7 @@ pub fn calibration_file() -> PathBuf {
     status_dir().join("calibration.json")
 }
 
-/// `fileFor(sessionId)`: None where Node's `.replace` would throw (a non-string id).
+/// `fileFor(sessionId)`: None where JavaScript's `.replace` would throw (a non-string id).
 pub fn file_for(session_id: &Value) -> Option<PathBuf> {
     let id = session_id.as_str()?;
     let clean: Vec<u8> =
@@ -335,7 +346,7 @@ pub fn dump_body(body: &Value, setting: Option<&str>) -> Option<PathBuf> {
     name.push(format!(".{}-{n}.json", now_ms() as u64));
     let file = PathBuf::from(name);
     let write = || -> std::io::Result<()> {
-        // Node ensures the directory whenever the prefix starts with it as a string.
+        // SPEC 8: the directory is ensured whenever the prefix starts with it as a string.
         if prefix.to_string_lossy().starts_with(&*dir.to_string_lossy()) {
             ensure_dir()?;
         }
@@ -351,7 +362,7 @@ pub fn prune_stale(max_age_ms: f64, now: f64) -> usize {
     let Ok(entries) = std::fs::read_dir(status_dir()) else { return 0 };
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().into_owned();
-        // Node's `name.endsWith(".json")` is case-sensitive, and so is this.
+        // SPEC 8: the `.json` suffix test is case-sensitive, and so is this.
         #[allow(clippy::case_sensitive_file_extension_comparisons)]
         let is_json = name.ends_with(".json");
         if !is_json || name == "settings.json" {
@@ -366,4 +377,15 @@ pub fn prune_stale(max_age_ms: f64, now: f64) -> usize {
         }
     }
     removed
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_default_status_dir_is_per_user_where_there_is_a_uid() {
+        assert_eq!(default_status_dir(Path::new("/tmp"), Some(1234)), PathBuf::from("/tmp/jev-claude-1234"));
+        assert_eq!(default_status_dir(Path::new("/tmp"), None), PathBuf::from("/tmp/jev-claude"));
+    }
 }

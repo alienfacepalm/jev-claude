@@ -1,4 +1,4 @@
-//! How a routing decision is said to a person (SPEC 12.4; `node/src/reasons.mjs`).
+//! How a routing decision is said to a person (SPEC 12.4).
 
 struct Reason {
     matches: &'static str,

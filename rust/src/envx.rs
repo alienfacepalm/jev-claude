@@ -1,9 +1,9 @@
 //! Environment access.
 //!
-//! Node reads `process.env` and `loadEnv` writes into it. Rust 2024 makes `set_var` unsafe, so
+//! SPEC 9.1 has `loadEnv` write into the process environment, as JavaScript's `process.env` allows. Rust 2024 makes `set_var` unsafe, so
 //! the process environment here is the real one plus an overlay that `loadEnv` writes to; every
 //! read goes through [`ProcessEnv`], and the launcher hands the overlay to Claude Code. Functions
-//! that Node gives an `env` parameter take `&dyn Env`, so tests pass a plain map.
+//! that SPEC gives an `env` parameter take `&dyn Env`, so tests pass a plain map.
 
 use std::collections::BTreeMap;
 use std::sync::{LazyLock, RwLock};
@@ -20,7 +20,7 @@ pub trait EnvMut: Env {
     fn set(&mut self, key: &str, value: &str);
 }
 
-/// A plain map, as Node's tests pass `{ JEV_OPUS_EFFORT: "high" }`.
+/// A plain map, as the tests pass `{ JEV_OPUS_EFFORT: "high" }`.
 pub type EnvMap = BTreeMap<String, String>;
 
 impl Env for EnvMap {
@@ -47,7 +47,7 @@ fn same_key(a: &str, b: &str) -> bool {
 }
 
 /// `process.env`: the real environment with `loadEnv`'s additions. Names compare
-/// case-insensitively on Windows, as Node's `process.env` does there.
+/// case-insensitively on Windows, as JavaScript's `process.env` does there (SPEC 3.8).
 #[derive(Clone, Copy, Default)]
 pub struct ProcessEnv;
 

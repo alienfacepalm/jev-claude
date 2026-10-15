@@ -1,4 +1,4 @@
-//! A model's short display name with its version (SPEC 12.3; `node/src/model-names.mjs`).
+//! A model's short display name with its version (SPEC 12.3).
 
 use crate::jsstr::minor_after;
 use regex::bytes::Regex;

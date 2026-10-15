@@ -1,0 +1,398 @@
+{
+  "_source": "Precomputed expectations for the black-box harness (SPEC 16.3), taken once from the Node reference at tag v0.11.0 (commit 5b51f14) for the exact inputs the harness sends. rust/tests/conformance/mod.rs looks entries up by the SHA-256 of the input; conformance/README.md says how to add or amend one.",
+  "menus": {
+    "static": [
+      {
+        "id": "claude-haiku-5-5",
+        "tier": "haiku",
+        "releasedAt": "",
+        "description": "claude-haiku-5-5"
+      },
+      {
+        "id": "claude-sonnet-5-5",
+        "tier": "sonnet",
+        "releasedAt": "",
+        "description": "claude-sonnet-5-5"
+      },
+      {
+        "id": "claude-opus-5-5",
+        "tier": "opus",
+        "releasedAt": "",
+        "description": "claude-opus-5-5"
+      },
+      {
+        "id": "claude-fable-5-1",
+        "tier": "fable",
+        "releasedAt": "",
+        "description": "claude-fable-5-1"
+      }
+    ],
+    "catalog": [
+      {
+        "id": "claude-opus-6",
+        "tier": "opus",
+        "releasedAt": "2026-11-01T00:00:00Z",
+        "description": "Claude Opus 6; released 2026-11-01; 1000000 input tokens"
+      },
+      {
+        "id": "claude-sonnet-5-5",
+        "tier": "sonnet",
+        "releasedAt": "2026-08-11T00:00:00Z",
+        "description": "Claude Sonnet 5.5; released 2026-08-11"
+      },
+      {
+        "id": "claude-haiku-5-5",
+        "tier": "haiku",
+        "releasedAt": "2026-08-11T00:00:00Z",
+        "description": "Claude Haiku 5.5; released 2026-08-11; 200000 input tokens"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "name": "static menu",
+      "models": [
+        {
+          "id": "claude-haiku-5-5",
+          "tier": "haiku",
+          "releasedAt": "",
+          "description": "claude-haiku-5-5"
+        },
+        {
+          "id": "claude-sonnet-5-5",
+          "tier": "sonnet",
+          "releasedAt": "",
+          "description": "claude-sonnet-5-5"
+        },
+        {
+          "id": "claude-opus-5-5",
+          "tier": "opus",
+          "releasedAt": "",
+          "description": "claude-opus-5-5"
+        },
+        {
+          "id": "claude-fable-5-1",
+          "tier": "fable",
+          "releasedAt": "",
+          "description": "claude-fable-5-1"
+        }
+      ],
+      "questions": {
+        "task_complexity": {
+          "type": "score",
+          "instructions": "How complex is the coding task overall, including ambiguity, scope, and blast radius?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "reasoning_required": {
+          "type": "score",
+          "instructions": "How much reasoning is required to complete the request correctly in one pass?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "tool_complexity": {
+          "type": "score",
+          "instructions": "How complex is the tool use required, from no tools to many coordinated or stateful operations?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "model": {
+          "type": "choice",
+          "instructions": [
+            "Pick the cheapest exact model that can fully complete this coding request in one pass, without retrying on a stronger model.",
+            "When you are unsure whether a cheaper model would get it right, pick the stronger one: a failed attempt wastes the whole turn and is rerun anyway, so it costs more than the difference. Speed does not matter.",
+            "Each tier is offered as its newest version only. Judge required reasoning, not requested reply length.",
+            "Reasoning effort is set per tier and is not something to choose between; judge only which model the work needs.",
+            "Changing tier mid-conversation discards the prompt cache and re-reads the whole history, so prefer the current model where the work has not changed shape."
+          ],
+          "criteria": {
+            "claude-haiku-5-5": {
+              "model": "claude-haiku-5-5",
+              "cost": "$1 / $5 per million input / output tokens; the cheapest, but it does no reasoning",
+              "what": "Trivial, mechanical, or purely factual work.",
+              "signals": [
+                "Rename, reformat, comment, or run one obvious command"
+              ],
+              "not_for": "Design judgement or multi-file reasoning."
+            },
+            "claude-sonnet-5-5": {
+              "model": "claude-sonnet-5-5",
+              "cost": "$2 / $10 per million tokens; about 40-60% less per completed task than Opus",
+              "what": "Well-scoped everyday work, and documents and knowledge work, where it does well for well under Opus's cost.",
+              "signals": [
+                "Implement a specified function or change, add tests, or fix a bug whose cause is already known",
+                "Write or edit documents, specs, summaries, or analysis"
+              ],
+              "not_for": "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-21 points higher on agentic coding."
+            },
+            "claude-opus-5-5": {
+              "model": "claude-opus-5-5",
+              "cost": "$4 / $20 per million tokens; about 1.6-2.6x Sonnet's cost per completed task",
+              "what": "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet, for about twice the cost per task.",
+              "signals": [
+                "Unknown-cause or intermittent bugs, multi-step changes across a codebase, cross-module design, API or behaviour-preserving changes, security, auth, concurrency, or migrations"
+              ],
+              "not_for": "Well-scoped changes and routine document or knowledge work, where Sonnet does well for less."
+            },
+            "claude-fable-5-1": {
+              "model": "claude-fable-5-1",
+              "cost": "$10 / $50 per million tokens; the most expensive by far",
+              "what": "Long-horizon autonomous work, the most demanding reasoning, and adversarial review that hardens a plan, spec, or design by hunting for how it fails.",
+              "signals": [
+                "Long-horizon autonomous work: a whole-repo migration, a large system built end to end from a spec, or a full deliverable such as financial analysis with spreadsheets and slides",
+                "Adversarially review, red-team, stress-test, or poke holes in a plan, spec, or design to harden it",
+                "A problem that has already defeated a strong model, such as a bug two attempts have missed"
+              ],
+              "not_for": "Writing the plan or spec itself, ordinary code review, or security-focused analysis, where Fable's safety classifiers can decline."
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "account catalog menu",
+      "models": [
+        {
+          "id": "claude-opus-6",
+          "tier": "opus",
+          "releasedAt": "2026-11-01T00:00:00Z",
+          "description": "Claude Opus 6; released 2026-11-01; 1000000 input tokens"
+        },
+        {
+          "id": "claude-sonnet-5-5",
+          "tier": "sonnet",
+          "releasedAt": "2026-08-11T00:00:00Z",
+          "description": "Claude Sonnet 5.5; released 2026-08-11"
+        },
+        {
+          "id": "claude-haiku-5-5",
+          "tier": "haiku",
+          "releasedAt": "2026-08-11T00:00:00Z",
+          "description": "Claude Haiku 5.5; released 2026-08-11; 200000 input tokens"
+        }
+      ],
+      "questions": {
+        "task_complexity": {
+          "type": "score",
+          "instructions": "How complex is the coding task overall, including ambiguity, scope, and blast radius?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "reasoning_required": {
+          "type": "score",
+          "instructions": "How much reasoning is required to complete the request correctly in one pass?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "tool_complexity": {
+          "type": "score",
+          "instructions": "How complex is the tool use required, from no tools to many coordinated or stateful operations?",
+          "criteria": [
+            "None",
+            "Very low",
+            "Low",
+            "Some",
+            "Moderate",
+            "Moderate to high",
+            "High",
+            "Very high",
+            "Severe",
+            "Extreme"
+          ]
+        },
+        "model": {
+          "type": "choice",
+          "instructions": [
+            "Pick the cheapest exact model that can fully complete this coding request in one pass, without retrying on a stronger model.",
+            "When you are unsure whether a cheaper model would get it right, pick the stronger one: a failed attempt wastes the whole turn and is rerun anyway, so it costs more than the difference. Speed does not matter.",
+            "Each tier is offered as its newest version only. Judge required reasoning, not requested reply length.",
+            "Reasoning effort is set per tier and is not something to choose between; judge only which model the work needs.",
+            "Changing tier mid-conversation discards the prompt cache and re-reads the whole history, so prefer the current model where the work has not changed shape."
+          ],
+          "criteria": {
+            "claude-opus-6": {
+              "model": "Claude Opus 6; released 2026-11-01; 1000000 input tokens",
+              "cost": "$4 / $20 per million tokens; about 1.6-2.6x Sonnet's cost per completed task",
+              "what": "Complex or open-ended coding and work that needs sustained judgement, where it clearly beats Sonnet, for about twice the cost per task.",
+              "signals": [
+                "Unknown-cause or intermittent bugs, multi-step changes across a codebase, cross-module design, API or behaviour-preserving changes, security, auth, concurrency, or migrations"
+              ],
+              "not_for": "Well-scoped changes and routine document or knowledge work, where Sonnet does well for less."
+            },
+            "claude-sonnet-5-5": {
+              "model": "Claude Sonnet 5.5; released 2026-08-11",
+              "cost": "$2 / $10 per million tokens; about 40-60% less per completed task than Opus",
+              "what": "Well-scoped everyday work, and documents and knowledge work, where it does well for well under Opus's cost.",
+              "signals": [
+                "Implement a specified function or change, add tests, or fix a bug whose cause is already known",
+                "Write or edit documents, specs, summaries, or analysis"
+              ],
+              "not_for": "Open-ended or multi-step coding, changes that must not break existing behaviour, unknown-cause debugging, or judgement calls: Opus scores 5-21 points higher on agentic coding."
+            },
+            "claude-haiku-5-5": {
+              "model": "Claude Haiku 5.5; released 2026-08-11; 200000 input tokens",
+              "cost": "$1 / $5 per million input / output tokens; the cheapest, but it does no reasoning",
+              "what": "Trivial, mechanical, or purely factual work.",
+              "signals": [
+                "Rename, reformat, comment, or run one obvious command"
+              ],
+              "not_for": "Design judgement or multi-file reasoning."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "turns": [
+    {
+      "name": "captured request",
+      "sha256": "6674bff47bade30a9bc28c5f97ac730572c62c6b8642dbe7708c8779c77b79ad",
+      "prompt": "rename the variable x to count in utils.js",
+      "label": "rename the variable x to count in utils.js",
+      "keys": {
+        "7f3c2a10-5b8e-4d21-9c6a-2e4f8b1d0a37": "cf81f19561d3",
+        "harness-routed": "061364290025",
+        "harness-continuation": "40a007dc02ba",
+        "harness-manual": "7770f09307e8",
+        "harness-off-menu": "bb884b763d87",
+        "harness-jev-down": "3ae32276c381"
+      }
+    },
+    {
+      "name": "captured request, sub-agent text",
+      "sha256": "83ced75693b7e54323ab1d71c4cd51866c80e7b26d262040efa28fc444eb2000",
+      "prompt": "Search the codebase for callers of handler 7 and report them",
+      "label": "Search the codebase for callers of handler 7 an…",
+      "keys": {
+        "7f3c2a10-5b8e-4d21-9c6a-2e4f8b1d0a37": "9b89bdd7de6b",
+        "harness-routed": "ad0da264e717",
+        "harness-continuation": "3502542bde7b",
+        "harness-manual": "f932cda97233",
+        "harness-off-menu": "fe4bcf040c47",
+        "harness-jev-down": "2d66186fa821"
+      }
+    },
+    {
+      "name": "captured request with a user-picked model",
+      "sha256": "57b8a3de4f9c810d17aff809e95333d4010e357be8d97e05fd2db11a74220b53",
+      "prompt": "rename the variable x to count in utils.js",
+      "label": "rename the variable x to count in utils.js",
+      "keys": {
+        "7f3c2a10-5b8e-4d21-9c6a-2e4f8b1d0a37": "cf81f19561d3",
+        "harness-routed": "061364290025",
+        "harness-continuation": "40a007dc02ba",
+        "harness-manual": "7770f09307e8",
+        "harness-off-menu": "bb884b763d87",
+        "harness-jev-down": "3ae32276c381"
+      }
+    }
+  ],
+  "forwarded": [
+    {
+      "name": "routed turn to Haiku",
+      "tier": "haiku",
+      "model": "claude-haiku-5-5",
+      "sha256": "d1d245b822511a97bbcce32ca3d8ed05438e21dd6e68001f989577ff0997e1a0",
+      "body": "{\"model\":\"claude-haiku-5-5\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"rename the variable x to count in utils.js\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"stream\":true}"
+    },
+    {
+      "name": "auxiliary call on the default tier",
+      "tier": "sonnet",
+      "model": "claude-sonnet-5-5",
+      "sha256": "8f7e10f0a11a8916edfaa08e6c8c0dab7e266c0c19f573fadacb4f9cdcc204c8",
+      "body": "{\"model\":\"claude-sonnet-5-5\",\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32,\"messages\":[{\"role\":\"user\",\"content\":\"Summarize this conversation in five words\"}],\"output_config\":{\"effort\":\"high\"}}"
+    },
+    {
+      "name": "tool continuation stays on Haiku",
+      "tier": "haiku",
+      "model": "claude-haiku-5-5",
+      "sha256": "18a73799e1ce2a11f21b0718864d78c43452da86dcdc7dee5966d1afe218c3fa",
+      "body": "{\"model\":\"claude-haiku-5-5\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"rename the variable x to count in utils.js\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"Bash\",\"input\":{\"command\":\"ls\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_1\",\"content\":\"utils.js\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"stream\":true}"
+    },
+    {
+      "name": "sub-agent turn on Sonnet",
+      "tier": "sonnet",
+      "model": "claude-sonnet-5-5",
+      "sha256": "116eed231e5df869fa53f58ec06a4920a8e977744d781fadc5a9c65ec1ec5946",
+      "body": "{\"model\":\"claude-sonnet-5-5\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"Search the codebase for callers of handler 7 and report them\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"thinking\":{\"type\":\"adaptive\",\"display\":\"omitted\"},\"context_management\":{\"edits\":[{\"type\":\"clear_thinking_20251015\",\"keep\":\"all\"}]},\"output_config\":{\"effort\":\"high\"},\"stream\":true}"
+    },
+    {
+      "name": "user-picked model passes through",
+      "tier": "nonsense",
+      "model": null,
+      "sha256": "e97b2e78115ce9b73ebdfe3712129b223f0025ef43a29d4993d03d229746c888",
+      "body": "{\"model\":\"claude-opus-5-5\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"rename the variable x to count in utils.js\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"thinking\":{\"type\":\"adaptive\",\"display\":\"omitted\"},\"context_management\":{\"edits\":[{\"type\":\"clear_thinking_20251015\",\"keep\":\"all\"}]},\"output_config\":{\"effort\":\"high\"},\"stream\":true}"
+    },
+    {
+      "name": "captured turn on the default tier",
+      "tier": "sonnet",
+      "model": "claude-sonnet-5-5",
+      "sha256": "bf71b73383a0b54332258f6684c927aca5db70f58728c43d6cb8f5e800a46db1",
+      "body": "{\"model\":\"claude-sonnet-5-5\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"rename the variable x to count in utils.js\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"thinking\":{\"type\":\"adaptive\",\"display\":\"omitted\"},\"context_management\":{\"edits\":[{\"type\":\"clear_thinking_20251015\",\"keep\":\"all\"}]},\"output_config\":{\"effort\":\"high\"},\"stream\":true}"
+    },
+    {
+      "name": "body whose processing throws, default tier",
+      "tier": "sonnet",
+      "model": "claude-sonnet-5-5",
+      "sha256": "8a1f445fc6aa98104bf240d76901352e4ad3d187dbdb3739df24182b85496bff",
+      "body": "{\"model\":\"claude-sonnet-5-5\",\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"tools\":[{\"name\":\"Bash\"}],\"messages\":[{\"role\":\"user\",\"content\":[null]}],\"output_config\":{\"effort\":\"high\"}}"
+    },
+    {
+      "name": "captured turn routed to the catalog's Opus",
+      "tier": "opus",
+      "model": "claude-opus-6",
+      "sha256": "f94e95c8087763e6a0f64a5b6f467544e5e22797dc9bbf57d082c1039d033904",
+      "body": "{\"model\":\"claude-opus-6\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"<system-reminder>\\nCodebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAs you answer the user's questions, you can use the following context:\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"<system-reminder>\\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over this reminder, but do not add attribution lines this reminder leaves out):\\n(redacted)\\n</system-reminder>\"},{\"type\":\"text\",\"text\":\"rename the variable x to count in utils.js\"}]},{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"# Environment\\n(redacted)\"},{\"type\":\"tool_addition\",\"tool\":{\"type\":\"tool_reference\",\"name\":\"advisor\"},\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}]}],\"system\":[{\"type\":\"text\",\"text\":\"x-anthropic-billing-header: cc_version=2.1.287.97b; cc_entrypoint=sdk-cli;\"},{\"type\":\"text\",\"text\":\"You are a Claude agent, built on Anthropic's Claude Agent SDK.\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},{\"type\":\"text\",\"text\":\"\\nYou are an agent working with the user toward their goals. (redacted)\",\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}}],\"tools\":[{\"name\":\"Bash\",\"description\":\"Executes a bash command and returns its output.\\n\\nThis tool runs Git Bash (POSIX sh), not cmd.exe or PowerShell. Use Unix shell syntax: `/dev/null` not `NUL`, forward slashes, `$VAR` not `%VAR%` or `$env:VAR`. Do not use PowerShell here-strings (`@'…'@`) or backtick continuation here — for multi-line strings use a heredoc.\\n\\n- Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt. Shell state (env vars, functions) does not persist; the shell is initialized from the user's profile.\\n- IMPORTANT: Avoid using this tool to run `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or after you have verified that a dedicated tool cannot accomplish your task. Instead, use the appropriate dedicated tool as this will provide a much better experience for the user.\\n- Command output is displayed to you, not reliably to the user.\\n- `timeout` is in milliseconds: default 120000, max 600000 for a foreground command.\\n- `run_in_background` runs the command detached: it keeps running across turns and re-invokes you when it exits. With it, `timeout` is how long the command may run in the background (default 1800000, max 7200000); at that limit it is stopped and you are re-invoked. No `&` needed. Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition.\\n\\n# Git\\n- Interactive flags (`-i`, e.g. `git rebase -i`, `git add -i`) are not supported in this environment.\\n- Use the `gh` CLI for GitHub operations (PRs, issues, API).\\n- Commit or push only when the user asks. If on the default branch, branch first.\\n- End git commit messages and PR bodies with the attribution lines given in the conversation's system-reminder, when one is present.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"command\":{\"description\":\"The command to execute\",\"type\":\"string\"},\"timeout\":{\"description\":\"Optional timeout in milliseconds (max 600000 for a foreground command)\",\"type\":\"number\"},\"description\":{\"description\":\"Clear, concise description of what this command does in active voice. Never use words like \\\"complex\\\" or \\\"risk\\\" in the description - just describe what it does.\\n\\nSay what the command does in plain words: do not echo the command's text, its flags, or file paths - the user reads this description, often without seeing the command.\\n\\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\\n- ls → \\\"List files in current directory\\\"\\n- git status → \\\"Show working tree status\\\"\\n- npm install → \\\"Install package dependencies\\\"\\n\\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\\n- find . -name \\\"*.tmp\\\" -exec rm {} \\\\; → \\\"Find and delete all .tmp files recursively\\\"\\n- git reset --hard origin/main → \\\"Discard all local changes and match remote main\\\"\\n- curl -s url | jq '.data[]' → \\\"Fetch JSON from URL and extract data array elements\\\"\",\"type\":\"string\"},\"run_in_background\":{\"description\":\"Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).\",\"type\":\"boolean\"},\"dangerouslyDisableSandbox\":{\"description\":\"Set this to true to dangerously override sandbox mode and run commands without sandboxing.\",\"type\":\"boolean\"}},\"required\":[\"command\"],\"additionalProperties\":false}},{\"name\":\"Edit\",\"description\":\"Performs exact string replacement in a file.\\n\\n- You must Read the file in this conversation before editing, or the call will fail.\\n- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.\\n- `replace_all: true` replaces every occurrence instead.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to modify\",\"type\":\"string\"},\"old_string\":{\"description\":\"The text to replace\",\"type\":\"string\"},\"new_string\":{\"description\":\"The text to replace it with (must be different from old_string)\",\"type\":\"string\"},\"replace_all\":{\"description\":\"Replace all occurrences of old_string (default false)\",\"default\":false,\"type\":\"boolean\"}},\"required\":[\"file_path\",\"old_string\",\"new_string\"],\"additionalProperties\":false}},{\"name\":\"Read\",\"description\":\"Reads a file from the local filesystem.\\n\\n- `file_path` must be an absolute path.\\n- Reads up to 2000 lines by default.\\n- When you already know which part of the file you need, only read that part. This can be important for larger files.\\n- Results are returned using cat -n format, with line numbers starting at 1\\n- Reads images (PNG, JPG, …) and presents them visually. Reads PDFs via the `pages` parameter (e.g. \\\"1-5\\\", max 20 pages/request; required for PDFs over 10 pages). Reads Jupyter notebooks (.ipynb) as cells with outputs.\\n- Reading a directory, a missing file, or an empty file returns an error or system reminder rather than content.\\n- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.\",\"input_schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"file_path\":{\"description\":\"The absolute path to the file to read\",\"type\":\"string\"},\"offset\":{\"description\":\"The line number to start reading from. Only provide if the file is too large to read at once\",\"type\":\"integer\",\"minimum\":0,\"maximum\":9007199254740991},\"limit\":{\"description\":\"The number of lines to read. Only provide if the file is too large to read at once.\",\"type\":\"integer\",\"exclusiveMinimum\":0,\"maximum\":9007199254740991},\"pages\":{\"description\":\"Page range for PDF files (e.g., \\\"1-5\\\", \\\"3\\\", \\\"10-20\\\"). Only applicable to PDF files. Maximum 20 pages per request.\",\"type\":\"string\"}},\"required\":[\"file_path\"],\"additionalProperties\":false}}],\"metadata\":{\"user_id\":\"{\\\"device_id\\\":\\\"0000000000000000000000000000000000000000000000000000000000000000\\\",\\\"account_uuid\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"session_id\\\":\\\"@@SESSION@@\\\"}\"},\"max_tokens\":32000,\"thinking\":{\"type\":\"adaptive\",\"display\":\"omitted\"},\"context_management\":{\"edits\":[{\"type\":\"clear_thinking_20251015\",\"keep\":\"all\"}]},\"output_config\":{\"effort\":\"high\"},\"stream\":true}"
+    }
+  ]
+}

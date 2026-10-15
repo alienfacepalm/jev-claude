@@ -1,4 +1,4 @@
-//! Where a session is working (SPEC 12.2; `node/src/worktree.mjs`).
+//! Where a session is working (SPEC 12.2).
 
 use crate::jsjson::Value;
 use crate::jsstr::JsStr;
@@ -24,7 +24,7 @@ pub fn git_branch(dir: &Value) -> Option<JsStr> {
     Some(JsStr::from(String::from_utf8_lossy(&out.stdout).into_owned()).trim())
 }
 
-/// `{ branch, worktree }`; `branch` is None when unknown (Node's null).
+/// `{ branch, worktree }`; `branch` is None when unknown (JavaScript's null).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Location {
     /// The branch name, `null` when it could not be read.

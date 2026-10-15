@@ -1,9 +1,9 @@
-//! Port of node/test/proxy-routing.test.mjs, driven by a request captured from the real Claude
+//! Routing (SPEC 7), driven by a request captured from the real Claude
 //! Code CLI: print mode posts to `/v1/messages?beta=true`, carries adaptive thinking and a
 //! thinking-clearing context edit, and ends in a `role: "system"` message.
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -13,6 +13,8 @@ use jev_router::jsjson::{self, Value};
 use jev_router::proxy::{ProxyOptions, RouteFn, start_proxy};
 use jev_router::status::read_status;
 use std::sync::{Arc, Mutex};
+
+static GATE: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 fn captured() -> Value {
     jsjson::parse_bytes(
@@ -50,6 +52,7 @@ struct Harness {
     seen: Arc<Mutex<Vec<Seen>>>,
     prompts: Arc<Mutex<Vec<String>>>,
     _proxy: jev_router::proxy::ProxyHandle,
+    _gate: tokio::sync::MutexGuard<'static, ()>,
 }
 
 impl Harness {
@@ -65,6 +68,9 @@ impl Harness {
 /// A proxy in front of an upstream that records what it got and, like the API, rejects the
 /// sentinel.
 async fn harness(route: impl Fn(&str) -> &'static str + Send + Sync + 'static, confidence: f64) -> Harness {
+    // One test at a time: every request here is the same conversation, so they share one status file,
+    // and a parallel test would overwrite the tier another one is about to read back.
+    let gate = GATE.lock().await;
     isolate_status();
     let (url, seen) = serve(Arc::new(|r: &Seen| {
         if r.json().get("model").is_str("jev-router") {
@@ -86,7 +92,7 @@ async fn harness(route: impl Fn(&str) -> &'static str + Send + Sync + 'static, c
     });
     let proxy =
         start_proxy(ProxyOptions { upstream_url: Some(url), route: Some(route), ..Default::default() }).await.unwrap();
-    Harness { port: proxy.port, seen, prompts, _proxy: proxy }
+    Harness { port: proxy.port, seen, prompts, _proxy: proxy, _gate: gate }
 }
 
 /// "a real print-mode request is routed on the user's prompt"

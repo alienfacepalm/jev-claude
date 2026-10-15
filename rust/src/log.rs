@@ -1,4 +1,4 @@
-//! Logging (SPEC 15; `node/src/log.mjs`).
+//! Logging (SPEC 15).
 
 use crate::osdirs::home_dir;
 use crate::timefmt::iso_now;

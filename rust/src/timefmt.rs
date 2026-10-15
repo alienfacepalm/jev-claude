@@ -92,7 +92,7 @@ pub fn parse_iso(text: &str) -> Option<f64> {
     Some((days_from_civil(y, mo, d) * 86_400_000 + h * 3_600_000 + mi * 60_000 + s * 1000 + f) as f64)
 }
 
-/// A readable UTC date-time for `jev-check`'s `as of` text (Node prints local time; the text is
+/// A readable UTC date-time for `jev-check`'s `as of` text (the retired Node edition printed local time; the text is
 /// excluded from comparison, SPEC 13).
 pub fn display_utc(ms: f64) -> String {
     let s = iso(ms);

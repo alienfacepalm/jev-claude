@@ -1,5 +1,7 @@
 //! jev-claude in Rust: a launcher for Claude Code with a local routing proxy. The specification
-//! is `SPEC.md` at the repository root; the Node implementation in `node/` is the reference.
+//! is `SPEC.md` at the repository root; where it is silent, the golden cases in
+//! `conformance/cases` and this crate decide. The Node edition it was first written against is
+//! retired (tag v0.11.0).
 
 pub mod config;
 pub mod env;
@@ -30,7 +32,7 @@ pub mod update;
 pub mod usage;
 pub mod worktree;
 
-/// Fixes the values Node computes when its modules load (SPEC 3.9): the status directory, the
+/// Fixes the values JavaScript computes when its modules load (SPEC 3.9): the status directory, the
 /// log file, whether stdout is a terminal, and the files under the home directory. Programs call
 /// this first, before reading any settings file.
 pub fn init() {

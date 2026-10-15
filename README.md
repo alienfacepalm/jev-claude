@@ -11,38 +11,23 @@ unchanged: its interface, tools, sessions, permissions, and sign-in all work as 
 
 ## Install
 
-You need [Node.js](https://nodejs.org) 22.16 or later (24 LTS recommended; see
-[Installing Node.js](#installing-nodejs)), [git](https://git-scm.com/downloads), and
-[Claude Code](https://code.claude.com/docs/en/setup), signed in with your Claude account or run
-on an Anthropic API key (see [Using an Anthropic API key](#using-an-anthropic-api-key)). You also
-need a Jev API key: sign in at
-[console.typesafe.ai](https://console.typesafe.ai) and create one on the
-[API keys page](https://console.typesafe.ai/keys). The installer asks for it.
+You need a Jev API key: sign in at [console.typesafe.ai](https://console.typesafe.ai) and create one
+on the [API keys page](https://console.typesafe.ai/keys). The installer asks for it. Everything
+else is checked, and installed for you if it is missing, with your permission. Run the line for
+your shell; it works the same on every operating system that has that shell:
 
-Without Node.js, use the [Rust edition](#without-nodejs-the-rust-edition) below instead: it needs
-only Claude Code. Otherwise run the line for your system:
-
-| System | Command |
+| Shell | Command |
 | --- | --- |
-| macOS, Linux, WSL | `curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh \| bash` |
-| Windows, PowerShell | `irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex` |
-| Windows, Command Prompt | `powershell -NoProfile -Command "irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex"` |
-| Windows, Git Bash | the macOS / Linux line |
+| macOS, Linux, WSL, Git Bash | `curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh \| bash` |
+| Windows PowerShell (5.1 or 7) | `irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex` |
+| Windows Command Prompt (cmd.exe) | `powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex"` |
 
-The installer:
-
-1. checks for Node.js and Claude Code, and installs [pnpm](https://pnpm.io) if it is missing;
-2. downloads jev-claude to `~/jev-claude` (or updates it there);
-3. installs the `jev-claude` command;
-4. asks for your Jev key, and optionally an Anthropic API key, and saves them to
-   `~/.jev-router.env`, readable only by you.
-
-Run it again at any time to update. An install made before the code moved into `node/` (any install older than
-the move, whatever its version) must be run through the installer again, or the `pnpm add --global` line below: a plain
-`git pull` does not regenerate the `jev-claude` command, which then fails with `Cannot find module
-.../bin/jev-claude.mjs`. To install somewhere else, set `JEV_CLAUDE_DIR` first; to save
-the keys without being asked, set `JEV_API_KEY` and `ANTHROPIC_API_KEY`. From a clone, run `./install.sh`, or `.\install.ps1` in
-PowerShell (`powershell -ExecutionPolicy Bypass -File .\install.ps1` if scripts are blocked).
+The Command Prompt line starts Windows PowerShell for the one command and runs the same
+`install.ps1`; the double quotes keep cmd.exe from reading the `|` itself. Each line installs the
+prebuilt programs of the latest release, the same way on every system. Building from source is
+only for contributors and for platforms without a release (see [Development](#development)). If
+`irm` fails on Windows PowerShell 5.1 with `Could not create SSL/TLS secure channel`, see
+[Troubleshooting](doc/RUST.md#troubleshooting) for the one-line fix.
 
 Then start it from any project:
 
@@ -50,112 +35,203 @@ Then start it from any project:
 jev-claude
 ```
 
-The `jev-router` package on npm is the original project and does not include this fork's changes.
+jev-claude is a set of native programs. It needs no Node.js, no pnpm, no Rust toolchain and no
+clone of this repository, and git is optional. It does need [Claude Code](https://code.claude.com/docs/en/setup),
+because jev-claude is a launcher for it; the installer installs it when it is missing. Claude Code
+asks you to sign in the first time it starts, or runs on an Anthropic API key (see
+[Using an Anthropic API key](#using-an-anthropic-api-key)).
 
-### Without Node.js: the Rust edition
+### What the installer checks and installs
 
-The same program is also built as native executables. The Rust edition needs no Node.js, no pnpm,
-and no clone, only [Claude Code](https://code.claude.com/docs/en/setup) to run. Ask the installer
-for it:
+It runs every check and prints each result (`ok`, `info`, `warn` or `FAIL`) before it changes
+anything, then lists all the failures together with the fix for each. Then it installs what it can:
 
-| System | Command |
-| --- | --- |
-| macOS, Linux, WSL | `curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh \| bash -s -- --rust` |
-| Windows, PowerShell | `$env:JEV_IMPL = 'rust'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex` |
-| Windows, Command Prompt | `powershell -NoProfile -Command "$env:JEV_IMPL='rust'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 \| iex"` |
-| Windows, Git Bash | the macOS / Linux line (it sets up Git Bash only; run the PowerShell line too for PowerShell and cmd) |
-
-The installer checks the machine before it changes anything, and prints each check and each step as
-it goes. A required check that fails stops it with a list of what to fix, so nothing is left half
-done:
-
-| Check | Needed? | If it fails |
+| Item | Needed? | If it is missing |
 | --- | --- | --- |
-| Platform: Windows x64 (ARM64 runs it through emulation), macOS Apple silicon or Intel, Linux x64 or arm64 | required | [build from source](doc/RUST.md#install-the-toolchain) |
-| A download tool (`curl`, or PowerShell) and `tar` (Windows 10 version 1803 and later has one) | required | the message names what to install |
-| A checksum tool (`sha256sum`, `shasum` or `openssl`; built in on Windows) | required | the download is never used unchecked |
-| The release host answers (your network, VPN or proxy) | required | check the connection and run it again |
-| Claude Code (`claude`) | warns | offers to run Anthropic's own installer, or prints the command |
-| Whether Claude Code is the native build or the older npm package, which runs on Node.js | warns | reinstall it natively |
-| git | optional | the status line leaves out the branch and worktree |
-| Node.js | not used | reported for information only |
+| A download tool: `curl` (or `wget`), or PowerShell's web commands on Windows | required | offers to install `curl` with your package manager (`apt-get`, `dnf`, `yum`, `zypper`, `apk`, `pacman` or `brew`) |
+| `tar` | required | offers to install it with your package manager; Windows 10 version 1803 and later has one, and an older Windows stops with the fix |
+| A checksum tool (`sha256sum`, `shasum` or `openssl`; built in on Windows) | required | offers to install one; the download is never used unchecked |
+| A network route to GitHub | required | any answer from the release host counts; silence stops the installer with a note to check your connection, VPN or proxy |
+| [Claude Code](https://code.claude.com/docs/en/setup) | required | installs it with Anthropic's own installer, after asking. If you decline, the installer stops before it changes anything and prints the command to run yourself; if Anthropic's installer fails, it stops there with the same command, before any of jev-claude is installed. It also reports whether Claude Code is the native build or the older npm package, which runs on Node.js. A `claude` that is found but does not run (`claude --version` fails) is a `FAIL` with the command to reinstall it. Under WSL a Claude Code on the Windows side does not count: WSL needs its own |
+| Claude Code's libraries on Alpine | required there | Claude Code's musl build needs `libgcc`, `libstdc++` and `ripgrep`; on Alpine the installer offers `apk add --no-cache libgcc libstdc++ ripgrep`, and then offers to set `USE_BUILTIN_RIPGREP=0` under `env` in `~/.claude/settings.json` so Claude Code uses that `ripgrep` |
+| git | optional | offers to install it; the status line leaves out the branch and worktree without it, and declining is fine |
+| Rust | never needed | never installed; you install the ready-made programs |
+| Node.js, pnpm | not used | never needed and never installed; Node.js is printed for information if it is there |
+| The install folder | required | `~/jev-claude-rust` (or `JEV_INSTALL_DIR`) must be missing, empty, or an earlier jev-claude install. Anything else stops the installer in this first step, before anything is changed, and is never touched |
+| An old Node edition of jev-claude | warning only | reported, with how to remove it and which one wins on your PATH; never deleted for you (see [Upgrading from the Node edition](#upgrading-from-the-node-edition)) |
 
-Then it downloads the archive for your platform from the latest
-[release](https://github.com/alienfacepalm/jev-claude/releases), compares its SHA-256 with the
-release's `SHA256SUMS` (a mismatch installs nothing), unpacks it to `~/jev-claude-rust`, adds
-`~/jev-claude-rust/bin` to your PATH (your shell profile, or your user PATH on Windows), runs the
-installed `jev-check` as a final test, and asks for your keys as above. The `/jev-calibrate`,
-`/jev-explain` and `/jev-legend` skills in that install run the native programs, so they need no
-Node.js either. Running the installer again updates the install and says which version it replaced.
+Before it changes your system to install any of these, the installer shows the exact command and
+asks `y/N`. It runs `sudo` only when you are not root and `sudo` exists, says so in the question,
+and never runs it silently. It touches nothing outside the item it is installing, and a failed
+install is reported with the manual fix. When there is nobody to ask (a CI job or a script with no
+terminal, or a Windows PowerShell console whose input is redirected or that was started with
+`-NonInteractive`), it installs nothing: it prints the command instead, and stops if the item is
+required. The same holds inside a Claude Code session, where an agent, not you, would be the one
+answering. Piping the script itself (`curl ... | bash`) or redirecting its output to a file still
+asks, on your terminal. Set `JEV_ASSUME_YES=1` to answer yes to every question (see [Settings](#settings-for-the-installer)).
 
-Settings: `JEV_INSTALL_DIR` (where to install), `JEV_VERSION` (a release tag such as `v0.10.0`, instead
-of the latest), `JEV_NO_MODIFY_PATH=1` (leave your PATH alone and print what to add),
-`JEV_INSTALL_CLAUDE=1` or `0` (install Claude Code when missing without asking, or never offer), and
-`JEV_RELEASE_URL` (download from a mirror). If both editions are installed, whichever `jev-claude`
-comes first on your PATH runs; the installer shows you both. To remove the Rust edition, delete
-`~/jev-claude-rust` and its PATH entry. [doc/RUST.md](doc/RUST.md) has the details.
+The installer prints six numbered steps, the same on every system: 1 checking this machine (the
+table above), 2 downloading the archive for your platform from the latest
+[release](https://github.com/alienfacepalm/jev-claude/releases), 3 verifying it (its SHA-256 must
+match the release's `SHA256SUMS`; a mismatch installs nothing), 4 installing it into
+`~/jev-claude-rust`, 5 putting it on your PATH, and 6 running the installed `jev-check` as a final
+test. Then it asks for your Jev key, and optionally an Anthropic API key, and saves them to
+`~/.jev-router.env`, readable only by you.
 
-### Installing by hand
+Step 4 unpacks the archive beside the install folder and swaps it in only when every program is
+there; an earlier install is kept until the new one's `jev-check` has run in step 6, and is put back
+if it fails. An install folder that is neither empty nor an earlier jev-claude install is refused
+and never touched.
+
+Step 5 is the only one that differs by system, and the result is the same: typing `jev-claude` in a
+new terminal works. On macOS, Linux and WSL the programs are linked into `~/.local/bin` (the
+installer adds that folder to your shell profile only if it is not already on your PATH; if the
+folder cannot be written, it puts the install's own `bin` on your PATH instead). On Windows, from
+PowerShell or Git Bash, `~/jev-claude-rust\bin` goes first on your Windows user PATH. When Claude
+Code lives in `%USERPROFILE%\.local\bin` and that folder is not on your user PATH (Anthropic's
+Windows installer leaves it off), both installers add it too, last, so `jev-claude` finds `claude`
+in new windows. The `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills in the
+install run the native programs by name, so the install's `bin` folder must be on the PATH of the
+shell Claude Code uses; open a new terminal after installing.
+
+### Settings for the installer
+
+Set these in the environment before the command, or pass an option to the script:
+
+| Setting | Effect |
+| --- | --- |
+| `JEV_ASSUME_YES=1` (or `-y`, `--yes`; `-Yes` when running `install.ps1` as a file) | answer yes to every "install this?" question, for an unattended install |
+| `JEV_INSTALL_CLAUDE=1` or `0` | install Claude Code when it is missing without asking, or never offer (the installer then stops, since it is required) |
+| `JEV_INSTALL_DIR` | where to install; the default is `~/jev-claude-rust`. It must be empty, missing, or an earlier jev-claude install: any other folder is refused and left as it is |
+| `JEV_BIN_DIR` | where macOS, Linux and WSL link the programs; the default is `~/.local/bin` |
+| `JEV_VERSION` | a release tag such as `v0.11.0`, instead of the latest |
+| `JEV_RELEASE_URL` | download from a mirror with the same layout (`latest/download/<archive>`, `download/<tag>/<archive>`): an `https://` address or a `file://` folder on disk |
+| `JEV_NO_MODIFY_PATH=1` | leave your shell profile and PATH alone; the installer prints what to add |
+| `JEV_API_KEY`, `ANTHROPIC_API_KEY` | save these keys without asking for them |
+| `-h`, `--help` (`-Help` for `install.ps1` as a file) | print the settings and exit. Piped through `\| bash` or `\| iex`, it points to the script's header instead, where the settings are listed |
+
+The yes/no settings (`JEV_ASSUME_YES`, `JEV_INSTALL_CLAUDE`, `JEV_NO_MODIFY_PATH`) take `1`, `true`
+or `yes` for on and `0`, `false` or `no` for off, in any letter case. `JEV_INSTALL_DIR` and
+`JEV_BIN_DIR` may be relative (to the folder you run the installer from) or, in Bash, start with
+`~`; they are made absolute before anything is written.
+
+The variable has to reach the installer, not `curl`. In Bash, put it after the pipe, or pass the
+flag; in PowerShell and Command Prompt, set it first:
 
 ```bash
-git clone https://github.com/alienfacepalm/jev-claude.git
-cd jev-claude
-pnpm install
-pnpm add --global "link:$(pwd)"          # Git Bash: "link:$(pwd -W)"; PowerShell: "link:$PWD"
-cp .env.example ~/.jev-router.env        # PowerShell: Copy-Item .env.example "$HOME\.jev-router.env"
+curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | JEV_ASSUME_YES=1 bash
+curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | bash -s -- -y
 ```
-
-Then open `~/.jev-router.env` and paste your key after `JEV_API_KEY=`.
-[`.env.example`](.env.example) explains each setting. To use a key for one project only, copy it
-to `.env` in that project instead. (`pnpm link --global`, used by older guides, does not exist in
-current pnpm.)
-
-### Installing Node.js
-
-jev-claude needs Node.js 22.16 or later: 22 is the oldest release line Node.js still supports
-(until April 2027), and earlier 22.x releases parse `.env` files differently (the
-`package.json` `engines` field says `^22.16.0 || >=24`); 24 is the current LTS. Check what you have with `node --version`.
-
-A version manager is the easiest way to get it and switch later. Pick one:
-
-**nvm** (macOS, Linux, WSL). Install it with the
-[command in its README](https://github.com/nvm-sh/nvm#installing-and-updating), open a new
-terminal, then:
-
-```bash
-nvm install 24
-nvm alias default 24
-```
-
-**nvm-windows** (Windows; a separate project with similar commands). Run the installer from
-[nvm-windows](https://github.com/coreybutler/nvm-windows/releases), open a new terminal, then:
 
 ```powershell
-nvm install 24
-nvm use 24
+$env:JEV_ASSUME_YES = '1'; irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex
 ```
 
-**fnm** (macOS, Linux, Windows). Install it with `brew install fnm`, `winget install Schniz.fnm`,
-or the [script in its README](https://github.com/Schniz/fnm#installation), add its
-[shell setup line](https://github.com/Schniz/fnm#shell-setup), then:
+```bat
+set JEV_ASSUME_YES=1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex"
+```
+
+Through `iex` the script takes no options, so on Windows use the variables. `--rust`, `--node` and
+`JEV_IMPL` from older instructions are still accepted and ignored, with a note: there is one edition.
+
+### Platforms
+
+| System | Release archive | Notes |
+| --- | --- | --- |
+| Windows 10 or 11, x64 | `windows-x64` | Windows PowerShell 5.1, PowerShell 7, Command Prompt (through `powershell`) and Git Bash |
+| Windows 11 on ARM64 | `windows-x64` | runs through Windows' x64 emulation; there is no native ARM64 build. Windows 10 on ARM cannot run x64 programs, so both installers stop there |
+| macOS, Apple silicon | `macos-arm64` | also from a terminal running under Rosetta |
+| macOS, Intel | `macos-x64` | |
+| Linux, x86-64 | `linux-x64` | statically linked (musl), so it runs on glibc and musl systems alike, Alpine included |
+| Linux, ARM64 | `linux-arm64` | statically linked, as above |
+| WSL | as Linux | |
+
+**Windows.** PowerShell and Command Prompt run `install.ps1`; Git Bash runs `install.sh`. Both
+install the same programs into the same folder and put its `bin` first on your Windows user PATH,
+the setting every Windows shell starts from, so one run covers PowerShell, Command Prompt and Git
+Bash alike; open a new terminal to pick it up (Windows Terminal and VS Code give new tabs the PATH
+they started with, so restart the app if a new tab cannot find `jev-claude`). Git Bash installs as
+Windows does, not as Linux: the programs are not linked, and no Git Bash profile line is written.
+`tar.exe` ships with Windows 10 version 1803 and later.
+
+**WSL** is Linux: run the Bash line inside your WSL distribution. It installs a Linux copy for that
+distribution, separate from a Windows install, and Claude Code must be installed inside WSL too
+(the installer offers it).
+
+**macOS.** The stock `bash` 3.2 runs the installer. The PATH line, if one is needed, goes in
+`~/.zshrc` (or `$ZDOTDIR/.zshrc`) for zsh, the default shell, and for bash in the first of
+`~/.bash_profile`, `~/.bash_login` and `~/.profile` that exists, since a macOS terminal starts a
+login shell. `tar` and `shasum` come with the system.
+
+**Linux.** The programs are static, so there is nothing to match against your C library. The
+PATH line goes in `~/.zshrc`, `~/.bashrc`, fish's `config.fish` or `~/.profile`, for your login
+shell. The installer itself is a Bash script: a minimal Alpine image has no `bash`, so start with
+`apk add bash`. It has BusyBox `wget` but no `curl`, which the installer is happy with; fetch it
+with `wget -qO- https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | bash`.
+It offers the rest, including the libraries Claude Code needs on Alpine, through `apk`.
+
+On any other platform (32-bit systems, FreeBSD, other CPU architectures) the installer stops and
+says why. There is no automatic source build: build the programs yourself, as
+[doc/RUST.md](doc/RUST.md#install-the-toolchain) describes, and put them on your PATH.
+
+### Updating
+
+Run the same line again. It downloads the latest release, checks it, replaces the install, and
+says which version it replaced (`updated 0.10.0 -> 0.11.0`, or `reinstalled version 0.11.0`). Your
+settings in `~/.jev-router.env` stay.
+
+### Removing
+
+There is no uninstaller; removing it takes a few deletions. Delete `~/jev-claude-rust` (or your
+`JEV_INSTALL_DIR`) and the seven `jev-*` links in `~/.local/bin` (or your `JEV_BIN_DIR`). Delete
+the line the installer added to your shell profile, if there is one: it follows a
+`# jev-claude (Rust edition)` comment. On Windows, remove the install's `bin` entry from your user
+PATH (Settings > System > About > Advanced system settings > Environment Variables). The programs
+also leave a few files you can delete: the `~/.jev-router` folder (`first-run.json`, `update.json`),
+`~/.jev-claude.log` (written only with `JEV_DEBUG`), and the status folder, `jev-claude-<uid>` (on
+Windows `jev-claude`) in your temp directory, or your `JEV_STATUS_DIR`. `~/.jev-router.env` is your
+own file and stays, as does Claude Code. [doc/RUST.md](doc/RUST.md#install-a-release) has the
+details.
+
+### Upgrading from the Node edition
+
+Up to v0.11.0 the default install was a Node.js edition, a git clone in `~/jev-claude` linked with
+pnpm; `--rust` (or `JEV_IMPL=rust`) installed these native programs instead. The Node edition is
+retired; the program is now Rust, and nothing about running it needs Node.js. Run the line above to
+install the new one. It goes to `~/jev-claude-rust`, a different folder, so it does not collide with
+the old clone, and the installer never deletes the old one. Both read the same settings file, so
+your keys carry over.
+
+If you used `--rust` before, there is nothing to remove: the same install line updates
+`~/jev-claude-rust` in place, and your shell profile line is kept. `--rust` and `JEV_IMPL` are
+still accepted and ignored, with an info row in the report (`-Rust` on Windows).
+
+Otherwise, remove the old one, so that it cannot be the one that runs:
 
 ```bash
-fnm install 24
-fnm default 24
+pnpm remove --global jev-router     # unlinks the old jev-claude command
+rm -rf ~/jev-claude                 # the old clone; PowerShell: Remove-Item -Recurse -Force "$HOME\jev-claude"
 ```
 
-**Volta** (macOS, Linux, Windows). Install it with `curl https://get.volta.sh | bash`, or
-`winget install Volta.Volta` on Windows, then `volta install node@24`.
+If you linked the old clone some other way, delete that link instead. If you installed pnpm and
+Node.js only for jev-claude, you can remove them too. Until the old
+command is gone, whichever `jev-claude` comes first on your PATH runs: check with `type -a
+jev-claude` (Bash) or `Get-Command jev-claude -All` (PowerShell). When it finds an old Node edition
+(a `jev-claude` on your PATH that is a JavaScript file, a script or pnpm shim, or a clone at
+`~/jev-claude`), the installer reports it as a `warn` row, says how to remove it, and in step 5
+which `jev-claude` wins in that shell. A `jev-claude` that reports `Cannot find module
+.../bin/jev-claude.mjs` is the old one.
 
-Or install Node.js directly:
+### Settings file and API key
 
-| System | Command |
-| --- | --- |
-| Windows | `winget install OpenJS.NodeJS.LTS`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
-| macOS | `brew install node`, or the installer from [nodejs.org](https://nodejs.org/en/download) |
-| Linux | A version manager above. Distribution packages are often older than 22.16; check with `node --version` |
+The installer writes your keys to `~/.jev-router.env`. To change them later, edit that file; the
+install includes a commented template, `~/jev-claude-rust/.env.example` (also
+[`.env.example`](.env.example) in this repository), and each setting is explained in
+[Configuration](#configuration). To use a key for one project only, put it in a `.env` in that
+project instead.
 
-Open a new terminal after installing, so it finds the new `node`.
+The `jev-router` package on npm is the original project and does not include this fork's changes.
 
 ## Usage
 
@@ -205,12 +281,12 @@ For each new prompt, Jev scores the work and picks a tier:
 
 The costs are per completed task, not per token: a model that costs twice as much per token can
 use fewer tokens. They come from Anthropic's and Artificial Analysis's published measurements
-(September 2026), noted with their sources in [`node/src/config.mjs`](node/src/config.mjs).
+(September 2026), noted with their sources in [`rust/src/config.rs`](rust/src/config.rs).
 
 Each tier always uses the newest version your account offers, read from Claude Code's model list,
 so a new release such as Opus 6 is used as soon as your account has it.
 
-Then these rules apply ([`node/src/policy.mjs`](node/src/policy.mjs)):
+Then these rules apply ([`rust/src/policy.rs`](rust/src/policy.rs)):
 
 - **You can ask.** A prompt such as `use opus` or `switch to the strong model` wins. A tier word in
   ordinary prose ("replace this with long polling") is not a request, and neither is one you rule
@@ -316,21 +392,52 @@ turn Jev's off.
 Run `/jev-calibrate` in a `jev-claude` session for a read-only report on your setup:
 
 ```text
+Jev Router setup check (read-only: nothing was changed)
+
 Routing      on - Jev Router picks a model for each turn
 Claude       your Claude Code sign-in
 Tuned for    haiku claude-haiku-5-5, sonnet claude-sonnet-5-5, opus claude-opus-5-5, fable claude-fable-5-1
-Your account claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5, claude-fable-5-1
+Your account claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5, claude-fable-5-1 (as of 2026-10-14 12:00:00 UTC)
 Newer models none - the router is tuned for the newest models your account offers
 Fable        offered when the work calls for it (bills extra usage credits; JEV_ALLOW_FABLE=0 turns it off)
+Mode         installed
 ```
 
-It changes nothing. On the first plain launch, `jev-claude` offers to run it for you, once. The
+`Mode` is `installed` for a release install and `repository` in a source checkout (a clone with
+`.git` and `rust/Cargo.toml`), where `/jev-calibrate retune` is available. If your account offers a
+model newer than the router was tuned for, `Newer models` names it and says to run the jev-claude
+installer again, which brings the tuning of the newest release. The report changes nothing. On the first plain launch, `jev-claude` offers to run it for you, once. The
 answer is kept in `~/.jev-router/first-run.json`; delete that file to be asked again. The offer is
 skipped in a project that defines its own `jev-calibrate` skill.
 
-`/jev-calibrate` only ever reports, so it is safe in an installed copy (the installer makes a git
-clone). To re-tune the router, run `/jev-calibrate retune` in a clone you develop in; see
-[Calibrating for new models](#calibrating-for-new-models).
+`/jev-calibrate` only ever reports, so it is safe in an installed copy. To re-tune the router, run
+`/jev-calibrate retune` in a clone you develop in, started with `JEV_ROOT` set to the clone (it
+needs the Rust toolchain); see [Calibrating for new models](#calibrating-for-new-models).
+
+## Lattis
+
+Lattis launches agent CLIs by name from its PATH and has no place to add another one, so to route
+the Claude Code that Lattis starts you stand a small shim in front of `claude`. The repository's
+[`shim/claude`](shim/claude) is that shim, a POSIX `sh` script, so it works on macOS, Linux and WSL
+only. It is not in the release archive: fetch it, or copy it from a clone, into a folder of its
+own, and put that folder first on the PATH Lattis sees, ahead of the folder holding the real
+`claude`. Do not put it in `~/.local/bin`, where it would stand in front of `claude` for everything:
+
+```bash
+mkdir -p ~/.lattis-bin
+curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/shim/claude -o ~/.lattis-bin/claude
+chmod +x ~/.lattis-bin/claude
+```
+
+Only a Lattis session goes through jev-claude: one whose `CLAUDE_CONFIG_DIR` contains `lattis` (in
+any letter case) or that has `LATTIS_AGENT_TOKEN` set. Every other launch (a terminal, a script,
+Claude Code's own update) is handed straight to the real Claude Code. The shim finds the real one
+through `JEV_REAL_CLAUDE`, else `~/.local/bin/claude`, else the first `claude` on PATH outside its own
+folder, and exits 127 with a message when there is none. It finds the launcher through `JEV_NATIVE`,
+else `jev-claude` on PATH, else `~/jev-claude-rust/bin/jev-claude`; if you installed elsewhere with
+`JEV_INSTALL_DIR`, set `JEV_NATIVE`. With no launcher found, Lattis gets plain Claude Code. The shim
+sets `JEV_SHIM=1` before it starts jev-claude: when jev-claude then runs `claude` and finds the shim
+again on PATH, the shim sees the marker and hands that call to the real program instead of looping.
 
 ## Why a model was chosen
 
@@ -366,11 +473,12 @@ operating system's temporary directory:
 | Platform | Location |
 | --- | --- |
 | Windows | `%TEMP%\jev-claude\<session-id>.json` |
-| macOS | `$TMPDIR/jev-claude/<session-id>.json` |
-| Linux | `${TMPDIR:-/tmp}/jev-claude/<session-id>.json` |
+| macOS | `$TMPDIR/jev-claude-<uid>/<session-id>.json` |
+| Linux | `${TMPDIR:-/tmp}/jev-claude-<uid>/<session-id>.json` |
 
-These files hold prompt text, so only you can read them (directory mode 700, files 600). Files
-untouched for 7 days are deleted.
+`<uid>` is your numeric user id, so users who share `/tmp` each get a folder of their own;
+`JEV_STATUS_DIR` chooses another folder. These files hold prompt text, so only you can read them
+(directory mode 700, files 600). Files untouched for 7 days are deleted.
 
 ## Configuration
 
@@ -418,82 +526,124 @@ before forwarding, and old MCP tool schemas that the API would reject are normal
 
 ## Development
 
-```bash
-pnpm install
-cp .env.example .env    # then paste your key
+The program is Rust, in `rust/`, and it follows [`SPEC.md`](SPEC.md). It is the only
+implementation: the repository holds no Python and no JavaScript. The previous Node.js edition is
+retired and available at the git tag `v0.11.0`. This section is for contributors and for anyone on
+a platform without a release archive; everyone else should use the [installer](#install).
 
-pnpm test               # Node unit tests, then the conformance harness
-pnpm lint               # Biome
-node node/scripts/live-routing.mjs
-node node/bin/jev-claude.mjs -p "what is 2+2?"
-```
+You need the Rust toolchain (1.85 or later, through rustup) and a C compiler, plus `git`;
+[doc/RUST.md](doc/RUST.md#install-the-toolchain) has the commands for Windows, macOS and Linux.
+Node.js is optional: a few launcher tests start an npm-style stand-in `claude` through `node`, the
+way an npm-installed Claude Code starts, and without `node` on PATH they print a note and skip.
 
-`pnpm test` runs offline. `node/scripts/live-routing.mjs` asks the real Jev about a few sample
-prompts.
-
-The Node.js implementation lives in `node/`; ports to Rust and Python live beside it in
-`rust/` and `python/`, and all of them follow [`SPEC.md`](SPEC.md). The installers set up the
-Node.js implementation, or the Rust one with `--rust` (see
-[Without Node.js](#without-nodejs-the-rust-edition)). See [doc/LAYOUT.md](doc/LAYOUT.md) for each implementation's test
-commands, what lives where, and why the root keeps a `package.json`.
+Run these from `rust/` (its `.cargo/config.toml`, which defines `cargo xtask` and makes rustdoc
+warnings fatal, is read only there):
 
 ```bash
-node conformance/generate.mjs        # regenerate the golden cases from the Node code (needs Node 24.21.x)
-node --test conformance/harness      # black-box tests, against Node by default
+cd rust
+cargo build --release --locked                           # the seven programs, in rust/target/release
+cargo fmt --all --check                                  # or `cargo fmt --all` to fix
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked                          # unit, integration, golden, conformance and xtask tests
+cargo doc --workspace --no-deps --locked
+cargo +1.85 check --workspace --all-targets --locked     # the minimum supported Rust version
 ```
 
-### Implementations
+`cargo test` runs offline: every server the tests talk to is a loopback fake. It includes the
+black-box conformance tests (`rust/tests/conformance_*.rs`), which start the built
+`jev-proxy-host` and `jev-statusline` against a fake Jev and a fake Anthropic API; run just those
+with `cargo test --locked --test 'conformance*'` ([conformance/README.md](conformance/README.md)).
 
-Each implementation has a full guide: installing its toolchain on Windows, macOS and Linux,
-building, installing the programs side by side, running `jev-claude`, tests, lint and format,
-running the conformance harness against it, what CI runs, troubleshooting, and where it knowingly
-differs from Node.
+The release and developer tasks are `cargo xtask` commands (the `rust/xtask` crate, never shipped),
+also run from `rust/`; relative paths are taken from there:
 
-| Implementation | Guide | Quick start | Toolchain | Lint and format |
-| --- | --- | --- | --- | --- |
-| Node.js (reference; the installers' default) | [doc/NODE.md](doc/NODE.md) | [node/README.md](node/README.md) | Node 22.16+ (24.21 to regenerate golden cases), pnpm | Biome |
-| Rust (also released as ready-made programs; the installers' `--rust` edition) | [doc/RUST.md](doc/RUST.md) | [rust/README.md](rust/README.md) | Rust stable, MSRV 1.85 | rustfmt, clippy (`all` + `pedantic`, `-D warnings`) |
-| Python | [doc/PYTHON.md](doc/PYTHON.md) | [python/README.md](python/README.md) | CPython 3.12+ | ruff (format and lint), mypy `strict` |
+```bash
+cargo xtask bump-version [<before>] [<after>] [--dry-run]   # the next version from the commits since the last release tag; writes package.json (--dry-run: only prints it)
+cargo xtask package --bin-dir target/release --out ../dist   # jev-claude-<platform>.tar.gz and SHA256SUMS
+cargo xtask installer-smoke-test --bin-dir target/release    # or --archive ../dist/jev-claude-<platform>.tar.gz
+```
 
-In a clone, the `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the Node.js scripts
-in `node/bin/`, so Node.js must be on `PATH` whichever launcher you run. The Rust release archive
-ships its own copies of the skills that run the native programs instead, which is why that
-edition needs no Node.js. A Rust or Python build finds the repository root (and with it the skills)
-by walking up from its own location, so build it inside the clone; each guide says what a copy
-installed elsewhere loses and how `JEV_ROOT` fixes it.
+The smoke test packages the build, serves it from a local server and runs the real `install.sh`
+(and on Windows `install.ps1`, under Windows PowerShell and PowerShell 7) in a throwaway home,
+with a stand-in for Claude Code and do-nothing package managers; it never touches your own home,
+PATH, profile or user PATH, never reaches Anthropic's installer or a real package manager, and
+runs dozens of cases per installer (a bad checksum, an interrupted download, a refused Claude Code
+install, an odd install folder, the PATH and profile edits). `--installers <dir>` runs the
+`install.sh` and `install.ps1` in another folder, and `--only <groups>` runs just some groups of
+cases; the group names are in the doc comment of `rust/xtask/src/smoke.rs`.
+
+To try your build against the real Jev and Claude Code, from the repository root:
+
+```bash
+cp .env.example .env                                     # then paste your key (git ignores .env)
+cargo run --manifest-path rust/Cargo.toml --release --bin jev-claude -- -p "what is 2+2?"
+cargo run --manifest-path rust/Cargo.toml --release --example live_routing   # asks the real Jev about a few sample prompts
+```
+
+The root keeps a `package.json` only as the version file the programs read at run time (SPEC.md
+2.3); it has no scripts and nothing installs it. [doc/LAYOUT.md](doc/LAYOUT.md) says what lives
+where, and [doc/RUST.md](doc/RUST.md) is the full guide: building, putting your build on PATH
+beside an installed copy, tests, lint and format, the conformance tests, troubleshooting, and
+where the program knowingly differs from the retired Node edition. [rust/README.md](rust/README.md)
+is its quick start.
+
+The `/jev-calibrate`, `/jev-explain` and `/jev-legend` skills run the native programs
+(`jev-check`, `jev-explain`, `jev-legend`) by name, so those must be on `PATH` in the shell Claude
+Code uses; the installer's `bin` folder is. A build finds the repository root (and with it the
+skills) by walking up from its own location, so build it inside the clone; doc/RUST.md says what a
+copy installed elsewhere loses and how `JEV_ROOT` fixes it.
 
 ### Continuous integration
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request, on
-Windows (the gating platform, SPEC.md 16) and Ubuntu, with one job per implementation. Each job
-runs that implementation's lint, format and unit-test gates and then the conformance harness
-against its programs. The Node job also regenerates the golden cases and fails if
-`conformance/cases` changes, and the Rust job packages its build as a release archive and installs
-it with the real installers. The commands are the ones in each guide's "What CI runs" section
-(for Rust, "The full gate").
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
+
+- `lint`: shellcheck on `install.sh`, `shim/claude` and the CI scripts, and actionlint on the
+  workflow.
+- `rust`, on Windows (the gating platform, SPEC.md 16), Ubuntu and macOS: format, clippy,
+  `cargo test --workspace` (the golden cases, the black-box conformance tests and the xtask tests),
+  the launcher tests that need `node` once with it and once without, rustdoc, the minimum Rust
+  version, a release build, and on Windows a check that the C runtime is linked in.
+- `release-targets`: every published target (Windows x64, Linux x64 and arm64 on musl, macOS Apple
+  silicon and Intel) built, checked for static linking, packaged, and installed by the real
+  installer on a machine of its own architecture.
+- `installers`: `cargo xtask installer-smoke-test` against the freshly built programs on all three
+  systems, plus Windows 11 on ARM (experimental), and the skills' command lines under Windows
+  PowerShell 5.1 and PowerShell 7.
+- `installer-alpine`: `install.sh` on Alpine (musl, BusyBox `wget`, `tar` and `sha256sum`, no `git`).
+
+The commands are the ones above, and doc/RUST.md's [full gate](doc/RUST.md#the-full-gate).
 
 ### Calibrating for new models
 
-`node node/scripts/calibrate.mjs --runs 2` asks the real Jev about the labelled prompts in
-[`node/scripts/calibration-cases.mjs`](node/scripts/calibration-cases.mjs). It reports how often Jev picked
-the intended tier, and where each turn finally ran (an unsure pick running one tier lower shows as
-`step`). Run it before and after any change to the guidance, costs, effort, or thresholds in
-`node/src/config.mjs`, and keep a change only when the pick score holds.
+`cargo run --manifest-path rust/Cargo.toml --release --example calibrate -- --runs 2` asks the
+real Jev about the labelled prompts in
+[`rust/examples/calibration-cases.json`](rust/examples/calibration-cases.json) (it needs
+`JEV_API_KEY`). It reports how often Jev picked the intended tier, and where each turn finally ran
+(an unsure pick running one tier lower shows as `step`). Run it before and after any change to the
+guidance, costs, effort, or thresholds in `rust/src/config.rs`, the tuning's source of truth, and
+keep a change only when the pick score holds.
 
-When a new Claude model ships, run `/jev-calibrate retune` in a `jev-claude` session started in a
-clone of this repository. It checks Anthropic's model notes and published per-task measurements, updates
-`node/src/config.mjs`, and measures each change with the script above, on a branch.
+When a new Claude model ships, build the clone (`cargo build --manifest-path rust/Cargo.toml
+--release`), then start `jev-claude` from that clone with `JEV_ROOT` set to it (`JEV_ROOT=$PWD
+jev-claude` in Bash, or `$env:JEV_ROOT = $PWD` first in PowerShell), or with the clone's
+`rust/target/release` first on PATH, and run `/jev-calibrate retune`. The skill reads the
+`jev-check` on PATH: an installed copy reports `Mode installed` and declines to retune. It checks
+Anthropic's model notes and published per-task measurements, updates `rust/src/config.rs`, and
+measures each change with the example above, on a branch.
 
 ### Versions and commit messages
 
-Every push to `master` runs [CI](.github/workflows/ci.yml) (lint, format and tests for all three
-implementations on Windows and Linux). Only when every job passes does its final `release` job bump
-the version in the root `package.json`, commit it as `chore(release): vX.Y.Z`, and tag it.
-Pull after pushing to pick up that commit. The same run then builds the Rust programs for Windows,
-macOS and Linux from the tagged commit, tests each archive with the installer, and publishes them,
-with `SHA256SUMS`, as a GitHub release: that release is what `install.sh --rust` and `install.ps1`
-download. The size of the bump comes from the
-[Conventional Commits](https://www.conventionalcommits.org) prefixes of the commits pushed:
+Every push to `master` runs [CI](.github/workflows/ci.yml). Only when every job passes, on every
+platform, does its `release` job bump the version in the root `package.json`
+(`cargo xtask bump-version`), commit it as `chore(release): vX.Y.Z`, and tag it. Pull after
+pushing to pick up that commit. The same run then builds the programs for Windows, macOS and Linux
+from the tagged commit (statically linked: musl on Linux, the C runtime on Windows), installs each
+archive with the real installer, and publishes them, with `SHA256SUMS`, as a GitHub release: that
+release is what `install.sh` and `install.ps1` download. If one platform's build fails after the
+tag exists, use **Re-run failed jobs** on that run: it rebuilds that platform and then publishes.
+The size of the bump comes from the
+[Conventional Commits](https://www.conventionalcommits.org) prefixes of every commit since the last
+release tag, so commits from a push whose run failed are released by the next successful one:
 
 | Commit subject | Bump |
 | --- | --- |
@@ -507,9 +657,10 @@ download. The size of the bump comes from the
 - Jev adds a short delay to the first request of each turn; tool calls within a turn add none.
 - Claude Code's request format is not a public contract. Use `JEV_DUMP` (set in your shell or
   `~/.jev-router.env`) to diagnose changes.
-- jev-claude and its installers are written for macOS, Linux (including WSL), and Windows. They
-  have been tested on Windows 10 (PowerShell 7 and 5.1, Git Bash) with Claude Code 2.1.287;
-  macOS and Linux run the same code but have not been tested yet.
+- jev-claude and its installers are written for macOS, Linux (including WSL), and Windows, and CI
+  builds and tests the programs and runs the installers on all three. Hand testing against a real
+  Claude Code has been on Windows 10 (PowerShell 7 and 5.1, Git Bash) with Claude Code 2.1.287;
+  macOS and Linux have had less of it.
 
 ## Changes from jev-router
 
@@ -524,13 +675,16 @@ jev-claude started as an import of [jev-router](https://github.com/gargpratyush/
 - **Newest models automatically.** Each tier uses the newest version in your account, the status
   line flags models newer than the router's tuning, and sub-agents show their model's version.
 - **Setup check and calibration.** `/jev-calibrate`, offered once on first launch, and the
-  calibration script and cases for re-tuning when new models ship.
+  calibration example and cases for re-tuning when new models ship.
 - **Easier setup.** One-line installers for macOS, Linux, and Windows, `.env.example`, and
   documented support for running on an Anthropic API key.
 - **Hardening.** A project's `.env` can no longer redirect traffic or run code, private files are
   owner-only, prompt overrides need an explicit instruction, Esc stops generation upstream, and
   the saved Claude Code model is restored even when a session is killed.
-- **Tooling.** pnpm instead of npm, and automatic version bumps on `master`.
+- **Native programs.** The program is Rust, installed from a ready-made release with no Node.js,
+  pnpm or clone, and the installers install what is missing (Claude Code included).
+- **Tooling.** Cargo throughout (`cargo xtask` for the release tasks, Rust integration tests for
+  the conformance suite), and automatic version bumps and releases on `master`.
 
 ## Contributing
 
@@ -545,9 +699,10 @@ For a pull request:
 2. Fork the repository and create a focused branch from `master`.
 3. Make the smallest change that solves the problem, with commit subjects as described in
    [Versions and commit messages](#versions-and-commit-messages).
-4. Run `pnpm test` and include tests for non-trivial behaviour changes. A change to
-   `rust/` or `python/` must also pass that implementation's gates (its guide's CI section),
-   and a change to Node's behaviour must regenerate the golden cases and pass every port.
+4. Run the gate in [Development](#development) (`cargo test --workspace --locked` and the rest,
+   from `rust/`) and include tests for non-trivial behaviour changes. A change to behaviour
+   changes [`SPEC.md`](SPEC.md), the golden cases in `conformance/cases/` (frozen fixtures, edited
+   by hand) and the Rust code together.
 
 Never commit API keys or other secrets: copy `.env.example` to `.env` (which git ignores) for local
 settings. All contributions are reviewed, and only the repository owner merges pull requests.

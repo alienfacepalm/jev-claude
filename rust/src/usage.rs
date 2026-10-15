@@ -1,4 +1,4 @@
-//! Tiny versions of the `/usage` meters (SPEC 12; `node/src/usage.mjs`).
+//! Tiny versions of the `/usage` meters (SPEC 12).
 
 use crate::icons::Icons;
 use crate::jsjson::Value;

@@ -1,4 +1,4 @@
-//! The status line's item labels (SPEC 12.1; `node/src/icons.mjs`).
+//! The status line's item labels (SPEC 12.1).
 
 use crate::envx::Env;
 
@@ -30,7 +30,7 @@ pub struct Icons {
 }
 
 impl Icons {
-    /// `(name, mark)` pairs in the order Node's object lists them.
+    /// `(name, mark)` pairs in the order SPEC 12.1 lists them.
     pub fn entries(&self) -> [(&'static str, &'static str); 11] {
         [
             ("model", self.model),

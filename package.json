@@ -3,40 +3,9 @@
   "version": "0.11.0",
   "private": true,
   "description": "Fork of jev-router for Claude Code: routes each turn to the model that gets the best result for the least cost, using TypeSafe Jev",
-  "type": "module",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alienfacepalm/jev-claude.git"
-  },
-  "homepage": "https://github.com/alienfacepalm/jev-claude#readme",
-  "bugs": "https://github.com/alienfacepalm/jev-claude/issues",
-  "bin": {
-    "jev-claude": "node/bin/jev-claude.mjs",
-    "jev-explain": "node/bin/jev-explain.mjs",
-    "jev-legend": "node/bin/jev-legend.mjs"
-  },
-  "scripts": {
-    "test": "pnpm run test:unit && pnpm run test:conformance",
-    "test:unit": "pnpm --dir node test",
-    "test:conformance": "node --test conformance/harness",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "check": "biome check . && pnpm test"
-  },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "model-routing",
-    "jev",
-    "typesafe"
-  ],
-  "engines": {
-    "node": "^22.16.0 || >=24"
-  },
-  "license": "MIT",
-  "packageManager": "pnpm@12.4.2",
-  "devDependencies": {
-    "@biomejs/biome": "2.5.15"
   }
 }

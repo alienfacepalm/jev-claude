@@ -1,0 +1,6 @@
+# actionlint settings. GitHub-hosted runner labels newer than the pinned actionlint (lint job in
+# workflows/ci.yml) are listed here so it does not report them as unknown.
+self-hosted-runner:
+  labels:
+    - macos-15-intel # the Intel macOS runner (macos-13 is retired)
+    - windows-11-arm # Windows 11 on ARM64

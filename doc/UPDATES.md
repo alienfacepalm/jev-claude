@@ -1,13 +1,13 @@
 # Updates
 
-jev-claude is a git clone (`~/jev-claude` by default). Updating means fast-forwarding that clone.
+jev-claude is installed from a release archive into `~/jev-claude-rust` (or `JEV_INSTALL_DIR`).
+Updating means installing the newer release over it: run the installer again.
 
 ## Status
 
-The update library (`node/src/update.mjs`, and its Rust and Python ports; SPEC.md section 14)
-and the `jev-update-check` program (`node/bin/jev-update-check.mjs`) exist and are tested by
-`node/test/update.test.mjs`. The `jev-claude` launcher does not call them yet (SPEC.md 1.2). So
-today the launcher:
+The update library (the `update` module, `rust/src/update.rs`; SPEC.md section 14) and the
+`jev-update-check` program exist and are tested (`rust/tests/update.rs`). The `jev-claude` launcher
+does not call them yet (SPEC.md 1.2). So today the launcher:
 
 - prints no update notice and starts no background check;
 - does not accept `--update`: `jev-claude --update` passes `--update` straight through to Claude
@@ -15,30 +15,39 @@ today the launcher:
 - ignores `JEV_NO_UPDATE_CHECK`.
 
 Nothing updates by itself. The two sections marked (planned) describe the launcher wiring as
-designed, for when it ships; the rest of this page describes the library as it works today.
+designed, for when it ships; the rest of this page describes what works today.
 
 ## How to update today
 
-Run the installer again (see the [README](../README.md#install)): it fast-forwards the clone with
-`git pull --ff-only`, runs `pnpm install --frozen-lockfile`, and re-links the `jev-claude`
-command. Or update by hand, as in [doc/NODE.md](NODE.md#updating):
+Run the same install command again (see the [README](../README.md#install)):
 
 ```bash
-git -C ~/jev-claude pull --ff-only
-cd ~/jev-claude && pnpm install --frozen-lockfile
+curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.sh | bash
 ```
 
-The Rust edition installed from a release (`install.sh --rust`, `install.ps1` with `JEV_IMPL=rust`;
-see [doc/RUST.md](RUST.md#install-a-release-no-toolchain-no-nodejs)) is not a clone. Update it by
-running the same installer again: it downloads the latest release, checks its SHA-256, swaps the
-folder, and prints `updated X -> Y` or `reinstalled version Y`. `jev-update-check` has nothing to
-look at in such an install (there is no git history) and reports no update.
+```powershell
+irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex
+```
 
-The `jev-claude` command itself is a pnpm shim that records the path of the entry point at install
-time, and nothing here rewrites it. An install made before the code moved into `node/` (any install older
-than the move, whatever its version) therefore fails after a fast-forward with `Cannot find module .../bin/jev-claude.mjs`; the
-fix is to run the installer again (or `pnpm add --global "link:<clone>"`), which regenerates the shim
-from the current `bin` map.
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/install.ps1 | iex"
+```
+
+It downloads the latest release, compares its SHA-256 with the release's `SHA256SUMS`, swaps the
+install folder, and prints `updated X -> Y` or `reinstalled version Y` (see
+[doc/RUST.md](RUST.md#install-a-release)). The earlier install is kept aside until the new one's
+`jev-check` has run, and put back if that fails. `JEV_VERSION=v0.11.0` installs a particular release
+instead. Your settings in `~/.jev-router.env` stay. `jev-update-check` has nothing to look at in
+such an install (there is no git history) and reports no update.
+
+A build from source (a git clone you develop in) updates the way any clone does: `git pull
+--ff-only`, then `cargo build --release --locked` in `rust/` (see [doc/RUST.md](RUST.md#build)).
+
+An install made with a release up to v0.11.0 as the Node edition (the default then: a clone in
+`~/jev-claude`) is not updated by this: running the installer installs the native programs beside
+it, in a different folder. See [Upgrading from the Node edition](../README.md#upgrading-from-the-node-edition)
+in the README for what to remove. An earlier `--rust` install (native programs in
+`~/jev-claude-rust`) is updated in place by the same line.
 
 ## The check (planned)
 
@@ -48,7 +57,7 @@ On every interactive start (stdin and stdout are terminals, `JEV_NO_UPDATE_CHECK
 1. read `~/.jev-router/update.json` and, if the last check found a newer version than the one
    installed, print ``[jev] Update available: X -> Y. Run `jev-claude --update`.``;
 2. if the last check is older than 6 hours (or missing), stamp the file and start
-   `node/bin/jev-update-check.mjs` detached, which does the actual look and rewrites the file.
+   `jev-update-check` detached, which does the actual look and rewrites the file.
 
 Nothing will wait on the network, so a slow or absent connection costs the launch nothing. The
 notice shown will be the result of the previous check, so a release shows up one launch after the
@@ -56,15 +65,22 @@ check that finds it. A failed check is retried at the same 6-hour interval, not 
 
 The look (implemented today in `jev-update-check`) is `git fetch origin <branch>` (with
 `GIT_TERMINAL_PROMPT=0`, so a remote that wants credentials fails instead of prompting), then a
-comparison of history and of the root `package.json`'s version at the fetched commit.
+comparison of history and of the root `package.json`'s version at the fetched commit. It works on
+a git clone; a release install is not one, so the planned check will need a release-aware look
+(the latest release tag against the installed `package.json`) before it ships for those installs.
 
 ## Applying (planned)
 
-`jev-claude --update` will fetch again, fast-forward with `git merge --ff-only`, and run
-`pnpm install --frozen-lockfile` when `pnpm-lock.yaml` changed. Only the lockfile counts: every
-release bumps the version in the root `package.json`, and a frozen install requires the two to agree.
-Output will be one line, and the exit code 0 for "updated" or "already up to date", 1 otherwise.
-It will take effect on the next start; the running process is never replaced.
+`jev-claude --update` will fetch again and fast-forward with `git merge --ff-only`, in a git clone.
+When the fast-forward changed anything under `rust/` (SPEC.md 14, `needsInstall`), the clone's
+programs are out of date, so applying then runs the clone's build step (the `install` callback of
+`applyUpdate`, which the launcher wiring will supply: a release build in `rust/`). A build that
+exits non-zero is reported as `building the update exited with N`. A change to documentation or to
+the root `package.json` alone needs no build. Output will be one line, and the exit code 0 for
+"updated" or "already up to date", 1 otherwise.
+It will take effect on the next start; the running process is never replaced. For a release
+install, applying will mean running the installer, as above; how `--update` does that is part of
+the design that has not shipped.
 
 ## When nothing is changed
 
@@ -91,6 +107,6 @@ prompt, in the process that also holds the Jev key. `--update` keeps that a deci
 
 ## Tests
 
-`node/test/update.test.mjs` uses real git: a bare repository as origin, clones made as the installer
-makes them (full and `--depth 1`), and real commits upstream. It checks the state of the checkout
-after each step. It needs `git` but no network.
+`rust/tests/update.rs` uses real git: a bare repository as
+origin, clones made the way a developer makes them (full and `--depth 1`), and real commits
+upstream. They check the state of the checkout after each step. They need `git` but no network.

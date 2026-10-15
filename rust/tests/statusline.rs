@@ -1,8 +1,8 @@
-//! Port of node/test/statusline.test.mjs: runs the real `jev-statusline` binary the way Claude
+//! The status line (SPEC 12): runs the real `jev-statusline` binary the way Claude
 //! Code does.
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -323,10 +323,11 @@ fn a_space_separates_the_sub_agents_symbol_from_the_first_model_name() {
     assert!(line.contains("\u{2726} Haiku 4.5"), "{line}");
 }
 
-/// Not a Node test: Node throws reading `session_id` of a JSON `null` on stdin, so the status
-/// line writes an error to stderr, nothing to stdout, and exits 1.
+/// Not one of the SPEC-derived titles: the retired Node edition threw reading `session_id` of a
+/// JSON `null` on stdin, and SPEC 20 keeps that, so the status line writes an error to stderr,
+/// nothing to stdout, and exits 1.
 #[test]
-fn a_json_null_on_stdin_fails_as_node_does() {
+fn a_json_null_on_stdin_fails_with_an_error_and_no_output() {
     let mut child = Command::new(env!("CARGO_BIN_EXE_jev-statusline"))
         .env("JEV_STATUS_DIR", isolate_status())
         .stdin(Stdio::piped())

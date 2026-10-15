@@ -1,5 +1,5 @@
-//! Asking Jev which tier fits (SPEC 5, 6; `node/src/router.mjs`), with this port's own client
-//! for the one endpoint Node's SDK is used for.
+//! Asking Jev which tier fits (SPEC 5, 6), with this crate's own client
+//! for the one endpoint the retired Node edition used an SDK for.
 
 use crate::config::{
     COMPLEXITY_MAX_SCORE, CONTEXT_WINDOW_TOKENS, JEV_DEADLINE_MS, JEV_MAX_RETRIES, JEV_TIMEOUT_MS, Model,

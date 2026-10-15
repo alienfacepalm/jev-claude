@@ -20,7 +20,7 @@ pub mod bytes_compat {
 /// The error type for bodies and connections.
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
-/// The parts of a URL the proxy and the client use (Node's `new URL`).
+/// The parts of a URL the proxy and the client use (the `new URL` shape of SPEC 3).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Url {
     /// Whether the scheme is `https:`.

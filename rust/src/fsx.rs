@@ -52,9 +52,9 @@ pub fn chmod(path: &Path, mode: u32) -> std::io::Result<()> {
 }
 
 #[cfg(not(unix))]
-/// `fs.chmodSync`: on Windows only checks that `path` exists, as Node's call fails when it does not.
+/// `fs.chmodSync`: on Windows only checks that `path` exists, as the JavaScript call fails when it does not.
 pub fn chmod(path: &Path, _mode: u32) -> std::io::Result<()> {
-    // Node's chmodSync throws for a missing path on every platform; keep that.
+    // `chmodSync` throws for a missing path on every platform (SPEC 3.11); keep that.
     std::fs::metadata(path).map(|_| ())
 }
 

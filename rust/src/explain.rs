@@ -1,4 +1,4 @@
-//! The explanation panel (SPEC 13; `node/src/explain.mjs`).
+//! The explanation panel (SPEC 13).
 
 use crate::config::tier_of;
 use crate::jsjson::Value;

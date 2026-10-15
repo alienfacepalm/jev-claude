@@ -1,4 +1,4 @@
-//! Finding and starting Claude Code (SPEC 10.2; `node/src/launch.mjs`).
+//! Finding and starting Claude Code (SPEC 10.2).
 
 use crate::envx;
 use regex::bytes::Regex;
@@ -84,7 +84,7 @@ fn is_executable(file: &Path) -> bool {
 
 static SHIM: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?i-u)"%~?dp0%?\\([^"]+?\.[cm]?js)""#).unwrap());
 
-/// The Node script an npm `.cmd` shim launches, or None.
+/// The JavaScript file an npm `.cmd` shim launches, or None.
 pub fn shim_script(file: &Path) -> Option<PathBuf> {
     let text = std::fs::read(file).ok()?;
     let text = String::from_utf8_lossy(&text);
@@ -156,8 +156,8 @@ fn has_ext(file: &Path, exts: &[&str]) -> bool {
     exts.iter().any(|e| s.ends_with(e))
 }
 
-/// `launchSpec(file)`. Node runs a shim's script with its own executable; this port uses `node`
-/// from PATH and falls back to the cmd.exe route when there is none.
+/// `launchSpec(file)`. A shim's script runs with `node` from PATH (the retired Node edition used its
+/// own executable); the cmd.exe route is the fallback when there is none.
 pub fn launch_spec(file: &Path) -> LaunchSpec {
     if has_ext(file, &[".ps1"]) {
         return LaunchSpec {

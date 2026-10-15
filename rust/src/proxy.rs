@@ -1,4 +1,4 @@
-//! The local routing proxy (SPEC 7; `node/src/proxy.mjs`).
+//! The local routing proxy (SPEC 7).
 
 use crate::config::{
     Model, TIERS, UNCERTAIN_DEFAULT, available_tiers, effort_floor, forced_effort, id_of, is_auto,
@@ -160,7 +160,7 @@ pub fn apply_tier(body: &mut Value, tier_name: &str, model: Option<&JsStr>, env:
     }
 }
 
-/// Context-management edits that only a thinking tier accepts (`/thinking/i` in Node).
+/// Context-management edits that only a thinking tier accepts (`/thinking/i`, SPEC 3.1).
 static THINKING_EDIT: LazyLock<Regex> = LazyLock::new(|| Regex::new("(?i-u)thinking").unwrap());
 
 static VERSION_RES: LazyLock<Vec<(&'static str, Regex)>> = LazyLock::new(|| {
@@ -553,10 +553,21 @@ fn real_route() -> RouteFn {
 }
 
 /// Starts the proxy on `127.0.0.1`, port 0 (`startProxy`). Must run inside a Tokio runtime.
+///
+/// An upstream that is not an absolute `http:` or `https:` URL is refused before anything listens
+/// (SPEC 7.1): the error has kind [`ErrorKind::InvalidInput`] and the message
+/// `invalid upstream URL (ANTHROPIC_BASE_URL): <value>`, with the value as given.
 pub async fn start_proxy(opts: ProxyOptions) -> std::io::Result<ProxyHandle> {
     let is_real = opts.route.is_none();
+    let upstream = opts.upstream_url.unwrap_or_else(|| ANTHROPIC_BASE_URL.to_string());
+    if Url::parse(&upstream).is_err() {
+        return Err(std::io::Error::new(
+            ErrorKind::InvalidInput,
+            format!("invalid upstream URL (ANTHROPIC_BASE_URL): {upstream}"),
+        ));
+    }
     let ctx = Arc::new(Ctx {
-        upstream: opts.upstream_url.unwrap_or_else(|| ANTHROPIC_BASE_URL.to_string()),
+        upstream,
         route: opts.route.unwrap_or_else(real_route),
         calibration_file: opts.calibration_file.unwrap_or_else(status::calibration_file),
         shared: Mutex::new(Shared::default()),
@@ -631,7 +642,7 @@ fn error_502(message: &str) -> Response<ProxyBody> {
         .unwrap()
 }
 
-/// Headers whose duplicates Node drops, keeping the first.
+/// Headers whose duplicates are dropped, keeping the first (SPEC 7).
 const SINGLE: [&str; 17] = [
     "age",
     "authorization",
@@ -653,7 +664,7 @@ const SINGLE: [&str; 17] = [
     // user-agent handled below with the same rule
 ];
 
-/// Node's `message.headers`: one value per name, duplicates joined or dropped as Node does.
+/// The `message.headers` shape of SPEC 7: one value per name, duplicates joined or dropped.
 fn node_headers(headers: &HeaderMap) -> Vec<(HeaderName, Vec<HeaderValue>)> {
     let mut out: Vec<(HeaderName, Vec<HeaderValue>)> = Vec::new();
     for name in headers.keys() {
@@ -679,7 +690,7 @@ fn node_headers(headers: &HeaderMap) -> Vec<(HeaderName, Vec<HeaderValue>)> {
     out
 }
 
-/// Methods for which Node sends `Content-Length: 0` on an empty request body.
+/// Methods that send `Content-Length: 0` on an empty request body.
 fn sends_zero_length(method: &hyper::Method) -> bool {
     !matches!(method.as_str(), "GET" | "HEAD" | "DELETE" | "OPTIONS" | "TRACE" | "CONNECT")
 }
@@ -695,7 +706,7 @@ async fn handle(req: Request<Incoming>, ctx: Arc<Ctx>) -> Result<Response<ProxyB
         Err(_) => return Ok(error_502("request body could not be read")),
     };
 
-    // Processing runs to completion even if the client leaves meanwhile, as Node's does; only
+    // Processing runs to completion even if the client leaves meanwhile (SPEC 7.2); only
     // the upstream request is skipped then, because this future is dropped with the connection.
     let out = if target.starts_with("/v1/messages") {
         let ctx2 = ctx.clone();
@@ -713,7 +724,7 @@ async fn handle(req: Request<Incoming>, ctx: Arc<Ctx>) -> Result<Response<ProxyB
 
 /// Runs file I/O for the status directory on Tokio's blocking pool, so a slow disk or the status
 /// lock never holds up a runtime worker (and with it other connections and streams). Awaiting it
-/// keeps the write ordered before the request is forwarded, as Node's synchronous writes are.
+/// keeps the write ordered before the request is forwarded, as SPEC 8 requires.
 async fn blocking<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
     tokio::task::spawn_blocking(work).await.map_err(|e| e.to_string())
 }
@@ -979,7 +990,7 @@ async fn forward(ctx: &Ctx, parts: &hyper::http::request::Parts, target: &str, o
             Ok(d) => d,
             Err(e) => {
                 debug(|| format!("upstream error: {e}"));
-                // Node destroys the client connection here; an aborted body does the same.
+                // SPEC 7.2: the client connection is destroyed here; an aborted body does the same.
                 let (tx, body) = ChannelBody::new(1);
                 let _ = tx.try_send(Err(e));
                 return Response::builder().status(status).body(ProxyBody::Stream(body)).unwrap();

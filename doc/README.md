@@ -8,32 +8,27 @@ forwarded to Anthropic untouched.
 
 | Page | What it covers |
 | --- | --- |
-| [../README.md](../README.md) | What it is, installing, configuration, how routing works, development |
+| [../README.md](../README.md) | What it is, installing the prebuilt programs (one command per shell: Bash, PowerShell, Command Prompt), what the installer checks, each platform, updating, removing, upgrading from the Node edition, the setup check, the Lattis shim, configuration, how routing works, development |
 | [PLUGIN_INSTALL.md](PLUGIN_INSTALL.md) | Installing from inside Claude Code with the `jev-installer` plugin |
-| [UPDATES.md](UPDATES.md) | How to update today (both editions); the planned launch-time update check and `jev-claude --update` |
+| [UPDATES.md](UPDATES.md) | How to update (run the installer again); the planned launch-time update check and `jev-claude --update` |
 
-## Implementations
+## The implementation
 
-Each guide covers installing the toolchain on Windows, macOS and Linux, building, installing the
-programs, running `jev-claude`, configuration, tests, lint and format, the conformance harness,
-what CI runs, troubleshooting, and known divergences from Node.
+jev-claude is written in Rust, in `rust/`, and that is the only implementation. The Node.js
+edition no longer exists in the tree; it is available at the git tag `v0.11.0`.
 
 | Page | What it covers |
 | --- | --- |
-| [NODE.md](NODE.md) | The Node.js reference implementation in `node/` (what the installers set up); Biome |
-| [RUST.md](RUST.md) | The Rust port in `rust/`: installing a release without Node.js, building from source; rustfmt, clippy, the MSRV check |
-| [PYTHON.md](PYTHON.md) | The Python port in `python/`; ruff, mypy, the virtual environment |
-
-The short quick starts in [node/](../node/README.md),
-[rust/](../rust/README.md) and [python/](../python/README.md) link back to these guides.
+| [RUST.md](RUST.md) | The full guide: installing a release (what the installer checks and installs), installing the toolchain on Windows, macOS and Linux and building from source (for contributors and unsupported platforms), putting a build on PATH, tests, lint and format, the calibration examples, the conformance tests, the `cargo xtask` release tasks, the full gate CI runs, troubleshooting, and the differences from the retired Node edition |
+| [../rust/README.md](../rust/README.md) | The short quick start, linking back to RUST.md |
 
 ## Contributing and the shared contract
 
 | Page | What it covers |
 | --- | --- |
-| [LAYOUT.md](LAYOUT.md) | Where each implementation and the shared files live, each one's gates, and CI |
-| [../SPEC.md](../SPEC.md) | The normative behaviour every port must match |
-| [../conformance/README.md](../conformance/README.md) | The shared fixtures, golden-case generator and black-box harness |
+| [LAYOUT.md](LAYOUT.md) | What lives where, the gates, CI and the release, and why the root keeps a `package.json` |
+| [../SPEC.md](../SPEC.md) | The normative behaviour the implementation must match |
+| [../conformance/README.md](../conformance/README.md) | The shared fixtures, the frozen golden cases and the black-box conformance tests |
 | [../conformance/cases/README.md](../conformance/cases/README.md) | The golden-case encoding and how to call each case file |
 
 Configuration lives in `~/.jev-router.env`; the settings are listed in the README's

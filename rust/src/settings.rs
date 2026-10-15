@@ -1,4 +1,4 @@
-//! The saved default model (SPEC 9.2; `node/src/settings.mjs`).
+//! The saved default model (SPEC 9.2).
 
 use crate::config::AUTO_MODEL;
 use crate::fsx::write_with_mode;
@@ -20,7 +20,7 @@ fn read_json(file: &Path) -> Option<Value> {
     jsjson::parse_bytes(&std::fs::read(file).ok()?).ok()
 }
 
-/// `JSON.parse(...).model`; None where Node throws (unreadable, not JSON, or `null`).
+/// `JSON.parse(...).model`; None where SPEC 9.2 says it throws (unreadable, not JSON, or `null`).
 fn model_of(file: &Path) -> Option<Value> {
     let v = read_json(file)?;
     if v.is_nullish() {

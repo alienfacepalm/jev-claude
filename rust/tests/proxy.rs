@@ -1,7 +1,7 @@
-//! Port of node/test/proxy.test.mjs.
+//! The routing proxy (SPEC 7).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -85,7 +85,7 @@ fn status_round_trips_per_session_and_misses_cleanly() {
     write_status(&s(""), &json(r#"{"tier":"opus"}"#));
 }
 
-/// "status files are private to their owner" (skipped on Windows, as in Node)
+/// "status files are private to their owner" (skipped on Windows)
 #[cfg(unix)]
 #[test]
 fn status_files_are_private_to_their_owner() {
@@ -288,6 +288,43 @@ async fn a_routed_request_without_metadata_is_recorded_under_the_conversation_ke
     assert_eq!(status.get("confidence"), &Value::Number(0.77));
     assert_eq!(status.get("effort"), &s("high"), "records the effort that went out");
     assert_eq!(agent_view_now(&status).main.get("effort"), &s("high"), "and carries it to the per-agent entry");
+}
+
+/// "a turn with tools but no model is recorded as manual and forwarded re-serialised"
+#[tokio::test]
+async fn a_turn_with_tools_but_no_model_is_recorded_as_manual_and_forwarded_re_serialised() {
+    isolate_status();
+    let (url, seen) = serve(Arc::new(|_: &Seen| Reply::json(200, r#"{"id":"msg_1","type":"message"}"#))).await;
+    let asked = Arc::new(Mutex::new(0usize));
+    let counter = asked.clone();
+    let route: RouteFn = Arc::new(move |_args| {
+        *counter.lock().unwrap() += 1;
+        Box::pin(async { Ok(None) })
+    });
+    let proxy =
+        start_proxy(ProxyOptions { upstream_url: Some(url), route: Some(route), ..Default::default() }).await.unwrap();
+    let sid = format!("no-model-{}", pid());
+    let raw = format!(
+        r#"{{"tools":[{{"name":"Bash"}}],"metadata":{{"user_id":"{{\"session_id\":\"{sid}\"}}"}},"messages":[{{"role":"user","content":"hi"}}],  "n": 1.0}}"#
+    );
+    let got =
+        request(proxy.port, "POST", "/v1/messages", &[("content-type", "application/json")], raw.as_bytes()).await;
+    assert_eq!(got.status, 200);
+
+    let forwarded = seen.lock().unwrap()[0].body.clone();
+    assert_eq!(
+        String::from_utf8_lossy(&forwarded),
+        raw.replace(r#",  "n": 1.0"#, r#","n":1"#),
+        "re-serialised, with no model added"
+    );
+    assert_eq!(*asked.lock().unwrap(), 0, "Jev is never asked about a turn the user owns");
+    let status = read_status(&s(&sid));
+    assert_eq!(status.get("manual"), &Value::Bool(true));
+    let agents = status.get("agents").as_object().expect("agents");
+    assert_eq!(agents.len(), 1, "{agents:?}");
+    let (_, entry) = agents.iter().next().unwrap();
+    assert_eq!(entry.get("manual"), &Value::Bool(true));
+    assert!(entry.as_object().unwrap().get("model").is_none(), "an undefined model is omitted: {entry:?}");
 }
 
 /// "converts a draft-04 boolean exclusiveMinimum into a draft 2020-12 number"

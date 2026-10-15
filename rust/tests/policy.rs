@@ -1,7 +1,7 @@
-//! Port of node/test/policy.test.mjs.
+//! Turning a Jev answer into the tier that runs (SPEC 7.6).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;

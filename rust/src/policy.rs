@@ -1,4 +1,4 @@
-//! Turns a Jev answer into the tier that runs (SPEC 7.6; `node/src/policy.mjs`).
+//! Turns a Jev answer into the tier that runs (SPEC 7.6).
 
 use crate::config::{
     DOWNGRADE_MAX_CONTEXT_TOKENS, MIN_CONFIDENCE, OVERRIDE_PATTERNS, TIER_NAMES, UNCERTAIN_DEFAULT, rank_of,
