@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 712" width="960" height="712" role="img" aria-labelledby="t d">
+<title id="t">How jev-claude works</title>
+<desc id="d">You type a prompt in Claude Code. jev-claude, a small proxy on your computer, asks Jev which Claude model fits the prompt (Haiku, Sonnet, Opus or Fable), then sends your request to Anthropic on that model. The answer comes straight back and the status line shows which model ran.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9198a1"/></marker>
+<marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3fb950"/></marker>
+<marker id="aha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#58a6ff"/></marker>
+</defs>
+<rect width="960" height="712" rx="18" fill="#0d1117" stroke="#30363d"/>
+<rect x="24" y="150" width="652" height="196" rx="18" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="6 6"/>
+<text x="42" y="174" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#9198a1" text-anchor="start" letter-spacing="1.2">YOUR COMPUTER</text>
+<rect x="48" y="188" width="140" height="128" rx="14" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="118.0" y="282" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e6edf3" text-anchor="middle" >You</text>
+<text x="118.0" y="302" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >type a prompt</text>
+<g stroke="#e6edf3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="118" cy="224" r="11"/><path d="M96 268c2-17 11-24 22-24s20 7 22 24"/></g>
+<rect x="256" y="188" width="150" height="128" rx="14" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="331.0" y="282" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e6edf3" text-anchor="middle" >Claude Code</text>
+<text x="331.0" y="302" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >unchanged</text>
+<g stroke="#e6edf3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="305" y="206" width="52" height="40" rx="6"/><path d="M317 218l9 8l-9 8M333 235h13"/></g>
+<rect x="474" y="188" width="178" height="128" rx="14" fill="#10243e" stroke="#58a6ff" stroke-width="2"/>
+<text x="563.0" y="282" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e6edf3" text-anchor="middle" >jev-claude</text>
+<text x="563.0" y="302" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >small proxy</text>
+<g stroke="#58a6ff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="513" cy="228" r="6"/><circle cx="613" cy="228" r="6"/><circle cx="563" cy="228" r="10"/><path d="M519 228h34M573 228h34"/></g>
+<rect x="748" y="188" width="190" height="128" rx="14" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="843.0" y="282" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e6edf3" text-anchor="middle" >Anthropic</text>
+<text x="843.0" y="302" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >runs that model</text>
+<g stroke="#e6edf3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M817 244h46a14 14 0 0 0 1-28a18 18 0 0 0-34-4a15 15 0 0 0-13 32z" transform="translate(-6,0)"/></g>
+<rect x="454" y="22" width="218" height="84" rx="14" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="563.0" y="58" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e6edf3" text-anchor="middle" >Jev</text>
+<text x="563.0" y="80" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >picks the right model</text>
+<text x="563.0" y="96" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="middle" >for this prompt</text>
+<rect x="30" y="24" width="204" height="36" rx="18" fill="#0f2d1a" stroke="#3fb950" stroke-width="1.5"/>
+<circle cx="50" cy="42" r="6" fill="#3fb950"/>
+<text x="64" y="47" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#3fb950" text-anchor="start" >Haiku</text>
+<text x="115.0" y="47" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >trivial edits</text>
+<rect x="240" y="24" width="204" height="36" rx="18" fill="#10243e" stroke="#58a6ff" stroke-width="1.5"/>
+<circle cx="260" cy="42" r="6" fill="#58a6ff"/>
+<text x="274" y="47" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#58a6ff" text-anchor="start" >Sonnet</text>
+<text x="333.6" y="47" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >everyday work</text>
+<rect x="30" y="68" width="204" height="36" rx="18" fill="#271a40" stroke="#bc8cff" stroke-width="1.5"/>
+<circle cx="50" cy="86" r="6" fill="#bc8cff"/>
+<text x="64" y="91" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#bc8cff" text-anchor="start" >Opus</text>
+<text x="106.4" y="91" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >hard problems</text>
+<rect x="240" y="68" width="204" height="36" rx="18" fill="#3a2210" stroke="#ffa657" stroke-width="1.5"/>
+<circle cx="260" cy="86" r="6" fill="#ffa657"/>
+<text x="274" y="91" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#ffa657" text-anchor="start" >Fable</text>
+<text x="325.0" y="91" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >long jobs</text>
+<line x1="192" y1="256" x2="252" y2="256" stroke="#9198a1" stroke-width="2.4" marker-end="url(#ah)"/>
+<circle cx="222" cy="234" r="13" fill="#58a6ff"/>
+<text x="222" y="239" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >1</text>
+<line x1="410" y1="240" x2="470" y2="240" stroke="#9198a1" stroke-width="2.4" marker-end="url(#ah)"/>
+<line x1="470" y1="272" x2="410" y2="272" stroke="#3fb950" stroke-width="2.4" stroke-dasharray="5 4" marker-end="url(#ahb)"/>
+<line x1="656" y1="240" x2="744" y2="240" stroke="#9198a1" stroke-width="2.4" marker-end="url(#ah)"/>
+<line x1="744" y1="272" x2="656" y2="272" stroke="#3fb950" stroke-width="2.4" stroke-dasharray="5 4" marker-end="url(#ahb)"/>
+<circle cx="700" cy="220" r="13" fill="#58a6ff"/>
+<text x="700" y="225" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >3</text>
+<circle cx="700" cy="294" r="13" fill="#58a6ff"/>
+<text x="700" y="299" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >4</text>
+<line x1="540" y1="184" x2="540" y2="110" stroke="#58a6ff" stroke-width="2.4" marker-end="url(#aha)" marker-start="url(#aha)"/>
+<circle cx="512" cy="134" r="13" fill="#58a6ff"/>
+<text x="512" y="139" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >2</text>
+<text x="556" y="128" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >which model?</text>
+<text x="556" y="144" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#58a6ff" text-anchor="start" >“Sonnet, 94% sure”</text>
+<line x1="48" y1="328" x2="84" y2="328" stroke="#9198a1" stroke-width="2.4" marker-end="url(#ah)"/>
+<text x="92" y="332" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#9198a1" text-anchor="start" >your request</text>
+<line x1="190" y1="328" x2="226" y2="328" stroke="#3fb950" stroke-width="2.4" stroke-dasharray="5 4" marker-end="url(#ahb)"/>
+<text x="234" y="332" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#9198a1" text-anchor="start" >the answer</text>
+<text x="30" y="392" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#e6edf3" text-anchor="start" >What happens on every prompt</text>
+<circle cx="43" cy="421" r="13" fill="#58a6ff"/>
+<text x="43" y="426" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >1</text>
+<text x="66" y="426" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#e6edf3" text-anchor="start" >You type a prompt in Claude Code, exactly as you always do.</text>
+<circle cx="43" cy="455" r="13" fill="#58a6ff"/>
+<text x="43" y="460" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >2</text>
+<text x="66" y="460" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#e6edf3" text-anchor="start" >jev-claude asks Jev which Claude model fits it: Haiku, Sonnet, Opus or Fable.</text>
+<circle cx="43" cy="489" r="13" fill="#58a6ff"/>
+<text x="43" y="494" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >3</text>
+<text x="66" y="494" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#e6edf3" text-anchor="start" >It sends your request on to Anthropic on that model. Your sign-in or API key goes straight through; it is never read or stored.</text>
+<circle cx="43" cy="523" r="13" fill="#58a6ff"/>
+<text x="43" y="528" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117" text-anchor="middle" >4</text>
+<text x="66" y="528" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#e6edf3" text-anchor="start" >The answer comes straight back, and the status line shows which model ran.</text>
+<rect x="30" y="590" width="900" height="44" rx="10" fill="#010409"/>
+<text x="48" y="618" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="14" font-weight="400" fill="#e6edf3" text-anchor="start" >✧✦ Sonnet 5.5 (94%) · ◔ high · ≡ 8% · 5h ▰▰▱▱ 41% · ~/work/my-project</text>
+<text x="30" y="576" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >The status line, at the bottom of Claude Code, shows the model each turn ran on:</text>
+<text x="30" y="662" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >A model you pick yourself with /model skips Jev and goes straight through.</text>
+<text x="30" y="682" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9198a1" text-anchor="start" >If Jev cannot be reached, the turn stays on the model already in use: routing never blocks Claude Code.</text>
+</svg>

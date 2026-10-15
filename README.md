@@ -9,6 +9,11 @@ Per-turn model routing for Claude Code. For each new prompt, Jev picks the Claud
 the best result for the least money: quality first, then cost, speed last. Claude Code itself is
 unchanged: its interface, tools, sessions, permissions, and sign-in all work as before.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/images/how-it-works-dark.svg">
+  <img src="doc/images/how-it-works-light.svg" alt="How jev-claude works: you type a prompt in Claude Code; jev-claude, a small proxy on your computer, asks Jev which Claude model fits (Haiku, Sonnet, Opus or Fable), sends the request to Anthropic on that model, and the answer comes straight back. The status line shows which model ran." width="960">
+</picture>
+
 ## Install
 
 You need a Jev API key: sign in at [console.typesafe.ai](https://console.typesafe.ai) and create one
@@ -532,11 +537,8 @@ Jev key itself is removed from the environment Claude Code runs with.
 own authorization, a subscription sign-in or an API key, is forwarded untouched; the proxy never
 reads or stores it.
 
-```text
-you -> Claude Code -> jev-claude proxy -> Anthropic
-                         |
-                         +-> Jev: choose a model
-```
+The picture at the top shows the path of one prompt: Claude Code sends its request to the proxy,
+the proxy asks Jev which model fits, and the request goes on to Anthropic on that model.
 
 Only requests for **Jev Router** are routed; a model you pick yourself passes straight through.
 Request fields the chosen model cannot accept, such as adaptive thinking on Haiku, are removed

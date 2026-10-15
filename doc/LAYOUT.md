@@ -11,6 +11,7 @@ Rust integration tests. The earlier Node.js implementation is retired and availa
 jev-claude/
 ├─ SPEC.md               # the behaviour the implementation must match
 ├─ README.md  doc/       # user and developer documentation (doc/README.md is the index)
+│                        #   doc/images/ holds the README's how-it-works picture (a light and a dark SVG)
 ├─ package.json          # the release version only (see below); no scripts, no dependencies
 ├─ .env.example  LICENSE  # the settings template (copied to ~/.jev-router.env by the installers)
 ├─ .github/workflows/    # ci.yml (every job, then the release)
