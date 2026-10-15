@@ -1,7 +1,7 @@
 # Checks the Rust edition (the only edition there is) on every push and pull request. Windows is
 # the gating platform (SPEC.md 16), so every job that builds or runs a program covers Windows,
 # Ubuntu and macOS:
-#   lint              shellcheck (install.sh, shim/claude, .github/scripts) and actionlint (this
+#   lint              shellcheck (install.sh, .github/scripts) and actionlint (this
 #                     file and .github/actions, with shellcheck on every run: block)
 #   rust              fmt, clippy, tests (unit, golden, black-box conformance, xtask), doc, MSRV,
 #                     release build, static C runtime on Windows (windows, ubuntu, macos); and the
@@ -55,7 +55,7 @@ env:
   NODE_VERSION: "24"
 
 jobs:
-  # Static checks of everything that is not Rust: the installers' shell, the shim, the CI scripts,
+  # Static checks of everything that is not Rust: the installers' shell, the CI scripts,
   # and the workflow itself. install.ps1 is not parsed here: the Windows installer legs run it
   # under both Windows PowerShell 5.1 and PowerShell 7, which finds a syntax error either way.
   lint:
@@ -66,11 +66,11 @@ jobs:
       - uses: actions/checkout@v4
 
       # shellcheck is preinstalled on the Ubuntu runners; each file's shebang picks the dialect
-      # (install.sh is bash, shim/claude is POSIX sh).
+      # (install.sh is bash).
       - name: shellcheck
         run: |
           shellcheck --version
-          shellcheck -S style install.sh shim/claude .github/scripts/*.sh
+          shellcheck -S style install.sh .github/scripts/*.sh
 
       # Pinned; the image carries its own shellcheck, which actionlint runs on every run: block.
       - name: actionlint

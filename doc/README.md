@@ -8,7 +8,7 @@ forwarded to Anthropic untouched.
 
 | Page | What it covers |
 | --- | --- |
-| [../README.md](../README.md) | What it is, installing the prebuilt programs (one command per shell: Bash, PowerShell, Command Prompt), what the installer checks, each platform, updating, removing, upgrading from the Node edition, the setup check, the Lattis shim, configuration, how routing works, development |
+| [../README.md](../README.md) | What it is, installing the prebuilt programs (one command per shell: Bash, PowerShell, Command Prompt), what the installer checks, each platform, updating, removing, upgrading from the Node edition, the setup check, configuration, how routing works, development |
 | [PLUGIN_INSTALL.md](PLUGIN_INSTALL.md) | Installing from inside Claude Code with the `jev-installer` plugin |
 | [UPDATES.md](UPDATES.md) | How to update (run the installer again); the planned launch-time update check and `jev-claude --update` |
 

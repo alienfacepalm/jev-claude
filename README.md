@@ -414,31 +414,6 @@ skipped in a project that defines its own `jev-calibrate` skill.
 `/jev-calibrate retune` in a clone you develop in, started with `JEV_ROOT` set to the clone (it
 needs the Rust toolchain); see [Calibrating for new models](#calibrating-for-new-models).
 
-## Lattis
-
-Lattis launches agent CLIs by name from its PATH and has no place to add another one, so to route
-the Claude Code that Lattis starts you stand a small shim in front of `claude`. The repository's
-[`shim/claude`](shim/claude) is that shim, a POSIX `sh` script, so it works on macOS, Linux and WSL
-only. It is not in the release archive: fetch it, or copy it from a clone, into a folder of its
-own, and put that folder first on the PATH Lattis sees, ahead of the folder holding the real
-`claude`. Do not put it in `~/.local/bin`, where it would stand in front of `claude` for everything:
-
-```bash
-mkdir -p ~/.lattis-bin
-curl -fsSL https://raw.githubusercontent.com/alienfacepalm/jev-claude/master/shim/claude -o ~/.lattis-bin/claude
-chmod +x ~/.lattis-bin/claude
-```
-
-Only a Lattis session goes through jev-claude: one whose `CLAUDE_CONFIG_DIR` contains `lattis` (in
-any letter case) or that has `LATTIS_AGENT_TOKEN` set. Every other launch (a terminal, a script,
-Claude Code's own update) is handed straight to the real Claude Code. The shim finds the real one
-through `JEV_REAL_CLAUDE`, else `~/.local/bin/claude`, else the first `claude` on PATH outside its own
-folder, and exits 127 with a message when there is none. It finds the launcher through `JEV_NATIVE`,
-else `jev-claude` on PATH, else `~/jev-claude-rust/bin/jev-claude`; if you installed elsewhere with
-`JEV_INSTALL_DIR`, set `JEV_NATIVE`. With no launcher found, Lattis gets plain Claude Code. The shim
-sets `JEV_SHIM=1` before it starts jev-claude: when jev-claude then runs `claude` and finds the shim
-again on PATH, the shim sees the marker and hands that call to the real program instead of looping.
-
 ## Why a model was chosen
 
 Run `/jev-explain` to see the factors behind the last routing decision:
@@ -597,7 +572,7 @@ copy installed elsewhere loses and how `JEV_ROOT` fixes it.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
 
-- `lint`: shellcheck on `install.sh`, `shim/claude` and the CI scripts, and actionlint on the
+- `lint`: shellcheck on `install.sh` and the CI scripts, and actionlint on the
   workflow.
 - `rust`, on Windows (the gating platform, SPEC.md 16), Ubuntu and macOS: format, clippy,
   `cargo test --workspace` (the golden cases, the black-box conformance tests and the xtask tests),

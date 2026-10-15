@@ -448,8 +448,7 @@ loopback fake. `cargo test --workspace` runs:
   `usage-meters` and `parse-env` golden cases in `tests/golden.rs` (the `parse-env` cases call the
   parser directly, not through `load_env`);
 - the Rust-only `tests/check.rs` (the `jev-check` report), `repo.rs` (root and version
-  resolution), `router.rs` (the Jev client's retries and timeouts) and `shim.rs` (macOS and Linux),
-  which runs the Lattis shim `shim/claude` under `/bin/sh`;
+  resolution), and `router.rs` (the Jev client's retries and timeouts);
 - `tests/bundle.rs`, which stages the programs cargo just built with the release packager
   (`xtask::package`, the code behind `cargo xtask package`) and checks the result as a user gets
   it: all seven programs, the root found from `bin/` with no `JEV_ROOT`, the release version,
@@ -600,7 +599,7 @@ A change to `rust/` is ready when all of these pass. CI runs the same commands o
 gating platform (SPEC 16), on Linux and on macOS, in the `rust` job of `.github/workflows/ci.yml`.
 That workflow has these jobs:
 
-- `lint`: shellcheck on `install.sh`, `shim/claude` and `.github/scripts`, and actionlint on the
+- `lint`: shellcheck on `install.sh` and `.github/scripts`, and actionlint on the
   workflow and `.github/actions`;
 - `rust`: the commands below, plus the launcher tests that need `node` run twice, once with it
   (required, so removing `setup-node` fails the build) and once with every `node` taken off PATH

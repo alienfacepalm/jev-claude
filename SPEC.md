@@ -79,7 +79,7 @@ underscore (`first-run` in 11 is `firstrun.rs`, `model-names` in 12.3 is `model_
   `package`, `installer-smoke-test`, run from `rust/`), and the release workflow: the release
   version stays in the root `package.json` (section 2.3). They are never shipped, and no user needs
   a Rust toolchain or Node.js.
-- The installers (`install.sh`, `install.ps1`), the `shim/claude` script, and the Claude Code plugin
+- The installers (`install.sh`, `install.ps1`) and the Claude Code plugin
   are packaging, not behaviour. The installers install the Rust programs from a release archive
   built by `cargo xtask package`, which holds `bin/` (the seven programs), `.claude/skills/` (the
   repository's skills, which run the native programs by name, found on PATH), a `package.json`

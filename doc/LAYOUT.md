@@ -18,7 +18,6 @@ jev-claude/
 ├─ .claude/skills/       # /jev-calibrate, /jev-explain, /jev-legend
 ├─ plugin/  .claude-plugin/   # the jev-installer plugin and its marketplace entry
 ├─ install.sh  install.ps1    # the installers (macOS, Linux, WSL, Git Bash / Windows PowerShell)
-├─ shim/claude           # a POSIX sh shim that routes Lattis's `claude` through jev-claude (not in the release archive; see the README's Lattis section)
 ├─ conformance/          # frozen golden cases, fixtures and the vendored env-file parser (test data)
 ├─ dist/                 # release archives from `cargo xtask package` (git-ignored)
 └─ rust/                 # the implementation
@@ -70,7 +69,7 @@ Windows is the gating platform (SPEC.md 16), so each job that builds or runs a p
 
 | Job | Runs on | Runs |
 | --- | --- | --- |
-| `lint` | Ubuntu | shellcheck on `install.sh`, `shim/claude` and `.github/scripts`, and actionlint (with shellcheck on every `run:` block) on `ci.yml` and `.github/actions` |
+| `lint` | Ubuntu | shellcheck on `install.sh` and `.github/scripts`, and actionlint (with shellcheck on every `run:` block) on `ci.yml` and `.github/actions` |
 | `rust` | Windows, Ubuntu, macOS | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets` with `-D warnings`, `cargo test --workspace` (unit, integration, golden, black-box conformance and xtask tests; Node.js is set up and required, so the npm-stand-in launcher tests run rather than skip), those launcher tests again with `node` taken off `PATH` (Ubuntu and Windows; each must skip with its note), `cargo doc --workspace`, `cargo +1.85 check --workspace` (MSRV), `cargo build --release`, and on Windows a check that the C runtime is statically linked; it also uploads the seven built programs for the `installers` job |
 | `release-targets` | the target's own machine: Windows x64, Ubuntu x64 and arm64, macOS Apple silicon, macOS Intel (`macos-15-intel`) | each published target built for its triple (musl on Linux), checked for static linking, packaged with `cargo xtask package` and installed by the real installer; the same steps as `binaries`, so a target that cannot build, link, package or install is found before a release is tagged |
 | `installers` | Windows, Ubuntu, macOS, and Windows 11 on ARM (experimental, cannot block a release) | `cargo xtask installer-smoke-test --bin-dir ../built` (from `rust/`): packages the `rust` job's build as the release archive and installs it with the real `install.sh` (and `install.ps1`, under both Windows PowerShell and PowerShell 7, on Windows) from a local server, in a throwaway home. The Linux leg installs the glibc-linked test build; the published musl archives are installed by `release-targets`. The ARM leg installs the x64 programs through emulation. On Windows it then runs `.github/scripts/skill-lines.ps1`, which runs the skills' command lines under both PowerShells |
