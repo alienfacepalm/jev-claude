@@ -279,8 +279,13 @@ fn the_settings_file_status_line_runs_through_cmd_and_git_bash() {
     run_status_line(&base, cmd);
     match jev_router::launch::resolve_command("bash", None, None, true) {
         Some(bash) => {
+            // The command line goes in a script file: Rust's argument quoting and the MSYS argument
+            // parser disagree about a command that itself holds double quotes, and Claude Code's own
+            // way of handing it to bash is not what this test is about.
+            let script = base.join("status-line.sh");
+            std::fs::write(&script, &command).unwrap();
             let mut bash = Command::new(bash);
-            bash.args(["-c", &command]);
+            bash.arg(script.to_string_lossy().replace('\\', "/"));
             run_status_line(&base, bash);
         }
         None => eprintln!("note: Git Bash leg skipped: `bash` is not on PATH"),

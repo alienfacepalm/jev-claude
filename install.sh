@@ -236,7 +236,7 @@ find_downloader() {
 # download URL FILE [quiet]: prints the HTTP status ("000" when nothing answered, "error" when wget only
 # says the server refused). A file:// address is copied, for a mirror on disk.
 download() {
-  local url="$1" out="$2" progress="-sS" status=0 code=""
+  local url="$1" out="$2" progress="-sS" status=0 code="" err=""
   case "$url" in
     file://*)
       if cp "${url#file://}" "$out" 2>/dev/null; then printf '200'; else printf '404'; fi
@@ -251,12 +251,21 @@ download() {
     if [ "$status" != 0 ] && [ "$code" = 200 ]; then code=interrupted; fi
     printf '%s' "${code:-000}"
   else
-    wget -q -O "$out" "$url" 2>/dev/null || status=$?
-    case "$status" in
-      0) printf '200' ;;
-      8) printf 'error' ;;
-      *) printf '000' ;;
-    esac
+    # BusyBox wget (Alpine) exits 1 for everything but says what happened on stderr ("server returned
+    # error: HTTP/1.1 404 Not Found", "short read"); GNU wget -q says nothing and exits 8 for a refusal.
+    err="$(wget -q -O "$out" "$url" 2>&1)" || status=$?
+    code="$(printf '%s\n' "$err" | sed -n 's|.*HTTP/[0-9.]* \([0-9][0-9][0-9]\).*|\1|p' | head -n 1)"
+    if [ "$status" = 0 ]; then
+      printf '200'
+    elif [ -n "$code" ]; then
+      printf '%s' "$code"
+    elif printf '%s' "$err" | grep -qiE 'short read|premature|read error|connection closed|timed out'; then
+      printf 'interrupted'
+    elif [ "$status" = 8 ]; then
+      printf 'error'
+    else
+      printf '000'
+    fi
   fi
 }
 
@@ -266,14 +275,20 @@ download_to_stdout() {
 }
 
 # Does anything answer at this address? Any HTTP answer counts; only silence is a network problem.
-# Prints yes, no or unknown (wget cannot always tell a refusal from silence).
+# Prints yes, no or unknown (a wget that says nothing cannot tell a refusal from silence).
 reachable() {
-  local status=0
+  local status=0 err=""
   if [ "$DOWNLOADER" = curl ]; then
     [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -L -I "$1" 2>/dev/null || true)" = 000 ] && echo no || echo yes
   else
-    wget -q --spider -T 20 "$1" 2>/dev/null || status=$?
-    case "$status" in 0 | 8) echo yes ;; *) echo unknown ;; esac
+    err="$(wget -q --spider -T 20 "$1" 2>&1)" || status=$?
+    if [ "$status" = 0 ] || [ "$status" = 8 ] || printf '%s' "$err" | grep -q 'HTTP/[0-9.]* [0-9][0-9][0-9]'; then
+      echo yes
+    elif [ "$status" = 4 ] || printf '%s' "$err" | grep -qiE "can't connect|bad address|connection refused|unreachable|resolve|no route"; then
+      echo no
+    else
+      echo unknown
+    fi
   fi
 }
 

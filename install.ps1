@@ -125,8 +125,19 @@
       # A partial file from the last attempt must not make a plain connection failure look like an interruption.
       Remove-Item -LiteralPath $out -Force -ErrorAction SilentlyContinue
       try {
-        Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $out
-        return 200
+        $response = Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $out -PassThru
+        # Windows PowerShell 5.1 does not complain when the connection closes before the body is whole, so
+        # the length the server announced is compared with what arrived (unless the body was compressed in
+        # transit, when the two differ by design).
+        $announced = 0L
+        if ($response -and $response.Headers -and -not $response.Headers['Content-Encoding']) {
+          [void][long]::TryParse(("$(@($response.Headers['Content-Length'])[0])"), [ref]$announced)
+        }
+        if ($announced -gt 0 -and (Get-Item -LiteralPath $out).Length -ne $announced) {
+          $status = -1
+        } else {
+          return 200
+        }
       } catch {
         $status = Http-Status $_
         if ($status -ge 400 -and $status -lt 500) { return $status }
@@ -334,7 +345,11 @@
     for ($attempt = 1; $attempt -le 5; $attempt++) {
       if (Test-Path -LiteralPath $to) { return "$to already exists" }
       try {
-        Move-Item -LiteralPath $from -Destination $to
+        # A rename, which either happens whole or not at all. (Move-Item can fall back to copying the folder
+        # and deleting the original, which leaves a half-moved install behind when a program in it is running.)
+        $fromFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($from)
+        $toFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($to)
+        [System.IO.Directory]::Move($fromFull, $toFull)
         return $null
       } catch { $problem = $_.Exception.Message }
       if ($attempt -lt 5) { Start-Sleep -Milliseconds (400 * $attempt) }

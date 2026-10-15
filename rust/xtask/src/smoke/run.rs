@@ -219,7 +219,9 @@ fn claude_dir(base: &Path, claude: ClaudeOnPath) -> Result<Option<PathBuf>, Stri
     let broken = claude == ClaudeOnPath::Broken;
     if cfg!(windows) {
         if claude == ClaudeOnPath::Npm {
-            write_file(&dir.join("claude.cmd"), "@echo 2.1.0 (Claude Code)\r\n", false)?;
+            // npm's shim names the JavaScript file it runs; that is how an installer tells it from the native build.
+            let shim = "@ECHO off\r\nREM \"%~dp0\\node_modules\\@anthropic-ai\\claude-code\\cli.js\"\r\n@echo 2.1.0 (Claude Code)\r\n";
+            write_file(&dir.join("claude.cmd"), shim, false)?;
         } else {
             stand_in(&dir, "claude")?;
             if broken {
@@ -576,7 +578,12 @@ pub fn run_collecting(
         if !interrupted && String::from_utf8_lossy(&output.lock().unwrap()).contains(interrupt_at.unwrap_or_default()) {
             interrupted = true;
             // The installer is the leader of a session of its own (see `detach`): its process group is its pid.
-            let _ = Command::new("sh").arg("-c").arg(format!("kill -TERM -- -{}", child.id())).status();
+            // (Three spellings, because sh is dash on Debian, ash on Alpine and bash on macOS, and no one
+            // form of "signal this group" is accepted by all of them.)
+            let id = child.id();
+            let kill =
+                format!("kill -s TERM -- -{id} 2>/dev/null || kill -TERM -- -{id} 2>/dev/null || kill -TERM -{id}");
+            let _ = Command::new("sh").arg("-c").arg(kill).status();
         }
         match child.try_wait() {
             Ok(Some(status)) => break status.code(),
