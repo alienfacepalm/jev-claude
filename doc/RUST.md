@@ -186,8 +186,10 @@ again, and its profile line (marked `# jev-claude (Rust edition)`) is recognised
 duplicated; `--rust` and `--node` (`-Rust` and `-Node` in `install.ps1`) and `JEV_IMPL` are
 accepted and ignored, with an `info` row saying so. This installer does not touch a Node clone. If it finds
 one (the `Old Node edition` row above), it prints how to remove it (`pnpm remove --global
-jev-router`, then delete the clone) and, in step 5, which `jev-claude` comes first on PATH, and
-never deletes anything itself. The new install is in `~/jev-claude-rust`, which is why the two do not collide,
+jev-router`, then delete the clone: `rm -rf` in `install.sh`, `Remove-Item -Recurse -Force` in
+`install.ps1`) and, in step 5, which `jev-claude` comes first on PATH, and never deletes anything
+itself. The README's [Upgrading from the Node edition](../README.md#upgrading-from-the-node-edition)
+has the commands for Bash, PowerShell and the Command Prompt. The new install is in `~/jev-claude-rust`, which is why the two do not collide,
 and both read the same settings file. On Unix their status folders differ (the Node edition used
 `<temp>/jev-claude`), so a saved-model memo of the old edition is not picked up.
 
@@ -327,8 +329,8 @@ Run `cargo install` again after each `git pull` to update the copies.
 
 If you also ran the installer, its `jev-claude` is on `PATH` as well (and so, if you never
 removed it, is the retired Node edition's), and whichever directory comes first on `PATH` wins. To
-see which one runs, use `command -v jev-claude` (Bash) or `Get-Command jev-claude -All`
-(PowerShell). To keep the installed one as the default and still try your build, leave the build
+see which one runs, use `command -v jev-claude` (Bash), `Get-Command jev-claude -All`
+(PowerShell) or `where jev-claude` (Command Prompt). To keep the installed one as the default and still try your build, leave the build
 directory off `PATH` and call it by path, or define a short name:
 
 ```bash
@@ -654,8 +656,8 @@ release with `SHA256SUMS`.
 | The installer says `Claude Code ... does not run` | A `claude` was found but `claude --version` fails. On Alpine it usually needs `apk add libgcc libstdc++ ripgrep` (the installer offers it); otherwise reinstall Claude Code with the command the installer printed, then run the installer again |
 | `[jev] invalid upstream URL (ANTHROPIC_BASE_URL): <value>` | `ANTHROPIC_BASE_URL` is set to something that is not a full `http://` or `https://` address (for example `localhost:4000`). Unset it, or give it a complete URL. The launcher exits before Claude Code starts |
 | The installer says `The checksums differ` | The download is not what the release published (a bad mirror or a damaged transfer). Nothing was installed; run it again, and do not use the file |
-| `jev-claude` is not found after the installer ran | Open a new terminal. If it still is not, check `command -v jev-claude` (Bash) or `Get-Command jev-claude -All` (PowerShell): the install's folder may not be on that shell's PATH (a terminal opened before the install has the old PATH) |
-| `jev-claude` runs but behaves like the old edition, or says `Cannot find module .../bin/jev-claude.mjs` | The retired Node edition's `jev-claude` comes first on PATH. Remove it: `pnpm remove --global jev-router`, then delete the old clone `~/jev-claude`. The installer printed both |
+| `jev-claude` is not found after the installer ran | Open a new terminal. If it still is not, check `command -v jev-claude` (Bash), `Get-Command jev-claude -All` (PowerShell) or `where jev-claude` (Command Prompt): the install's folder may not be on that shell's PATH (a terminal opened before the install has the old PATH) |
+| `jev-claude` runs but behaves like the old edition, or says `Cannot find module .../bin/jev-claude.mjs` | The retired Node edition's `jev-claude` comes first on PATH. Remove it: `pnpm remove --global jev-router`, then delete the old clone `~/jev-claude` (`rm -rf ~/jev-claude`; PowerShell `Remove-Item -Recurse -Force "$HOME\jev-claude"`; Command Prompt `rmdir /s /q "%USERPROFILE%\jev-claude"`). The installer printed both |
 | An installed `/jev-explain`, `/jev-legend` or `/jev-calibrate` says `command not found` | These skills run the native programs by name, so the install's `bin` folder must be on the PATH of the shell Claude Code runs commands in. Open a new terminal after the installer, or add the folder to PATH. Verified with Claude Code on Windows (Git Bash): `claude -p "/jev-legend" --add-dir <install folder>` prints the key |
 | `/jev-explain`, `/jev-legend` or `/jev-calibrate` is missing | The programs are outside the clone and `JEV_ROOT` is unset, so `--add-dir` was not passed. Set `JEV_ROOT` |
 | `jev-check` says `Mode installed` although you run from a clone | Same cause: set `JEV_ROOT` to the clone |

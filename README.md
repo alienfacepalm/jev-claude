@@ -183,16 +183,43 @@ settings in `~/.jev-router.env` stay.
 
 ### Removing
 
-There is no uninstaller; removing it takes a few deletions. Delete `~/jev-claude-rust` (or your
-`JEV_INSTALL_DIR`) and the seven `jev-*` links in `~/.local/bin` (or your `JEV_BIN_DIR`). Delete
-the line the installer added to your shell profile, if there is one: it follows a
-`# jev-claude (Rust edition)` comment. On Windows, remove the install's `bin` entry from your user
-PATH (Settings > System > About > Advanced system settings > Environment Variables). The programs
-also leave a few files you can delete: the `~/.jev-router` folder (`first-run.json`, `update.json`),
-`~/.jev-claude.log` (written only with `JEV_DEBUG`), and the status folder, `jev-claude-<uid>` (on
-Windows `jev-claude`) in your temp directory, or your `JEV_STATUS_DIR`. `~/.jev-router.env` is your
-own file and stays, as does Claude Code. [doc/RUST.md](doc/RUST.md#install-a-release) has the
-details.
+There is no uninstaller; removing it takes a few deletions. In these commands `~` is your home
+folder (`C:\Users\you` on Windows), and the install folder is `~/jev-claude-rust` unless you set
+`JEV_INSTALL_DIR`.
+
+macOS, Linux, WSL, and Git Bash on Windows (Git Bash also has the Windows PATH step below):
+
+```bash
+rm -rf ~/jev-claude-rust                                   # the install (or your JEV_INSTALL_DIR)
+for p in jev-claude jev-statusline jev-explain jev-legend jev-check jev-update-check jev-proxy-host; do
+  if [ -L ~/.local/bin/$p ]; then rm ~/.local/bin/$p; fi   # the links (or your JEV_BIN_DIR); only links, never a file of yours
+done
+```
+
+Then delete the line the installer added to your shell profile, if there is one: it follows a
+`# jev-claude (Rust edition)` comment.
+
+Windows PowerShell:
+
+```powershell
+Remove-Item -Recurse -Force "$HOME\jev-claude-rust"        # the install (or your JEV_INSTALL_DIR)
+```
+
+Windows Command Prompt:
+
+```bat
+rmdir /s /q "%USERPROFILE%\jev-claude-rust"
+```
+
+On Windows there are no links; the installer put the install's `bin` folder on your user PATH
+instead. Remove that entry (Settings > System > About > Advanced system settings > Environment
+Variables > Path), and `%USERPROFILE%\.local\bin` too if you only added it for Claude Code.
+
+The programs also leave a few files you can delete: the `~/.jev-router` folder (`first-run.json`,
+`update.json`), `~/.jev-claude.log` (written only with `JEV_DEBUG`), and the status folder,
+`jev-claude-<uid>` (on Windows `jev-claude`) in your temp directory, or your `JEV_STATUS_DIR`.
+`~/.jev-router.env` is your own file and stays, as does Claude Code.
+[doc/RUST.md](doc/RUST.md#install-a-release) has the details.
 
 ### Upgrading from the Node edition
 
@@ -207,17 +234,32 @@ If you used `--rust` before, there is nothing to remove: the same install line u
 `~/jev-claude-rust` in place, and your shell profile line is kept. `--rust` and `JEV_IMPL` are
 still accepted and ignored, with an info row in the report (`-Rust` on Windows).
 
-Otherwise, remove the old one, so that it cannot be the one that runs:
+Otherwise, remove the old one, so that it cannot be the one that runs. First unlink the old
+command (the same in every shell, with pnpm installed):
+
+```text
+pnpm remove --global jev-router
+```
+
+Then delete the old clone, in the shell you use:
 
 ```bash
-pnpm remove --global jev-router     # unlinks the old jev-claude command
-rm -rf ~/jev-claude                 # the old clone; PowerShell: Remove-Item -Recurse -Force "$HOME\jev-claude"
+rm -rf ~/jev-claude
+```
+
+```powershell
+Remove-Item -Recurse -Force "$HOME\jev-claude"
+```
+
+```bat
+rmdir /s /q "%USERPROFILE%\jev-claude"
 ```
 
 If you linked the old clone some other way, delete that link instead. If you installed pnpm and
 Node.js only for jev-claude, you can remove them too. Until the old
 command is gone, whichever `jev-claude` comes first on your PATH runs: check with `type -a
-jev-claude` (Bash) or `Get-Command jev-claude -All` (PowerShell). When it finds an old Node edition
+jev-claude` (Bash), `Get-Command jev-claude -All` (PowerShell) or `where jev-claude` (Command
+Prompt), which lists every match in PATH order. When it finds an old Node edition
 (a `jev-claude` on your PATH that is a JavaScript file, a script or pnpm shim, or a clone at
 `~/jev-claude`), the installer reports it as a `warn` row, says how to remove it, and in step 5
 which `jev-claude` wins in that shell. A `jev-claude` that reports `Cannot find module
@@ -247,7 +289,8 @@ jev-claude -p "fix the failing test"
 
 By default Claude Code runs on your Claude subscription sign-in. To run it on an Anthropic API key
 instead, billed per token to that key's account, create a key in the
-[Claude Console](https://platform.claude.com) and add it to `~/.jev-router.env`:
+[Claude Console](https://platform.claude.com) and add it to `~/.jev-router.env` (on Windows
+`%USERPROFILE%\.jev-router.env`):
 
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
@@ -555,6 +598,9 @@ cargo run --manifest-path rust/Cargo.toml --release --bin jev-claude -- -p "what
 cargo run --manifest-path rust/Cargo.toml --release --example live_routing   # asks the real Jev about a few sample prompts
 ```
 
+On Windows copy the template with `Copy-Item .env.example .env` (PowerShell) or
+`copy .env.example .env` (Command Prompt); the `cargo` lines are the same in every shell.
+
 The root keeps a `package.json` only as the version file the programs read at run time (SPEC.md
 2.3); it has no scripts and nothing installs it. [doc/LAYOUT.md](doc/LAYOUT.md) says what lives
 where, and [doc/RUST.md](doc/RUST.md) is the full guide: building, putting your build on PATH
@@ -678,6 +724,10 @@ For a pull request:
    from `rust/`) and include tests for non-trivial behaviour changes. A change to behaviour
    changes [`SPEC.md`](SPEC.md), the golden cases in `conformance/cases/` (frozen fixtures, edited
    by hand) and the Rust code together.
+5. Keep the docs right for every system. Any instruction that runs a command gives it for each
+   shell it applies to: Bash (macOS, Linux, WSL, Git Bash), Windows PowerShell and the Windows
+   Command Prompt, with the Windows paths (`%USERPROFILE%`, `\`) where `~` and `/` would not work.
+   A change to what an installer prints or does is a change to those instructions.
 
 Never commit API keys or other secrets: copy `.env.example` to `.env` (which git ignores) for local
 settings. All contributions are reviewed, and only the repository owner merges pull requests.

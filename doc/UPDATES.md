@@ -46,7 +46,7 @@ A build from source (a git clone you develop in) updates the way any clone does:
 An install made with a release up to v0.11.0 as the Node edition (the default then: a clone in
 `~/jev-claude`) is not updated by this: running the installer installs the native programs beside
 it, in a different folder. See [Upgrading from the Node edition](../README.md#upgrading-from-the-node-edition)
-in the README for what to remove. An earlier `--rust` install (native programs in
+in the README for what to remove (with the commands for Bash, PowerShell and the Command Prompt). An earlier `--rust` install (native programs in
 `~/jev-claude-rust`) is updated in place by the same line.
 
 ## The check (planned)
