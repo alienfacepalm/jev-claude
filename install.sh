@@ -174,7 +174,7 @@ free_name() {
 sweep_stale_folders() {
   local d rest pid
   for d in "$DIR".new.* "$DIR".old.*; do
-    [ -d "$d" ] && [ ! -L "$d" ] || continue
+    if [ ! -d "$d" ] || [ -L "$d" ]; then continue; fi
     rest="${d#"$DIR".???.}"
     case "$rest" in '' | *[!0-9.]* | .* | *. | *..*) continue ;; esac
     pid="${rest%%.*}"
@@ -201,7 +201,7 @@ absolute_path() {
   while [ "${#p}" -gt 1 ] && [ "${p%/}" != "$p" ]; do p="${p%/}"; done
   case "${p##*/}" in
     . | ..)
-      resolved="$(cd "$p" 2>/dev/null && pwd || true)"
+      resolved="$( (cd "$p" 2>/dev/null && pwd) || true)"
       [ -z "$resolved" ] || p="$resolved"
       ;;
   esac

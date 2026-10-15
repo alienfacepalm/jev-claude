@@ -85,7 +85,7 @@ fn a_200_catalog_is_relayed_recorded_for_calibration_and_becomes_the_jev_menu() 
         let forwarded = upstream.request(0);
         assert_eq!(forwarded.method, "GET");
         assert_eq!(forwarded.url, "/v1/models?limit=1000");
-        assert!(forwarded.body.is_empty());
+        assert_eq!(forwarded.body, b"");
         assert_forwarded_headers(&res.sent, &forwarded, &upstream.host(), b"", true);
 
         let menu = menu("catalog");

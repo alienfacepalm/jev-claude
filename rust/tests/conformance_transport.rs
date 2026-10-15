@@ -169,7 +169,7 @@ fn head_is_answered_by_the_proxy_itself() {
         let Setup { jev: _jev, upstream, proxy } = setup(ctx, Opts::default());
         let res = send(proxy.port, "HEAD", "/", &[], None);
         assert_eq!(res.status, 200);
-        assert!(res.body.is_empty());
+        assert_eq!(res.body, b"");
         let deep = send(proxy.port, "HEAD", "/v1/messages?beta=true", &[], None);
         assert_eq!(deep.status, 200);
         assert_eq!(upstream.requests().len(), 0, "nothing reached the upstream");

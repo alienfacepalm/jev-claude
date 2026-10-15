@@ -2,11 +2,14 @@
 //! mapping, prerequisites offered through a package manager, a terminal to ask on, and what only
 //! Windows has (the user PATH in the registry, a locked folder, stale folders, other CPUs).
 
+#[cfg(unix)]
+use super::run::steering_variables;
 use super::run::{
     Installer, PathSpec, Run, Setup, Shell, create_dir_all, find_on_path, have_script, logging_stub, remove_dir_all,
-    steering_variables, write_file,
+    write_file,
 };
 use super::{Case, Ctx};
+#[cfg(unix)]
 use crate::package::PROGRAMS;
 use std::fmt::Write as _;
 use std::path::Path;
@@ -46,6 +49,7 @@ fn read(path: &Path) -> String {
 
 /// The installer's links into `~/.local/bin`: its own are replaced, anyone else's are left alone,
 /// and a program run through a link finds its root.
+#[cfg_attr(not(unix), allow(clippy::unnecessary_wraps))]
 fn links(ctx: &mut Ctx, e: &Installer) -> Result<(), String> {
     #[cfg(unix)]
     {
