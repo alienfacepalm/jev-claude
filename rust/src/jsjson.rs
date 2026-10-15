@@ -1,4 +1,4 @@
-//! JSON with JavaScript semantics (SPEC 3.3): `JSON.parse` and `JSON.stringify` as Node runs
+//! JSON with JavaScript semantics (SPEC 3.3): `JSON.parse` and `JSON.stringify` as JavaScript runs
 //! them, including object key order (array-index keys first), IEEE-754 numbers printed the way
 //! `Number.prototype.toString` prints them, lone surrogates that round-trip, and `undefined`.
 

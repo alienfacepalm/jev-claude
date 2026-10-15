@@ -1,4 +1,4 @@
-//! What each part of the status line means (SPEC 13; `node/src/legend.mjs`).
+//! What each part of the status line means (SPEC 13).
 
 use crate::icons::Icons;
 

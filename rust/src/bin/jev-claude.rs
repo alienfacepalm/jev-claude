@@ -1,4 +1,4 @@
-//! The launcher (SPEC 10; `node/bin/jev-claude.mjs`).
+//! The launcher (SPEC 10).
 
 use jev_router::config::AUTO_MODEL;
 use jev_router::env::{apply_child_env, load_process_env};
@@ -49,7 +49,7 @@ fn eprint(text: &str) {
     let _ = std::io::stderr().write_all(text.as_bytes());
 }
 
-/// The `--settings` pair that installs this port's status line, or nothing (10.1).
+/// The `--settings` pair that installs this edition's status line, or nothing (10.1).
 fn status_line_args() -> Vec<String> {
     if envx::truthy("JEV_NO_STATUSLINE") {
         return vec![];
@@ -139,7 +139,7 @@ async fn hangup() -> Option<i32> {
     std::future::pending().await
 }
 
-/// Sends `signal` to the process `pid`, as Node's `child.kill(signal)` does.
+/// Sends `signal` to the process `pid`, as SPEC 10 requires.
 #[cfg(unix)]
 #[allow(unsafe_code)] // kill(2) through a one-line FFI declaration, as osdirs declares getuid.
 fn forward_signal(pid: u32, signal: i32) {
@@ -221,6 +221,11 @@ async fn main() {
         let inherited = envx::get("ANTHROPIC_BASE_URL").filter(|u| !u.is_empty());
         let proxy = match start_proxy(ProxyOptions { upstream_url: inherited.clone(), ..Default::default() }).await {
             Ok(p) => p,
+            // A malformed ANTHROPIC_BASE_URL: say so and stop before Claude Code starts.
+            Err(e) if e.kind() == std::io::ErrorKind::InvalidInput => {
+                eprint(&format!("[jev] {e}\n"));
+                std::process::exit(1);
+            }
             Err(e) => {
                 eprint(&format!("[jev] could not start the proxy: {e}\n"));
                 std::process::exit(1);
@@ -292,7 +297,7 @@ async fn main() {
             #[cfg(not(unix))]
             {
                 let _ = signal;
-                // Node's child.kill() is TerminateProcess on Windows.
+                // SPEC 10: killing the child is TerminateProcess on Windows.
                 let _ = child.start_kill();
             }
             match tokio::time::timeout(std::time::Duration::from_secs(5), child.wait()).await {

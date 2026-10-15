@@ -1,0 +1,50 @@
+{
+  "$comment": [
+    "Prompts with the tier each should land on, for the calibrate example:",
+    "  cargo run --manifest-path rust/Cargo.toml --release --example calibrate -- --runs 2",
+    "The labels are judgements, not ground truth: each follows Anthropic's positioning of the models and the",
+    "published per-task benchmarks noted in rust/src/config.rs. Revisit them when a new model changes what a tier",
+    "is good at, and say why in the commit. Keep both sides of every boundary covered, since a guidance change",
+    "that pulls one tier's work in tends to push its neighbour's out."
+  ],
+  "groups": [
+    {
+      "want": "sonnet",
+      "why": "Well-scoped work, documents and knowledge work.",
+      "prompts": [
+        "add a unit test for the existing formatDate helper",
+        "fix the off-by-one in pagination; the bug is the < on line 40 of src/page.ts",
+        "write a spec.md for adding multi-tenant support to our API",
+        "turn these meeting notes into a polished project update doc",
+        "review this PR for style issues"
+      ]
+    },
+    {
+      "want": "opus",
+      "why": "Open-ended or multi-step coding, judgement, security.",
+      "prompts": [
+        "users intermittently get logged out after deploy, figure out why",
+        "refactor the auth middleware across the api and worker modules",
+        "our tests fail intermittently in CI but never locally; find and fix the cause",
+        "add rate limiting to the public API without breaking existing clients",
+        "audit our login endpoint for security vulnerabilities"
+      ]
+    },
+    {
+      "want": "haiku",
+      "why": "Trivial and mechanical.",
+      "prompts": ["fix the typo 'recieve' in README.md", "rename the variable tmp to total in src/sum.js"]
+    },
+    {
+      "want": "fable",
+      "why": "Long-horizon work, problems that beat a strong model, adversarial review of plans.",
+      "prompts": [
+        "migrate the entire monorepo from webpack to vite",
+        "implement the full payment reconciliation service described in spec.md, end to end",
+        "this race condition has beaten two previous attempts; dig through git history and find the real cause",
+        "build a financial model spreadsheet and a slide deck from the Q3 data in data/",
+        "red-team our OAuth migration plan in docs/plan.md and poke holes in the rollout"
+      ]
+    }
+  ]
+}

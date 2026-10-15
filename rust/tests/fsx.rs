@@ -1,4 +1,4 @@
-//! Replacing a file (SPEC 3.11; `node/test/status.test.mjs`): the rename retries while another
+//! Replacing a file (SPEC 3.11): the rename retries while another
 //! process holds the target open, and a rename that never lands removes the temporary file.
 
 mod common;

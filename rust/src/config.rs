@@ -1,4 +1,4 @@
-//! Every routing knob (SPEC 4; `node/src/config.mjs`). Prose sent to Jev is copied byte for byte.
+//! Every routing knob (SPEC 4). Prose sent to Jev is copied byte for byte.
 
 use crate::envx::Env;
 use crate::jsjson::{Object, Value};
@@ -260,7 +260,7 @@ pub struct Model {
 }
 
 impl Model {
-    /// The model as the JavaScript object Node builds (absent fields left out).
+    /// The model as the JavaScript object SPEC 4 describes (absent fields left out).
     pub fn to_value(&self) -> Value {
         let mut o = Object::new();
         o.insert("id", Value::String(self.id.clone()));

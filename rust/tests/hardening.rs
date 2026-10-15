@@ -1,7 +1,7 @@
-//! Port of node/test/hardening.test.mjs.
+//! Hardening: what the programs refuse, strip and survive (SPEC 3, 7, 10, 20).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -411,7 +411,12 @@ fn prefers_claudes_cmd_shim_over_its_ps1() {
     let file = file.unwrap();
     assert_eq!(shim_script(&file), Some(script.clone()));
     let spec = launch_spec(&file);
-    // Node uses its own executable; this port runs the script with `node` from PATH.
+    if !have_node("prefers_claudes_cmd_shim_over_its_ps1") {
+        // Without node the shim goes the cmd.exe way instead (SPEC 10.2).
+        assert!(spec.shim.is_some(), "{spec:?}");
+        return;
+    }
+    // An npm shim's script runs with `node` from PATH (SPEC 10.2).
     let node = resolve_command("node", None, None, cfg!(windows)).expect("node on PATH");
     assert_eq!(spec, LaunchSpec { command: node, prefix: vec![script.to_string_lossy().into_owned()], shim: None });
     assert_eq!(run(&spec, &awkward()), awkward_value());
@@ -424,10 +429,13 @@ fn a_powershell_shim_is_run_past_the_default_execution_policy() {
     assert_eq!(spec.prefix[..4], ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
 }
 
-/// "a shim with no script to run directly is quoted for cmd.exe" (Windows only, as in Node)
+/// "a shim with no script to run directly is quoted for cmd.exe" (Windows only)
 #[cfg(windows)]
 #[test]
 fn a_shim_with_no_script_to_run_directly_is_quoted_for_cmd() {
+    if !have_node("a_shim_with_no_script_to_run_directly_is_quoted_for_cmd") {
+        return;
+    }
     let (dir, _) = shim_dir("opaque", false);
     let spec = launch_spec(&dir.join("opaque.cmd"));
     assert!(spec.shim.is_some(), "falls back to cmd.exe");
@@ -463,4 +471,244 @@ fn jev_dump_1_writes_owner_only_dumps_into_the_status_directory() {
     for f in [first, second] {
         std::fs::remove_file(f).unwrap();
     }
+}
+
+/// "an upstream URL that is not http(s) is refused at startup"
+#[tokio::test]
+async fn an_upstream_url_that_is_not_http_is_refused_at_startup() {
+    isolate_status();
+    for upstream in ["api.anthropic.com", "localhost:4000", "not a url", "ftp://example.com"] {
+        let started = start_proxy(ProxyOptions {
+            upstream_url: Some(upstream.into()),
+            route: Some(sure(HAIKU)),
+            ..Default::default()
+        })
+        .await;
+        match started {
+            Ok(proxy) => panic!("{upstream:?} was accepted and the proxy listens on {}", proxy.port),
+            Err(e) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::InvalidInput, "{upstream:?}: {e}");
+                assert_eq!(e.to_string(), format!("invalid upstream URL (ANTHROPIC_BASE_URL): {upstream}"));
+            }
+        }
+    }
+}
+
+/// A scratch home for running a built program: HOME, USERPROFILE and the status directory point
+/// inside it, Jev's address is a closed loopback port (so a prewarm never leaves the machine), and
+/// the variables that change what the programs print are removed.
+fn scratch_program(program: &str, home: &std::path::Path) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    command
+        .current_dir(home)
+        .env("HOME", home)
+        .env("USERPROFILE", home)
+        .env("JEV_STATUS_DIR", home.join("status"))
+        .env("TYPESAFE_BASE_URL", "http://127.0.0.1:9")
+        .env_remove("JEV_DEBUG")
+        .env_remove("JEV_DUMP")
+        .env_remove("ANTHROPIC_BASE_URL")
+        .stdin(std::process::Stdio::null());
+    command
+}
+
+/// Waits for a child with piped output; kills it and fails the test if it is still running after
+/// `limit` (a proxy that wrongly started would otherwise hold the test forever).
+fn output_within(mut child: std::process::Child, limit: Duration) -> std::process::Output {
+    let started = std::time::Instant::now();
+    while child.try_wait().unwrap().is_none() {
+        if started.elapsed() > limit {
+            let _ = child.kill();
+            let out = child.wait_with_output().unwrap();
+            panic!(
+                "still running after {limit:?}; stdout: {:?}, stderr: {:?}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr)
+            );
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    child.wait_with_output().unwrap()
+}
+
+/// "the proxy host exits 1 with a [jev] message and no port for a malformed ANTHROPIC_BASE_URL"
+#[test]
+fn the_proxy_host_exits_1_with_a_jev_message_and_no_port_for_a_malformed_base_url() {
+    let home = temp_dir("jev-proxy-host-home-");
+    let child = scratch_program(env!("CARGO_BIN_EXE_jev-proxy-host"), &home)
+        .env("ANTHROPIC_BASE_URL", "api.anthropic.com")
+        .env("JEV_API_KEY", "x")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let out = output_within(child, Duration::from_secs(10));
+    assert_eq!(out.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8_lossy(&out.stderr),
+        "[jev] invalid upstream URL (ANTHROPIC_BASE_URL): api.anthropic.com\n"
+    );
+    assert!(!String::from_utf8_lossy(&out.stdout).contains("PORT="), "no port is printed");
+}
+
+/// Reads one HTTP request head and its content-length body from a raw connection.
+async fn read_request(stream: &mut tokio::net::TcpStream) {
+    use tokio::io::AsyncReadExt;
+    let mut got = Vec::new();
+    let mut buf = [0u8; 4096];
+    let head_end = loop {
+        let n = stream.read(&mut buf).await.unwrap();
+        assert!(n > 0, "the request ended before its head");
+        got.extend_from_slice(&buf[..n]);
+        if let Some(i) = got.windows(4).position(|w| w == b"\r\n\r\n") {
+            break i + 4;
+        }
+    };
+    let head = String::from_utf8_lossy(&got[..head_end]).to_ascii_lowercase();
+    let length: usize =
+        head.lines().find_map(|l| l.strip_prefix("content-length:")).map_or(0, |v| v.trim().parse().unwrap());
+    while got.len() < head_end + length {
+        let n = stream.read(&mut buf).await.unwrap();
+        assert!(n > 0, "the request ended before its body");
+        got.extend_from_slice(&buf[..n]);
+    }
+}
+
+/// "a client that leaves a silent, close-delimited stream hangs up on the upstream" (SPEC 7.2 step 7)
+#[tokio::test]
+async fn a_client_that_leaves_a_silent_close_delimited_stream_hangs_up_on_the_upstream() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    isolate_status();
+    let heads = [
+        ("connection: close", "HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\nconnection: close\r\n\r\n"),
+        ("no framing", "HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\n\r\n"),
+    ];
+    for (framing, head) in heads {
+        let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let (hung_up_tx, hung_up_rx) = tokio::sync::oneshot::channel::<std::time::Instant>();
+        tokio::spawn(async move {
+            let (mut up, _) = listener.accept().await.unwrap();
+            read_request(&mut up).await;
+            // One event, framed only by the connection closing, then silence.
+            up.write_all(head.as_bytes()).await.unwrap();
+            up.write_all(b"data: {\"n\":0}\n\n").await.unwrap();
+            up.flush().await.unwrap();
+            let mut buf = [0u8; 1024];
+            loop {
+                match up.read(&mut buf).await {
+                    Ok(0) | Err(_) => break,
+                    Ok(_) => {}
+                }
+            }
+            let _ = hung_up_tx.send(std::time::Instant::now());
+        });
+        let proxy = start_proxy(ProxyOptions {
+            upstream_url: Some(format!("http://127.0.0.1:{port}")),
+            route: Some(sure(HAIKU)),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+        let mut client = tokio::net::TcpStream::connect(("127.0.0.1", proxy.port)).await.unwrap();
+        let request = format!(
+            "POST /v1/messages HTTP/1.1\r\nhost: 127.0.0.1\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{GO}",
+            GO.len()
+        );
+        client.write_all(request.as_bytes()).await.unwrap();
+        let mut seen = Vec::new();
+        let mut buf = [0u8; 4096];
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while !String::from_utf8_lossy(&seen).contains("data:") {
+                let n = client.read(&mut buf).await.unwrap();
+                assert!(n > 0, "{framing}: the proxy closed before relaying the event");
+                seen.extend_from_slice(&buf[..n]);
+            }
+        })
+        .await
+        .unwrap_or_else(|_| panic!("{framing}: the event never reached the client"));
+        drop(client); // Claude Code goes away while the upstream is silent.
+        let left = std::time::Instant::now();
+
+        let hung_up_at = tokio::time::timeout(Duration::from_secs(10), hung_up_rx)
+            .await
+            .unwrap_or_else(|_| panic!("the proxy never hung up on the upstream (framing: {framing})"))
+            .unwrap();
+        assert!(
+            hung_up_at.saturating_duration_since(left) < Duration::from_millis(1500),
+            "{framing}: hung up {:?} after the client left",
+            hung_up_at.saturating_duration_since(left)
+        );
+    }
+}
+
+/// "a client reset prints nothing on the terminal and the proxy keeps serving"
+// jev-proxy-host's stderr is Claude Code's terminal, so a client resetting its connection (SO_LINGER
+// 0) must not print anything there, and the next request must still be served.
+#[test]
+fn a_client_reset_prints_nothing_on_the_terminal_and_the_proxy_keeps_serving() {
+    use std::io::{BufRead, Read, Write};
+    let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(1).enable_all().build().unwrap();
+    let (upstream, _seen) =
+        runtime.block_on(serve(Arc::new(|_: &Seen| Reply::json(200, r#"{"type":"message","id":"msg_1"}"#))));
+    let home = temp_dir("jev-proxy-host-home-");
+    let mut child = scratch_program(env!("CARGO_BIN_EXE_jev-proxy-host"), &home)
+        .env("ANTHROPIC_BASE_URL", &upstream)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut first_line = String::new();
+    std::io::BufReader::new(child.stdout.take().unwrap()).read_line(&mut first_line).unwrap();
+    let port: u16 = first_line.trim().strip_prefix("PORT=").expect("PORT= line").parse().unwrap();
+
+    let get = |path: &str| {
+        let mut stream = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+        write!(stream, "GET {path} HTTP/1.1\r\nHost: x\r\nConnection: keep-alive\r\n\r\n").unwrap();
+        let mut got = Vec::new();
+        let mut buf = [0u8; 4096];
+        while !String::from_utf8_lossy(&got).contains("\"msg_1\"}") {
+            let n = stream.read(&mut buf).unwrap();
+            assert!(n > 0, "the proxy closed the connection: {}", String::from_utf8_lossy(&got));
+            got.extend_from_slice(&buf[..n]);
+        }
+        (stream, String::from_utf8_lossy(&got).into_owned())
+    };
+    let (stream, reply) = get("/x");
+    assert!(reply.starts_with("HTTP/1.1 200"), "{reply}");
+    std::thread::sleep(Duration::from_millis(200));
+    // Close with SO_LINGER 0, which sends an RST instead of a FIN.
+    runtime.block_on(async move {
+        stream.set_nonblocking(true).unwrap();
+        let stream = tokio::net::TcpStream::from_std(stream).unwrap();
+        stream.set_zero_linger().unwrap();
+        drop(stream);
+    });
+    std::thread::sleep(Duration::from_millis(200));
+    let (_, reply) = get("/y");
+    assert!(reply.starts_with("HTTP/1.1 200"), "the proxy still serves after the reset: {reply}");
+
+    child.kill().unwrap();
+    child.wait().unwrap();
+    let mut stderr = String::new();
+    child.stderr.take().unwrap().read_to_string(&mut stderr).unwrap();
+    assert_eq!(stderr, "", "nothing reached the terminal (Claude Code's stderr)");
+}
+
+/// "case folding in file extensions is ASCII-only" (SPEC 3.1): ".ps1" matches in any ASCII case,
+/// but the long s (U+017F), which Unicode folds to "s", does not make a .ps1.
+#[test]
+fn case_folding_in_file_extensions_is_ascii_only() {
+    let long_s = std::path::Path::new("C:\\bin\\claude.p\u{17f}1");
+    assert_eq!(launch_spec(long_s), LaunchSpec { command: long_s.to_path_buf(), prefix: vec![], shim: None });
+    let spec = launch_spec(std::path::Path::new("C:\\bin\\claude.PS1"));
+    assert_eq!(spec.command, std::path::PathBuf::from("powershell.exe"));
+    assert_eq!(spec.prefix, ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\bin\\claude.PS1"]);
+    assert!(spec.shim.is_none());
+    // The default PATHEXT spells .CMD in upper case: it is still a shim (here with no script behind
+    // it, so it goes the cmd.exe way).
+    let spec = launch_spec(std::path::Path::new("C:\\nonexistent\\opaque.CMD"));
+    assert!(spec.shim.is_some(), "an upper-case .CMD is still treated as a shim: {spec:?}");
 }

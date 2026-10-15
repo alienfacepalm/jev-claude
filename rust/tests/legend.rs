@@ -1,7 +1,7 @@
-//! Port of node/test/legend.test.mjs.
+//! What each part of the status line means (SPEC 13).
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 use jev_router::envx::map;

@@ -574,7 +574,7 @@ fn is_decimal_literal(t: &str) -> bool {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Regex helpers for patterns that use lookahead in Node (3.1)
+// Regex helpers for patterns that use lookahead in JavaScript (SPEC 3.1)
 
 /// Searches `re` (a pattern whose JavaScript form ended in `(?![-\w])`) from the start of
 /// `text`, restarting at a failed match's start + 1, and returns the first passing match.

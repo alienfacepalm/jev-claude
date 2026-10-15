@@ -1,5 +1,6 @@
-//! Golden cases (SPEC 16.2): every file in `conformance/cases`, generated from the Node
-//! functions themselves, checked against this implementation.
+//! Golden cases (SPEC 16.2): every file in `conformance/cases`, frozen fixtures owned by
+//! `SPEC.md` (generated once from the Node edition, tag v0.11.0), checked against this
+//! implementation.
 
 mod common;
 
@@ -337,6 +338,39 @@ fn parse_env() {
     });
 }
 
+/// Every parse-env case, written to the user's `~/.jev-router.env` and loaded through
+/// `env::load_env`'s real file path (SPEC 9.1), yields the expected keys minus blank values: a
+/// blank line in a copied `.env.example` must not hide a key set elsewhere. (A port of the retired
+/// Node edition's `env-cases.test.mjs`, tag v0.11.0.)
+#[test]
+fn every_parse_env_golden_case_loads_the_same_keys_from_the_users_jev_router_env() {
+    let cases = load_cases("parse-env");
+    assert!(!cases.is_empty());
+    let mut failures = Vec::new();
+    for case in &cases {
+        let home = temp_dir("jev-env-cases-home-");
+        let cwd = temp_dir("jev-env-cases-cwd-");
+        let text = case.input.get("text").to_js_string().to_string_lossy();
+        std::fs::write(home.join(".jev-router.env"), text.as_bytes()).unwrap();
+        let mut got = EnvMap::new();
+        jev_router::env::load_env(&cwd, &home, &mut got);
+        let Value::Object(expected) = &case.expected else {
+            panic!("parse-env / {}: expected an object, got {:?}", case.name, case.expected)
+        };
+        let want: EnvMap = expected
+            .iter()
+            .filter_map(|(k, v)| match v {
+                Value::String(s) if !s.to_string_lossy().is_empty() => Some((k.to_string_lossy(), s.to_string_lossy())),
+                _ => None,
+            })
+            .collect();
+        if got != want {
+            failures.push(format!("parse-env / {}: got {got:?}, want {want:?}", case.name));
+        }
+    }
+    assert!(failures.is_empty(), "{} of {} cases failed:\n{}", failures.len(), cases.len(), failures.join("\n"));
+}
+
 #[test]
 fn json_stringify_and_parse() {
     check_cases("stringify", &mut |i| {
@@ -385,7 +419,7 @@ fn math() {
 }
 
 #[test]
-fn config_tables_match_node() {
+fn config_tables_match_spec() {
     // Every tier id and family in one place, as `jev-check` prints them.
     let ids: Vec<&str> = config::TIERS.iter().map(|t| t.id).collect();
     assert_eq!(ids, ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5", "claude-fable-5-1"]);

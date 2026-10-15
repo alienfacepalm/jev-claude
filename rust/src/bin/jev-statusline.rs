@@ -8,7 +8,7 @@ fn main() {
     let line = match jev_router::statusline::render(&input, &jev_router::icons::icons()) {
         Ok(line) => line,
         Err(message) => {
-            // Node throws here: an error on stderr, nothing on stdout, exit 1.
+            // SPEC 20: an error on stderr, nothing on stdout, exit 1.
             let _ = writeln!(std::io::stderr(), "jev-statusline: {message}");
             std::process::exit(1);
         }

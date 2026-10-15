@@ -1,4 +1,8 @@
 # Applies to every cargo command run inside rust/.
+[alias]
+# The developer and CI tasks: `cargo xtask bump-version`, `package`, `installer-smoke-test`.
+xtask = "run --package xtask --"
+
 [build]
 # `cargo doc` fails on any rustdoc warning (broken intra-doc links, bad code blocks), so the
 # documentation gate is the same command on every shell and in CI.

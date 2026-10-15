@@ -1,4 +1,4 @@
-//! The first-run setup offer (SPEC 11; `node/src/first-run.mjs`).
+//! The first-run setup offer (SPEC 11).
 
 use crate::jsjson::{self, Object, Value};
 use crate::jsstr::trim_str;

@@ -11,6 +11,13 @@ publish = false
 name = "jev_router"
 path = "src/lib.rs"
 
+# The product crate sits at the root of the workspace; xtask holds the developer and CI tasks
+# (`cargo xtask ...`). Plain `cargo build` and `cargo test` mean the product alone;
+# `cargo test --workspace` runs the xtask tests too.
+[workspace]
+members = [".", "xtask"]
+default-members = ["."]
+
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util", "time", "macros", "sync", "signal", "process"] }
 hyper = { version = "1", features = ["http1", "server", "client"] }
@@ -21,6 +28,10 @@ tokio-rustls = { version = "0.26", default-features = false, features = ["ring",
 webpki-roots = "1"
 sha1 = "0.10"
 regex = "1"
+
+[dev-dependencies]
+# tests/bundle.rs stages the programs this crate builds with the release packager.
+xtask = { path = "xtask" }
 
 # The lint policy, picked up by every `cargo build`, `cargo clippy` and `cargo doc`. CI runs
 # `cargo clippy --all-targets -- -D warnings`, so each warning here fails the build.
@@ -55,8 +66,9 @@ return_self_not_must_use = "allow"
 # than a generic "# Errors" heading would.
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
-# Functions and local names follow the Node source line by line (SPEC traceability), so a long
-# Node function stays one long Rust function and keeps Node's short names.
+# Functions and local names follow SPEC.md step by step (traceability to the specification, which
+# was written from the retired Node edition), so a long specified function stays one long Rust
+# function and keeps its short names.
 too_many_lines = "allow"
 similar_names = "allow"
 many_single_char_names = "allow"

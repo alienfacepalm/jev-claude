@@ -1,4 +1,4 @@
-//! Node's `os.homedir()` and `os.tmpdir()` (SPEC 3.8). Platform helpers such as
+//! The rules of JavaScript's `os.homedir()` and `os.tmpdir()` (SPEC 3.8). Platform helpers such as
 //! `std::env::temp_dir` follow different rules and are not used.
 
 use crate::envx::{Env, ProcessEnv};
@@ -34,7 +34,7 @@ pub fn temp_dir_in(env: &dyn Env) -> PathBuf {
             .or_else(|| non_empty(env, "TMP"))
             .or_else(|| non_empty(env, "SystemRoot").map(|r| format!("{r}\\temp")))
             .or_else(|| non_empty(env, "windir").map(|r| format!("{r}\\temp")))
-            // Node concatenates the missing value: `undefined\temp`.
+            // SPEC 3.8 concatenates the missing value: `undefined\temp`.
             .unwrap_or_else(|| "undefined\\temp".to_string());
         let drive_root = path.len() == 3 && path.as_bytes()[1] == b':' && path.ends_with('\\');
         if path.len() > 1 && path.ends_with('\\') && !drive_root {
@@ -57,7 +57,7 @@ pub fn temp_dir() -> PathBuf {
     temp_dir_in(&ProcessEnv)
 }
 
-/// Removes the `\\?\` prefix `canonicalize` adds on Windows, so paths print as Node prints them.
+/// Removes the `\\?\` prefix `canonicalize` adds on Windows, so paths print as SPEC 3.8 has them.
 pub fn simplify(path: PathBuf) -> PathBuf {
     let s = path.to_string_lossy();
     if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
@@ -106,14 +106,20 @@ fn os_profile_dir() -> Option<PathBuf> {
     }
 }
 
+/// The real user id (getuid(2)), for the per-user status directory and the passwd lookup.
 #[cfg(unix)]
 #[allow(unsafe_code)] // getuid(2) FFI: the standard library does not expose the real user id.
-fn os_profile_dir() -> Option<PathBuf> {
+pub fn real_uid() -> u32 {
     unsafe extern "C" {
         fn getuid() -> u32;
     }
     // SAFETY: getuid has no preconditions and cannot fail.
-    let uid = unsafe { getuid() };
+    unsafe { getuid() }
+}
+
+#[cfg(unix)]
+fn os_profile_dir() -> Option<PathBuf> {
+    let uid = real_uid();
     let passwd = std::fs::read_to_string("/etc/passwd").ok()?;
     passwd.lines().find_map(|line| {
         let f: Vec<&str> = line.split(':').collect();
@@ -133,20 +139,20 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
-    fn windows_temp_follows_node() {
+    fn windows_temp_follows_spec() {
         assert_eq!(temp_dir_in(&map(&[("TEMP", r"C:\t\"), ("TMP", r"D:\x")])), PathBuf::from(r"C:\t"));
         assert_eq!(temp_dir_in(&map(&[("TEMP", ""), ("TMP", r"D:\x")])), PathBuf::from(r"D:\x"), "empty is unset");
         assert_eq!(temp_dir_in(&map(&[("TEMP", r"C:\")])), PathBuf::from(r"C:\"), "a drive root keeps its slash");
         assert_eq!(temp_dir_in(&map(&[("SystemRoot", r"C:\Windows")])), PathBuf::from(r"C:\Windows\temp"));
         assert_eq!(temp_dir_in(&map(&[("windir", r"C:\W")])), PathBuf::from(r"C:\W\temp"));
-        assert_eq!(temp_dir_in(&map(&[])), PathBuf::from(r"undefined\temp"), "Node's literal fallback");
+        assert_eq!(temp_dir_in(&map(&[])), PathBuf::from(r"undefined\temp"), "SPEC 3.8's literal fallback");
         assert_eq!(home_dir_in(&map(&[("USERPROFILE", r"C:\Users\u")])), PathBuf::from(r"C:\Users\u"));
         assert!(!home_dir_in(&map(&[("USERPROFILE", "")])).as_os_str().is_empty(), "the profile directory");
     }
 
     #[cfg(unix)]
     #[test]
-    fn unix_temp_follows_node() {
+    fn unix_temp_follows_spec() {
         assert_eq!(temp_dir_in(&map(&[("TMPDIR", "/x/"), ("TMP", "/y")])), PathBuf::from("/x"));
         assert_eq!(temp_dir_in(&map(&[("TMPDIR", ""), ("TMP", "/y")])), PathBuf::from("/y"));
         assert_eq!(temp_dir_in(&map(&[("TEMP", "/")])), PathBuf::from("/"));

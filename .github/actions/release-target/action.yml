@@ -1,0 +1,96 @@
+# One published release target, built, checked and installed exactly as it ships: the programs are
+# built for the target's triple, checked for static linking (musl on Linux, the C runtime on
+# Windows), packaged as the release archive in dist/, and installed by the real installer. Used by
+# the `release-targets` job on every push and pull request (so a target that fails to build, link,
+# package or install is found before a release is tagged) and by the `binaries` job, which builds
+# the archives that are published. Run it after actions/checkout; paths are relative to the
+# repository root.
+name: Release target
+description: Build, check, package and install one release target.
+inputs:
+  target:
+    description: The release platform name, as in the archive name (windows-x64, linux-x64, ...).
+    required: true
+  triple:
+    description: The Rust target triple it is built for.
+    required: true
+runs:
+  using: composite
+  steps:
+    # The target triple is added to the stable toolchain; xtask itself runs on the host.
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ inputs.triple }}
+
+    - name: musl C compiler (the ring TLS backend compiles a little C)
+      if: endsWith(inputs.triple, '-musl')
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: rust
+        key: ${{ inputs.triple }}
+
+    # The Intel Mac archive must be built and installed on an Intel Mac: an Apple-silicon runner
+    # cannot show that install.sh picks it (a Rosetta shell is mapped to macos-arm64 on purpose),
+    # and the smoke test skips an archive that is not the host's. Fail loudly if the runner label
+    # ever stops meaning Intel hardware.
+    - name: The macos-x64 leg runs on an Intel Mac
+      if: inputs.target == 'macos-x64'
+      shell: bash
+      run: |
+        machine="$(uname -m)"
+        translated="$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)"
+        echo "uname -m: $machine, Rosetta: $translated"
+        if [ "$machine" != x86_64 ] || [ "$translated" = 1 ]; then
+          echo "::error::the macos-x64 leg is not on an Intel Mac, so its archive would never run here"
+          exit 1
+        fi
+
+    - name: Build
+      shell: bash
+      working-directory: rust
+      env:
+        TRIPLE: ${{ inputs.triple }}
+      run: cargo build --release --locked --target "$TRIPLE"
+
+    - name: The Linux programs are statically linked
+      if: endsWith(inputs.triple, '-musl')
+      shell: bash
+      env:
+        TRIPLE: ${{ inputs.triple }}
+      run: bash .github/scripts/assert-static-elf.sh "rust/target/$TRIPLE/release"
+
+    - name: The Windows programs link the C runtime statically
+      if: endsWith(inputs.triple, '-windows-msvc')
+      shell: pwsh
+      env:
+        TRIPLE: ${{ inputs.triple }}
+      run: ./.github/scripts/assert-static-crt.ps1 -Dir "rust/target/$env:TRIPLE/release"
+
+    # Paths are relative to rust/, where the `cargo xtask` alias exists; the archives land in
+    # dist/ at the repository root.
+    - name: Package
+      shell: bash
+      working-directory: rust
+      env:
+        TRIPLE: ${{ inputs.triple }}
+        TARGET: ${{ inputs.target }}
+      run: cargo --locked xtask package --bin-dir "target/$TRIPLE/release" --target "$TARGET" --out ../dist
+
+    # The archive that will be published, installed by the real installer on a machine of its own
+    # architecture. The smoke test skips an archive that is not this machine's and still exits 0,
+    # so a skip is turned into a failure here: every published archive must really be installed.
+    - name: Install the archive with the installer
+      shell: bash
+      working-directory: rust
+      env:
+        TARGET: ${{ inputs.target }}
+      run: |
+        log="$RUNNER_TEMP/installer-smoke-$TARGET.log"
+        cargo --locked xtask installer-smoke-test --archive "../dist/jev-claude-$TARGET.tar.gz" | tee "$log"
+        if grep -q '^skipped:' "$log"; then
+          echo "::error::the $TARGET archive was not installed: this runner is not a $TARGET machine"
+          exit 1
+        fi

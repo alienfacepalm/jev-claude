@@ -1,5 +1,5 @@
 // Excerpt of src/node_dotenv.cc from Node.js v24.21.0, the parser behind util.parseEnv,
-// which node/src/env.mjs uses. Ports implement exactly this algorithm (SPEC.md 9.1).
+// which the retired Node edition (tag v0.11.0) used. rust/src/env.rs implements exactly this algorithm (SPEC.md 9.1).
 // Source: https://github.com/nodejs/node/blob/v24.21.0/src/node_dotenv.cc
 // Node.js is MIT licensed: Copyright Node.js contributors. All rights reserved.
 // store_ is a map: insert_or_assign means a repeated key keeps its last value.

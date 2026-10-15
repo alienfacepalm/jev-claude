@@ -1,4 +1,4 @@
-//! The status line Claude Code runs (SPEC 12; `node/bin/jev-statusline.mjs`).
+//! The status line Claude Code runs (SPEC 12).
 
 use crate::icons::Icons;
 use crate::jsjson::{self, Value};
@@ -107,8 +107,8 @@ fn tilde_path(path: &[u8], home: &[u8]) -> Vec<u8> {
     }
 }
 
-/// Renders the status line for Claude Code's stdin JSON, with a branch lookup. Fails where Node
-/// throws: stdin holding the JSON literal `null`, whose `session_id` Node cannot read.
+/// Renders the status line for Claude Code's stdin JSON, with a branch lookup. Fails where SPEC 20
+/// says it fails: stdin holding the JSON literal `null`, whose `session_id` cannot be read.
 pub fn render_with(stdin: &[u8], icons: &Icons, branch_of: &dyn Fn(&Value) -> Option<JsStr>) -> Result<String, String> {
     let text = String::from_utf8_lossy(stdin);
     let text = if text.is_empty() { "{}".into() } else { text };

@@ -9,6 +9,11 @@ async fn main() {
     let upstream = jev_router::envx::get("ANTHROPIC_BASE_URL").filter(|u| !u.is_empty());
     let proxy = match start_proxy(ProxyOptions { upstream_url: upstream, ..Default::default() }).await {
         Ok(p) => p,
+        // A malformed ANTHROPIC_BASE_URL is the user's to fix, so it is reported as it stands.
+        Err(e) if e.kind() == std::io::ErrorKind::InvalidInput => {
+            eprintln!("[jev] {e}");
+            std::process::exit(1);
+        }
         Err(e) => {
             eprintln!("[jev] could not start the proxy: {e}");
             std::process::exit(1);

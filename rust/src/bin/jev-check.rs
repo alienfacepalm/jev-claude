@@ -11,8 +11,11 @@ fn row(label: &str, text: &str) -> String {
 
 fn main() {
     jev_router::init();
+    // A source checkout (SPEC 13): `rust/Cargo.toml` beside the `.git` directory of the root, which
+    // is the folder holding the jev-calibrate skill or, when set, JEV_ROOT as given (SPEC 2.4). A
+    // release folder has neither, and tuning lives in `rust/src/config.rs`.
     let repository = jev_router::repo::root()
-        .is_some_and(|r| r.join(".git").exists() && r.join("node").join("scripts").join("calibrate.mjs").exists());
+        .is_some_and(|r| r.join(".git").exists() && r.join("rust").join("Cargo.toml").is_file());
     let routing = envx::get("ANTHROPIC_CUSTOM_MODEL_OPTION").as_deref() == Some(AUTO_MODEL);
     let calibration = read_calibration(&calibration_file());
     let mut lines = vec!["Jev Router setup check (read-only: nothing was changed)".to_string(), String::new()];
@@ -71,7 +74,7 @@ fn main() {
                     "none - the router is tuned for the newest models your account offers".to_string()
                 } else {
                     format!(
-                        "{} - routing already uses them, but the router was tuned on the versions before. Update jev-router to get tuning for them.",
+                        "{} - routing already uses them, but the router was tuned on the versions before. Run the jev-claude installer again to get tuning for them.",
                         join_array(newer, ", ").to_string_lossy()
                     )
                 },

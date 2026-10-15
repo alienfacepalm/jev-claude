@@ -1,4 +1,4 @@
-//! The update library (SPEC 14; `node/src/update.mjs`).
+//! The update library (SPEC 14).
 
 use crate::fsx::{rename_over, temp_name};
 use crate::jsjson::{self, Object, Value};
@@ -221,12 +221,18 @@ pub fn check_for_update_now(root: &Path) -> Value {
     check_for_update(root, now_ms())
 }
 
-/// Whether these changed files mean the dependencies need installing again.
+/// Whether these changed files (paths from `git diff --name-only`, so always `/`-separated) mean the
+/// clone has to be built again before the update takes effect: anything under `rust/` (the code,
+/// `Cargo.toml`, `Cargo.lock`) changes the programs, while docs, skills and the root `package.json`
+/// (whose version the programs read at run time) do not. A root `pnpm-lock.yaml` still counts, as
+/// the frozen golden case `needs-install` pins; the Rust edition has none, so it never appears.
 pub fn needs_install(changed: &[&str]) -> bool {
-    changed.contains(&"pnpm-lock.yaml")
+    changed.iter().any(|f| *f == "pnpm-lock.yaml" || f.starts_with("rust/"))
 }
 
-/// `applyUpdate(root, {install})`, as the object Node resolves.
+/// `applyUpdate(root, {install})`, as the object it resolves (SPEC 14). `install` is the clone's
+/// build step (for example `cargo build --release --locked` in `rust/`), run in `root` after the
+/// fast-forward when [`needs_install`] says so; a non-zero exit reports `failed`.
 pub fn apply_update(root: &Path, install: Option<&dyn Fn(&Path) -> i32>) -> Value {
     let mut o = Object::new();
     let (behind, _) = match inspect_clone(root) {
@@ -253,7 +259,7 @@ pub fn apply_update(root: &Path, install: Option<&dyn Fn(&Path) -> i32>) -> Valu
             if code != 0 {
                 let mut f = Object::new();
                 f.insert("status", "failed".into());
-                f.insert("reason", format!("installing dependencies exited with {code}").into());
+                f.insert("reason", format!("building the update exited with {code}").into());
                 f.insert("from", from.clone());
                 f.insert("to", to);
                 return Ok(Value::Object(f));

@@ -1,9 +1,9 @@
-//! Port of node/test/update.test.mjs. These tests drive real git: a bare repository stands in
-//! for GitHub, clones are made the way the installer makes them (including the shallow
-//! `--depth 1` one), and the "upstream" moves on by real commits.
+//! The update library (SPEC 14). These tests drive real git: a bare repository stands in
+//! for GitHub, clones are made the way a developer makes them (full and shallow `--depth 1`),
+//! and the "upstream" moves on by real commits.
 
-// Each test's doc comment is the Node test title, quoted verbatim so the two suites can be
-// compared line by line; Markdown backticks would change the titles.
+// Each test's doc comment is its title as a plain sentence (the titles come from the retired Node
+// edition's suite, tag v0.11.0); Markdown backticks would change them.
 #![allow(clippy::doc_markdown)]
 
 mod common;
@@ -42,7 +42,7 @@ struct Fixture {
     _serial: std::sync::MutexGuard<'static, ()>,
 }
 
-/// Node runs a file's tests one after another; these share that, so dozens of git processes
+/// The tests of this file run one after another (as the original suite did), so dozens of git processes
 /// never compete with the 5 s local git timeout the library applies.
 static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
@@ -56,7 +56,8 @@ impl Fixture {
         git(&base, &["clone", &origin.to_string_lossy(), &upstream.to_string_lossy()]);
         git(&upstream, &["checkout", "-b", "master"]);
         std::fs::write(upstream.join("package.json"), pkg("0.1.0")).unwrap();
-        std::fs::write(upstream.join("pnpm-lock.yaml"), "lock: 1\n").unwrap();
+        std::fs::create_dir(upstream.join("rust")).unwrap();
+        std::fs::write(upstream.join("rust").join("Cargo.lock"), "lock: 1\n").unwrap();
         git(&upstream, &["add", "."]);
         git(&upstream, &["commit", "-m", "first"]);
         git(&upstream, &["push", "-u", "origin", "master"]);
@@ -144,7 +145,7 @@ fn level_install_has_no_update_full_clone() {
     level_with_origin(false);
 }
 
-/// "an install that is level with origin has no update (a shallow clone, as the installer makes)"
+/// "an install that is level with origin has no update (a shallow clone)"
 #[test]
 fn level_install_has_no_update_shallow_clone() {
     level_with_origin(true);
@@ -156,15 +157,16 @@ fn release_found_announced_and_applied_full_clone() {
     release_found_and_applied(false);
 }
 
-/// "a release upstream is found, announced, and applied by fast-forward (a shallow clone, as the installer makes)"
+/// "a release upstream is found, announced, and applied by fast-forward (a shallow clone)"
 #[test]
 fn release_found_announced_and_applied_shallow_clone() {
     release_found_and_applied(true);
 }
 
-/// "changed dependencies ask for an install; unchanged ones do not"
+/// "a change to the crate asks for a build; other changes do not" (the retired Node edition's title
+/// was "changed dependencies ask for an install", when its lockfile was the trigger)
 #[test]
-fn changed_dependencies_ask_for_an_install() {
+fn a_change_to_the_crate_asks_for_a_build() {
     let f = Fixture::new();
     let install = f.clone_to("install", false);
     f.release("0.1.1", &[("notes.txt", "docs only\n")]);
@@ -175,21 +177,23 @@ fn changed_dependencies_ask_for_an_install() {
     };
 
     assert_eq!(status_of(&apply_update(&install, Some(&recorded))), "updated");
-    assert!(calls.borrow().is_empty(), "a change that leaves the lockfile alone installs nothing");
+    assert!(calls.borrow().is_empty(), "a change that leaves rust/ alone builds nothing");
 
-    f.release("0.2.0", &[("pnpm-lock.yaml", "lock: 2\n")]);
+    f.release("0.2.0", &[("rust/Cargo.lock", "lock: 2\n")]);
     assert_eq!(status_of(&apply_update(&install, Some(&recorded))), "updated");
-    assert_eq!(*calls.borrow(), vec![install.clone()], "a new lockfile installs once, in the install folder");
+    assert_eq!(*calls.borrow(), vec![install.clone()], "a new Cargo.lock builds once, in the install folder");
 
-    f.release("0.3.0", &[("pnpm-lock.yaml", "lock: 3\n")]);
+    f.release("0.3.0", &[("rust/src.rs", "fn main() {}\n")]);
     let failing = |_: &Path| 1;
     let failed = apply_update(&install, Some(&failing));
-    assert_eq!(status_of(&failed), "failed", "a failed install is reported, not hidden");
+    assert_eq!(status_of(&failed), "failed", "a failed build is reported, not hidden");
     assert!(reason_of(&failed).contains("exited with 1"));
 
-    assert!(!needs_install(&["README.md", "src/proxy.mjs"]));
-    assert!(!needs_install(&["package.json"]), "a version bump alone is not a dependency change");
-    assert!(needs_install(&["README.md", "pnpm-lock.yaml"]));
+    assert!(!needs_install(&["README.md", "doc/RUST.md", ".claude/skills/jev-check/SKILL.md"]));
+    assert!(!needs_install(&["package.json"]), "a version bump alone is read at run time, not built in");
+    assert!(needs_install(&["README.md", "rust/Cargo.lock"]));
+    assert!(needs_install(&["rust/src/proxy.rs"]));
+    assert!(!needs_install(&["conformance/rust/notes.txt"]), "only the crate folder at the root");
 }
 
 /// "a copy with local changes is left exactly as it is"
@@ -197,14 +201,15 @@ fn changed_dependencies_ask_for_an_install() {
 fn a_copy_with_local_changes_is_left_exactly_as_it_is() {
     let f = Fixture::new();
     let install = f.clone_to("install", false);
-    std::fs::write(install.join("pnpm-lock.yaml"), "lock: 1\nmy edit\n").unwrap();
+    std::fs::write(install.join("rust").join("Cargo.lock"), "lock: 1\nmy edit\n").unwrap();
     f.release("0.2.0", &[]);
 
     assert_eq!(check_for_update_now(&install).get("available"), &Value::Bool(false), "no notice");
     let applied = apply_update(&install, None);
     assert_eq!(status_of(&applied), "refused");
     assert!(reason_of(&applied).contains("local changes"));
-    assert!(std::fs::read_to_string(install.join("pnpm-lock.yaml")).unwrap().contains("my edit"), "the edit survives");
+    let lock = install.join("rust").join("Cargo.lock");
+    assert!(std::fs::read_to_string(lock).unwrap().contains("my edit"), "the edit survives");
     assert_eq!(version(&install), "0.1.0");
 }
 
@@ -254,6 +259,37 @@ fn an_unreachable_origin_is_reported() {
     assert_eq!(status_of(&applied), "refused");
     assert!(reason_of(&applied).contains("could not reach origin"));
     assert_eq!(version(&install), "0.1.0");
+}
+
+/// "an install reached through another spelling of its path is still a clone of its own"
+// git reports the on-disk spelling of the toplevel; a case-insensitive file system (macOS, Windows)
+// lets the root be spelled differently. The Windows 8.3 short name (C:\Users\RUNNER~1) is already
+// exercised by every Windows CI run, because std::env::temp_dir() is itself a short name there.
+#[test]
+fn an_install_reached_through_another_spelling_of_its_path_is_still_a_clone_of_its_own() {
+    let f = Fixture::new();
+    let install = f.clone_to("install", false);
+    let respelled = install.parent().unwrap().join("INSTALL");
+    if !respelled.exists() {
+        eprintln!("note: skipped: the file system is case-sensitive");
+        return;
+    }
+    assert_eq!(check_for_update_now(&respelled).get("available"), &Value::Bool(false));
+    let applied = apply_update(&respelled, None);
+    assert_eq!(applied, json(r#"{"status":"current","version":"0.1.0"}"#), "{applied:?}");
+}
+
+/// "a release folder that is no git clone has no update, and says so"
+#[test]
+fn a_release_folder_that_is_no_git_clone_has_no_update() {
+    let dir = temp_dir("jev-update-release-");
+    std::fs::write(dir.join("package.json"), pkg("0.1.0")).unwrap();
+    let found = check_for_update_now(&dir);
+    let keys: Vec<String> = found.as_object().unwrap().keys().map(jev_router::jsstr::JsStr::to_string_lossy).collect();
+    assert_eq!(keys, ["checkedAt", "available"]);
+    assert_eq!(found.get("available"), &Value::Bool(false));
+    let at = found.get("checkedAt").as_str().unwrap().to_string_lossy();
+    assert!(parse_iso(&at).is_some() && at.ends_with('Z'), "{at}");
 }
 
 /// "folders that are not a clone of their own are refused"
@@ -323,4 +359,18 @@ fn the_state_file_round_trips_and_a_damaged_one_reads_as_no_state() {
     assert_eq!(read_state(&file), None, "damaged");
     std::fs::write(&file, "42").unwrap();
     assert_eq!(read_state(&file), None, "valid JSON that is not a state object");
+}
+
+/// "a state write that fails leaves no temporary file behind"
+#[test]
+fn a_state_write_that_fails_leaves_no_temporary_file_behind() {
+    let dir = temp_dir("jev-update-state-fail-");
+    let file = dir.join("update.json");
+    std::fs::create_dir(&file).unwrap(); // the rename onto a directory fails on every OS
+    write_state(&json(r#"{"checkedAt":"2026-10-04T12:00:00.000Z","available":false}"#), &file);
+    let mut names: Vec<String> =
+        std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    names.sort();
+    assert_eq!(names, ["update.json"], "no update.json.<pid>.<n>.tmp is left");
+    assert!(file.is_dir(), "the failed write changed nothing");
 }
