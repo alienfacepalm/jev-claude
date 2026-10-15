@@ -683,6 +683,17 @@ fn other_cpus(ctx: &mut Ctx, e: &Installer) -> Result<(), String> {
         ctx.exits_nonzero(&run, "an ARM64 PC with Windows 10 fails the install");
         ctx.says(&run, "cannot run the x64 programs", "and says why");
     }
+    // On an ARM PC Windows sets the architecture variables for each process itself, so a made-up CPU
+    // never reaches the installer there; the other Windows runs cover this case.
+    let host = powershell(
+        "if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }",
+    )
+    .map(|t| t.trim().to_string())
+    .unwrap_or_default();
+    if host.eq_ignore_ascii_case("ARM64") {
+        println!("skipped: a CPU with no prebuilt programs (an ARM PC does not let a test make one up)");
+        return Ok(());
+    }
     let run = ctx.go(e, &ctx.base().env("PROCESSOR_ARCHITEW6432", "IA64"))?;
     ctx.exits_nonzero(&run, "a CPU with no prebuilt programs fails the install");
     ctx.says(&run, "Windows IA64 has no prebuilt programs", "and names the CPU");
